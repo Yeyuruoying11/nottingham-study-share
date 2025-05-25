@@ -1,27 +1,71 @@
-# 诺丁汉留学圈 - Nottingham Study Share
+# 诺丁汉留学圈 - 分享你的留学故事
 
-一个专为诺丁汉大学留学生打造的社交分享平台，类似小红书的设计风格，让同学们可以分享留学攻略、生活经验、美食推荐等内容。
+专为诺丁汉大学留学生打造的社交分享平台，分享留学攻略、生活经验、美食推荐等内容。
 
-## ✨ 功能特色
+## ✨ 最新功能
+- 🔐 **用户认证系统** - 完整的注册、登录、登出功能
+- 🎨 **现代化UI设计** - 基于Aceternity UI和Tailwind CSS
+- 📱 **响应式设计** - 完美支持移动端和桌面端
+- 🔥 **实时数据** - Firebase集成，支持实时数据同步
 
-### 🔐 登录界面
-- 现代化的渐变背景设计
-- 流畅的动画效果
-- 支持邮箱登录和社交媒体登录
-- 响应式设计，支持移动端
+## 🚀 技术栈
 
-### 🏠 首页设计
-- 类似小红书的瀑布流布局
-- 智能分类系统（学习、生活、美食、旅行等）
-- 实时搜索功能
-- 无限滚动的用户评价展示
-- 响应式网格布局
+- **前端框架**: Next.js 14 + React 18 + TypeScript
+- **样式**: Tailwind CSS + Framer Motion
+- **后端服务**: Firebase (Auth + Firestore + Storage)
+- **部署**: Vercel
+- **UI组件**: Aceternity UI + Lucide Icons
 
-### 🎨 设计亮点
-- 参考 [Awwwards](https://www.awwwards.com/) 的现代设计趋势
-- 使用 [Aceternity UI](https://ui.aceternity.com/components/infinite-moving-cards) 的无限滚动卡片组件
-- 诺丁汉大学品牌色彩（绿色和金色）
-- 流畅的动画和过渡效果
+## 📱 功能特性
+
+### 🏠 首页
+- Pinterest风格的瀑布流布局
+- 分类筛选（学习、生活、美食、旅行、购物、租房）
+- 搜索功能
+- 用户评价滚动展示
+
+### 🔐 用户系统
+- 邮箱注册/登录
+- 用户状态管理
+- 个人资料管理
+- 安全登出
+
+### 📝 内容管理
+- 发布攻略和经验分享
+- 图片上传
+- 点赞和评论系统
+- 内容分类管理
+
+## 🎨 设计特色
+
+- **诺丁汉大学品牌色** - 绿色主题配色
+- **玻璃拟态效果** - 现代化的视觉设计
+- **流畅动画** - Framer Motion驱动的交互动画
+- **移动优先** - 响应式设计，完美适配各种设备
+
+## 🌐 在线访问
+
+**网站地址**: [https://nottingham-study-share.vercel.app](https://nottingham-study-share.vercel.app)
+
+## 🛠️ 本地开发
+
+```bash
+# 安装依赖
+npm install
+
+# 启动开发服务器
+npm run dev
+
+# 访问 http://localhost:3000
+```
+
+## 📄 许可证
+
+MIT License
+
+---
+
+**让留学生活更精彩，让经验分享更简单！** 🎓✨
 
 ## 🛠️ 技术栈
 
@@ -121,8 +165,4 @@ npm start
 
 ## 🤝 贡献
 
-欢迎提交 Issues 和 Pull Requests 来改进这个项目！
-
-## �� 许可证
-
-MIT License 
+欢迎提交 Issues 和 Pull Requests 来改进这个项目！ 
