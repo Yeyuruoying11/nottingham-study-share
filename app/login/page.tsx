@@ -2,18 +2,92 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, ArrowRight, User, AlertCircle, CheckCircle } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
+  const [isLogin, setIsLogin] = useState(true); // true: 登录, false: 注册
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { login, register } = useAuth();
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // 处理登录逻辑
-    console.log("Login attempt:", { email, password });
+    setError("");
+    setSuccess("");
+    setIsLoading(true);
+
+    try {
+      if (isLogin) {
+        // 登录逻辑
+        if (!email || !password) {
+          throw new Error("请填写邮箱和密码");
+        }
+        await login(email, password);
+        setSuccess("登录成功！正在跳转...");
+        setTimeout(() => {
+          router.push("/");
+        }, 1500);
+      } else {
+        // 注册逻辑
+        if (!email || !password || !displayName || !confirmPassword) {
+          throw new Error("请填写所有必填字段");
+        }
+        if (password !== confirmPassword) {
+          throw new Error("两次输入的密码不一致");
+        }
+        if (password.length < 6) {
+          throw new Error("密码长度至少为6位");
+        }
+        await register(email, password, displayName);
+        setSuccess("注册成功！正在跳转...");
+        setTimeout(() => {
+          router.push("/");
+        }, 1500);
+      }
+    } catch (error: any) {
+      console.error("Auth error:", error);
+      let errorMessage = "操作失败，请重试";
+      
+      // Firebase 错误处理
+      if (error.code) {
+        switch (error.code) {
+          case "auth/user-not-found":
+            errorMessage = "用户不存在，请检查邮箱地址";
+            break;
+          case "auth/wrong-password":
+            errorMessage = "密码错误，请重试";
+            break;
+          case "auth/email-already-in-use":
+            errorMessage = "邮箱已被注册，请使用其他邮箱";
+            break;
+          case "auth/invalid-email":
+            errorMessage = "邮箱格式不正确";
+            break;
+          case "auth/weak-password":
+            errorMessage = "密码强度不够，请使用至少6位字符";
+            break;
+          default:
+            errorMessage = error.message || "操作失败，请重试";
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -72,8 +146,86 @@ export default function LoginPage() {
           <p className="text-white/80 text-sm">分享你的留学故事</p>
         </div>
 
-        {/* 登录表单 */}
+        {/* 切换登录/注册 */}
+        <div className="flex bg-white/10 rounded-xl p-1 mb-6">
+          <button
+            onClick={() => {
+              setIsLogin(true);
+              setError("");
+              setSuccess("");
+            }}
+            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all duration-300 ${
+              isLogin 
+                ? "bg-white/20 text-white shadow-lg" 
+                : "text-white/60 hover:text-white"
+            }`}
+          >
+            登录
+          </button>
+          <button
+            onClick={() => {
+              setIsLogin(false);
+              setError("");
+              setSuccess("");
+            }}
+            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all duration-300 ${
+              !isLogin 
+                ? "bg-white/20 text-white shadow-lg" 
+                : "text-white/60 hover:text-white"
+            }`}
+          >
+            注册
+          </button>
+        </div>
+
+        {/* 错误和成功消息 */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg flex items-center space-x-2"
+          >
+            <AlertCircle className="w-4 h-4 text-red-300" />
+            <span className="text-red-100 text-sm">{error}</span>
+          </motion.div>
+        )}
+
+        {success && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 p-3 bg-green-500/20 border border-green-500/30 rounded-lg flex items-center space-x-2"
+          >
+            <CheckCircle className="w-4 h-4 text-green-300" />
+            <span className="text-green-100 text-sm">{success}</span>
+          </motion.div>
+        )}
+
+        {/* 表单 */}
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* 注册时显示姓名输入 */}
+          {!isLogin && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60 w-5 h-5" />
+                <input
+                  type="text"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="姓名"
+                  className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all duration-300"
+                  required={!isLogin}
+                />
+              </div>
+            </motion.div>
+          )}
+
+          {/* 邮箱输入 */}
           <motion.div
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
@@ -92,6 +244,7 @@ export default function LoginPage() {
             </div>
           </motion.div>
 
+          {/* 密码输入 */}
           <motion.div
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
@@ -117,32 +270,65 @@ export default function LoginPage() {
             </div>
           </motion.div>
 
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="flex items-center justify-between text-sm"
-          >
-            <label className="flex items-center text-white/80">
-              <input type="checkbox" className="mr-2 rounded" />
-              记住我
-            </label>
-            <Link href="/forgot-password" className="text-white/80 hover:text-white transition-colors">
-              忘记密码？
-            </Link>
-          </motion.div>
+          {/* 注册时显示确认密码 */}
+          {!isLogin && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60 w-5 h-5" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="确认密码"
+                  className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all duration-300"
+                  required={!isLogin}
+                />
+              </div>
+            </motion.div>
+          )}
 
+          {/* 登录时显示记住我和忘记密码 */}
+          {isLogin && (
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="flex items-center justify-between text-sm"
+            >
+              <label className="flex items-center text-white/80">
+                <input type="checkbox" className="mr-2 rounded" />
+                记住我
+              </label>
+              <Link href="/forgot-password" className="text-white/80 hover:text-white transition-colors">
+                忘记密码？
+              </Link>
+            </motion.div>
+          )}
+
+          {/* 提交按钮 */}
           <motion.button
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.6 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: isLoading ? 1 : 1.05 }}
+            whileTap={{ scale: isLoading ? 1 : 0.95 }}
             type="submit"
-            className="w-full bg-white/20 hover:bg-white/30 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center group"
+            disabled={isLoading}
+            className="w-full bg-white/20 hover:bg-white/30 disabled:bg-white/10 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center group"
           >
-            登录
-            <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            {isLoading ? (
+              <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+            ) : (
+              <>
+                {isLogin ? "登录" : "注册"}
+                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </>
+            )}
           </motion.button>
         </form>
 
@@ -160,7 +346,10 @@ export default function LoginPage() {
           transition={{ delay: 0.7 }}
           className="space-y-3"
         >
-          <button className="w-full bg-white/10 hover:bg-white/20 text-white font-medium py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center">
+          <button 
+            type="button"
+            className="w-full bg-white/10 hover:bg-white/20 text-white font-medium py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center"
+          >
             <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
               <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
               <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -169,28 +358,18 @@ export default function LoginPage() {
             </svg>
             使用 Google 登录
           </button>
-          
-          <button className="w-full bg-white/10 hover:bg-white/20 text-white font-medium py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center">
-            <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.024-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.097.118.112.221.085.341-.09.381-.293 1.199-.334 1.363-.053.225-.172.271-.402.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.92-7.252 4.158 0 7.392 2.967 7.392 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.357-.629-2.746-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24.009 12.017 24.009c6.624 0 11.99-5.367 11.99-11.988C24.007 5.367 18.641.001 12.017.001z"/>
-            </svg>
-            使用微信登录
-          </button>
         </motion.div>
 
-        {/* 注册链接 */}
+        {/* 返回首页链接 */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
           className="text-center mt-6"
         >
-          <p className="text-white/80 text-sm">
-            还没有账号？
-            <Link href="/register" className="text-white hover:text-yellow-300 font-semibold ml-1 transition-colors">
-              立即注册
-            </Link>
-          </p>
+          <Link href="/" className="text-white/80 hover:text-white text-sm transition-colors">
+            ← 返回首页
+          </Link>
         </motion.div>
       </motion.div>
     </div>

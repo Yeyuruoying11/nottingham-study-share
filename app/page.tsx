@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Search, Plus, Heart, MessageCircle, Share, Bookmark, User, Bell, Menu } from "lucide-react";
+import { Search, Plus, Heart, MessageCircle, Share, Bookmark, User, Bell, Menu, LogOut, Settings } from "lucide-react";
 import { InfiniteMovingCards } from "@/components/ui/infinite-moving-cards";
 import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
 
 // 模拟数据
 const posts = [
@@ -127,6 +128,33 @@ const categories = [
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("全部");
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+  
+  const { user, logout } = useAuth();
+
+  // 点击外部关闭用户菜单
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setShowUserMenu(false);
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
 
   const PostCard = ({ post, index }: { post: any; index: number }) => (
     <motion.div
@@ -199,53 +227,139 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <div className="flex items-center space-x-3">
+            <Link href="/" className="flex items-center space-x-3">
               <div className="w-10 h-10 notts-green rounded-xl flex items-center justify-center shadow-lg">
                 <span className="text-white text-lg font-bold">N</span>
               </div>
-              <div>
+              <div className="hidden sm:block">
                 <h1 className="text-xl font-bold text-gray-900">诺丁汉留学圈</h1>
                 <p className="text-xs text-gray-500">分享你的留学故事</p>
               </div>
-            </div>
+            </Link>
 
             {/* 搜索栏 */}
-            <div className="flex-1 max-w-md mx-8">
+            <div className="flex-1 max-w-lg mx-8">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="搜索留学攻略、美食推荐..."
-                  className="w-full pl-12 pr-4 py-2 bg-gray-100 border-0 rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all duration-300"
+                  placeholder="搜索攻略、美食、生活经验..."
+                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
               </div>
             </div>
 
-            {/* 用户操作 */}
+            {/* 右侧按钮 */}
             <div className="flex items-center space-x-4">
+              {user ? (
+                <>
+                  {/* 发布按钮 */}
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="notts-green text-white px-4 py-2 rounded-xl font-medium flex items-center space-x-2 shadow-lg hover:shadow-xl transition-all"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span className="hidden sm:inline">发布</span>
+                  </motion.button>
+
+                  {/* 通知按钮 */}
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all relative"
+                  >
+                    <Bell className="w-5 h-5" />
+                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+                  </motion.button>
+
+                  {/* 用户头像菜单 */}
+                  <div className="relative" ref={userMenuRef}>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setShowUserMenu(!showUserMenu)}
+                      className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-2 border-transparent hover:border-green-500 transition-all"
+                    >
+                      {user.photoURL ? (
+                        <img 
+                          src={user.photoURL} 
+                          alt={user.displayName || user.email || "用户"} 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <User className="w-4 h-4 text-gray-600" />
+                      )}
+                    </motion.button>
+
+                    {/* 用户下拉菜单 */}
+                    {showUserMenu && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-50"
+                      >
+                        <div className="px-4 py-3 border-b border-gray-100">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {user.displayName || "用户"}
+                          </p>
+                          <p className="text-xs text-gray-500 truncate">
+                            {user.email}
+                          </p>
+                        </div>
+                        
+                        <button className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2">
+                          <User className="w-4 h-4" />
+                          <span>个人资料</span>
+                        </button>
+                        
+                        <button className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2">
+                          <Settings className="w-4 h-4" />
+                          <span>设置</span>
+                        </button>
+                        
+                        <div className="border-t border-gray-100 mt-1 pt-1">
+                          <button 
+                            onClick={handleLogout}
+                            className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
+                          >
+                            <LogOut className="w-4 h-4" />
+                            <span>退出登录</span>
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                /* 未登录状态 */
+                <div className="flex items-center space-x-3">
+                  <Link 
+                    href="/login"
+                    className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+                  >
+                    登录
+                  </Link>
+                  <Link 
+                    href="/login"
+                    className="notts-green text-white px-4 py-2 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all"
+                  >
+                    注册
+                  </Link>
+                </div>
+              )}
+
+              {/* 移动端菜单按钮 */}
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="notts-green text-white px-6 py-2 rounded-full flex items-center space-x-2 shadow-lg hover:shadow-xl transition-all duration-300"
+                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all md:hidden"
               >
-                <Plus className="w-4 h-4" />
-                <span className="text-sm font-medium">发布</span>
+                <Menu className="w-5 h-5" />
               </motion.button>
-              
-              <button className="relative p-2 text-gray-600 hover:text-gray-900 transition-colors">
-                <Bell className="w-6 h-6" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-              </button>
-              
-              <Link href="/login">
-                <img
-                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face"
-                  alt="User Avatar"
-                  className="w-8 h-8 rounded-full object-cover border-2 border-gray-200 hover:border-green-500 transition-colors cursor-pointer"
-                />
-              </Link>
             </div>
           </div>
         </div>
