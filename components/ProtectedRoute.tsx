@@ -45,4 +45,5 @@ export default function ProtectedRoute({ children, requireAuth = true }: Protect
     return null;
   }
 
- 
+  return <>{children}</>;
+} 
