@@ -6,88 +6,10 @@ import { Search, Plus, Heart, MessageCircle, Share, Bookmark, User, Bell, Menu, 
 import { InfiniteMovingCards } from "@/components/ui/infinite-moving-cards";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { postsData } from "@/lib/posts-data";
 
-// 模拟数据
-const posts = [
-  {
-    id: 1,
-    title: "诺丁汉大学新生宿舍攻略",
-    content: "刚到诺丁汉，住宿是个大问题。我整理了一份超全宿舍攻略，包括各个宿舍区的优缺点、价格对比...",
-    image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=300&fit=crop",
-    author: {
-      name: "小红同学",
-      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face",
-    },
-    likes: 234,
-    comments: 56,
-    tags: ["宿舍", "新生", "攻略"],
-  },
-  {
-    id: 2,
-    title: "诺丁汉周边美食探店",
-    content: "在诺丁汉生活了两年，今天分享一些我发现的宝藏餐厅，有中餐、西餐、还有当地特色...",
-    image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&h=600&fit=crop",
-    author: {
-      name: "美食探索者",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face",
-    },
-    likes: 189,
-    comments: 42,
-    tags: ["美食", "探店", "生活"],
-  },
-  {
-    id: 3,
-    title: "论文季生存指南",
-    content: "又到了论文季，图书馆里人满为患。分享一些我的论文写作技巧和时间管理方法...",
-    image: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=500&fit=crop",
-    author: {
-      name: "学霸小王",
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
-    },
-    likes: 312,
-    comments: 78,
-    tags: ["学习", "论文", "技巧"],
-  },
-  {
-    id: 4,
-    title: "诺丁汉春天踏青地点推荐",
-    content: "春天来了，诺丁汉有很多美丽的地方适合踏青拍照，今天推荐几个我的私藏景点...",
-    image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop",
-    author: {
-      name: "旅行小达人",
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face",
-    },
-    likes: 156,
-    comments: 23,
-    tags: ["旅行", "踏青", "摄影"],
-  },
-  {
-    id: 5,
-    title: "租房避坑指南",
-    content: "在诺丁汉租房一年多的经验总结，从找房、看房到签约，每个环节都有需要注意的地方...",
-    image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&h=350&fit=crop",
-    author: {
-      name: "租房达人",
-      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=40&h=40&fit=crop&crop=face",
-    },
-    likes: 445,
-    comments: 89,
-    tags: ["租房", "避坑", "经验"],
-  },
-  {
-    id: 6,
-    title: "诺丁汉购物指南",
-    content: "从Victoria Centre到Intu，诺丁汉的购物中心各有特色，这份购物指南帮你找到最适合的...",
-    image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=450&fit=crop",
-    author: {
-      name: "购物小能手",
-      avatar: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=40&h=40&fit=crop&crop=face",
-    },
-    likes: 267,
-    comments: 34,
-    tags: ["购物", "商场", "推荐"],
-  },
-];
+// 使用真实的帖子数据
+const posts = postsData;
 
 const testimonials = [
   {
@@ -157,63 +79,65 @@ export default function HomePage() {
   };
 
   const PostCard = ({ post, index }: { post: any; index: number }) => (
-    <motion.div
-      initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: index * 0.1 }}
-      className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 group cursor-pointer"
-    >
-      <div className="relative overflow-hidden">
-        <img
-          src={post.image}
-          alt={post.title}
-          className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      </div>
-      
-      <div className="p-4">
-        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 text-sm leading-tight">
-          {post.title}
-        </h3>
-        <p className="text-gray-600 text-xs line-clamp-3 mb-3 leading-relaxed">
-          {post.content}
-        </p>
-        
-        <div className="flex flex-wrap gap-1 mb-3">
-          {post.tags.map((tag: string, tagIndex: number) => (
-            <span
-              key={tagIndex}
-              className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
-            >
-              #{tag}
-            </span>
-          ))}
+    <Link href={`/post/${post.id}`}>
+      <motion.div
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: index * 0.1 }}
+        className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 group cursor-pointer"
+      >
+        <div className="relative overflow-hidden">
+          <img
+            src={post.image}
+            alt={post.title}
+            className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </div>
         
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <img
-              src={post.author.avatar}
-              alt={post.author.name}
-              className="w-6 h-6 rounded-full object-cover"
-            />
-            <span className="text-xs text-gray-600 font-medium">{post.author.name}</span>
+        <div className="p-4">
+          <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 text-sm leading-tight">
+            {post.title}
+          </h3>
+          <p className="text-gray-600 text-xs line-clamp-3 mb-3 leading-relaxed">
+            {post.content}
+          </p>
+          
+          <div className="flex flex-wrap gap-1 mb-3">
+            {post.tags.map((tag: string, tagIndex: number) => (
+              <span
+                key={tagIndex}
+                className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
+              >
+                #{tag}
+              </span>
+            ))}
           </div>
           
-          <div className="flex items-center space-x-4 text-gray-500">
-            <div className="flex items-center space-x-1">
-              <Heart className="w-4 h-4" />
-              <span className="text-xs">{post.likes}</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <img
+                src={post.author.avatar}
+                alt={post.author.name}
+                className="w-6 h-6 rounded-full object-cover"
+              />
+              <span className="text-xs text-gray-600 font-medium">{post.author.name}</span>
             </div>
-            <div className="flex items-center space-x-1">
-              <MessageCircle className="w-4 h-4" />
-              <span className="text-xs">{post.comments}</span>
+            
+            <div className="flex items-center space-x-4 text-gray-500">
+              <div className="flex items-center space-x-1">
+                <Heart className="w-4 h-4" />
+                <span className="text-xs">{post.likes}</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <MessageCircle className="w-4 h-4" />
+                <span className="text-xs">{post.comments}</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </motion.div>
+      </motion.div>
+    </Link>
   );
 
   return (
