@@ -7,6 +7,7 @@
 - 🎨 **现代化UI设计** - 基于Aceternity UI和Tailwind CSS
 - 📱 **响应式设计** - 完美支持移动端和桌面端
 - 🔥 **实时数据** - Firebase集成，支持实时数据同步
+- 🌐 **自定义域名** - 支持绑定自定义域名
 
 ## 🚀 技术栈
 
@@ -45,7 +46,38 @@
 
 ## 🌐 在线访问
 
-**网站地址**: [https://nottingham-study-share.vercel.app](https://nottingham-study-share.vercel.app)
+**网站地址**: [https://www.newbiemap.com](https://www.newbiemap.com)
+**备用地址**: [https://nottingham-study-share.vercel.app](https://nottingham-study-share.vercel.app)
+
+## 🔧 自定义域名配置
+
+如果你有自己的域名，可以按照以下步骤配置：
+
+### 1. 在Vercel中添加域名
+1. 登录 [Vercel控制台](https://vercel.com)
+2. 进入项目设置 → Domains
+3. 添加你的域名
+
+### 2. 配置DNS记录
+在你的域名提供商（如LCN）控制面板中添加以下DNS记录：
+
+```
+类型: A
+名称: @
+值: 76.76.19.61
+TTL: 3600
+
+类型: A  
+名称: www
+值: 76.76.19.61
+TTL: 3600
+```
+
+### 3. 等待DNS传播
+DNS更改通常需要几分钟到24小时生效。可以使用 [whatsmydns.net](https://www.whatsmydns.net) 检查传播状态。
+
+### 4. SSL证书
+Vercel会自动为你的域名生成SSL证书，无需额外配置。
 
 ## 🛠️ 本地开发
 
