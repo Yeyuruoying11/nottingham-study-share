@@ -29,7 +29,7 @@ export interface Comment {
   likes: number;
 }
 
-export const postsData: Post[] = [
+export let postsData: Post[] = [
   {
     id: 1,
     title: "诺丁汉大学新生宿舍攻略",
@@ -377,4 +377,45 @@ export function getPostById(id: number): Post | undefined {
 
 export function getCommentsByPostId(postId: number): Comment[] {
   return commentsData.filter(comment => comment.postId === postId);
+}
+
+export function getAllPosts(): Post[] {
+  return [...postsData].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+export function addNewPost(postData: {
+  title: string;
+  content: string;
+  category: string;
+  tags: string[];
+  image?: string;
+  author: {
+    name: string;
+    avatar: string;
+    university?: string;
+    year?: string;
+  };
+}): Post {
+  const newId = Math.max(...postsData.map(p => p.id), 0) + 1;
+  
+  const now = new Date();
+  const createdAt = now.toISOString().split('T')[0];
+  
+  const newPost: Post = {
+    id: newId,
+    title: postData.title,
+    content: postData.content.length > 100 ? postData.content.substring(0, 100) + "..." : postData.content,
+    fullContent: postData.content,
+    image: postData.image || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=300&fit=crop",
+    author: postData.author,
+    likes: 0,
+    comments: 0,
+    tags: postData.tags,
+    createdAt,
+    category: postData.category
+  };
+  
+  postsData.unshift(newPost);
+  
+  return newPost;
 } 

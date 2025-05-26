@@ -6,10 +6,7 @@ import { Search, Plus, Heart, MessageCircle, Share, Bookmark, User, Bell, Menu, 
 import { InfiniteMovingCards } from "@/components/ui/infinite-moving-cards";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import { postsData } from "@/lib/posts-data";
-
-// 使用真实的帖子数据
-const posts = postsData;
+import { getAllPosts } from "@/lib/posts-data";
 
 const testimonials = [
   {
@@ -51,9 +48,19 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("全部");
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [posts, setPosts] = useState(() => getAllPosts()); // 使用状态管理帖子数据
   const userMenuRef = useRef<HTMLDivElement>(null);
   
   const { user, logout } = useAuth();
+
+  // 定期刷新帖子数据（可选）
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPosts(getAllPosts());
+    }, 5000); // 每5秒刷新一次
+
+    return () => clearInterval(interval);
+  }, []);
 
   // 点击外部关闭用户菜单
   useEffect(() => {
