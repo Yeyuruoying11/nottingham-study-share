@@ -2,11 +2,22 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Search, Plus, Heart, MessageCircle, Share, Bookmark, User, Bell, Menu, LogOut, Settings, Trash2 } from "lucide-react";
+import { Search, Plus, Heart, MessageCircle, Share, Bookmark, User, Bell, Menu, LogOut, Settings, Trash2, MoreVertical } from "lucide-react";
 import { InfiniteMovingCards } from "@/components/ui/infinite-moving-cards";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import { getAllPosts, deletePost } from "@/lib/posts-data";
+import { 
+  getAllPostsFromFirestore, 
+  deletePostFromFirestore, 
+  formatTimestamp,
+  type FirestorePost 
+} from "@/lib/firestore-posts";
+
+// 临时导入迁移函数
+const migrateTestData = async () => {
+  const { migrateTestData } = await import("../scripts/migrate-data");
+  return migrateTestData();
+};
 
 const testimonials = [
   {
@@ -48,19 +59,44 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("全部");
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [posts, setPosts] = useState(() => getAllPosts()); // 使用状态管理帖子数据
+  const [posts, setPosts] = useState<FirestorePost[]>([]);
+  const [loading, setLoading] = useState(true);
   const userMenuRef = useRef<HTMLDivElement>(null);
   
   const { user, logout } = useAuth();
 
-  // 定期刷新帖子数据（可选）
+  // 从Firestore加载帖子数据
   useEffect(() => {
-    const interval = setInterval(() => {
-      setPosts(getAllPosts());
-    }, 5000); // 每5秒刷新一次
+    const loadPosts = async () => {
+      setLoading(true);
+      try {
+        const firestorePosts = await getAllPostsFromFirestore();
+        setPosts(firestorePosts);
+      } catch (error) {
+        console.error('加载帖子失败:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    return () => clearInterval(interval);
+    loadPosts();
   }, []);
+
+  // 临时的数据迁移函数
+  const handleMigrateData = async () => {
+    if (window.confirm('确定要初始化测试数据吗？这将添加一些示例帖子到数据库。')) {
+      try {
+        await migrateTestData();
+        alert('测试数据初始化成功！');
+        // 重新加载帖子
+        const updatedPosts = await getAllPostsFromFirestore();
+        setPosts(updatedPosts);
+      } catch (error) {
+        console.error('数据迁移失败:', error);
+        alert('数据迁移失败，请检查控制台');
+      }
+    }
+  };
 
   // 点击外部关闭用户菜单
   useEffect(() => {
@@ -87,9 +123,36 @@ export default function HomePage() {
 
   const PostCard = ({ post, index }: { post: any; index: number }) => {
     const [isDeleting, setIsDeleting] = useState(false);
+    const [showMenu, setShowMenu] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
     
-    // 检查当前用户是否是帖子作者
-    const isAuthor = user && (user.displayName === post.author.name || user.email === post.author.name);
+    // 改进的作者身份验证逻辑 - 使用UID进行验证
+    const isAuthor = user && post.author.uid && user.uid === post.author.uid;
+
+    // 调试信息（开发环境下显示）- 只在菜单打开时显示
+    if (process.env.NODE_ENV === 'development' && user && showMenu) {
+      console.log('用户信息:', {
+        uid: user.uid,
+        displayName: user.displayName,
+        email: user.email
+      });
+      console.log('帖子作者UID:', post.author.uid);
+      console.log('是否为作者:', isAuthor);
+    }
+
+    // 点击外部关闭菜单
+    useEffect(() => {
+      function handleClickOutside(event: MouseEvent) {
+        if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+          setShowMenu(false);
+        }
+      }
+
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }, []);
 
     const handleDeletePost = async (e: React.MouseEvent) => {
       e.preventDefault(); // 阻止Link的跳转
@@ -102,17 +165,19 @@ export default function HomePage() {
 
       const confirmDelete = window.confirm("确定要删除这篇帖子吗？删除后无法恢复。");
       if (!confirmDelete) {
+        setShowMenu(false);
         return;
       }
 
       setIsDeleting(true);
       
       try {
-        const success = deletePost(post.id, user.displayName || user.email || "");
+        const success = await deletePostFromFirestore(post.id!, user.uid);
         
         if (success) {
           // 刷新帖子列表
-          setPosts(getAllPosts());
+          const updatedPosts = await getAllPostsFromFirestore();
+          setPosts(updatedPosts);
           alert("帖子删除成功！");
         } else {
           alert("删除失败，您可能没有权限删除此帖子");
@@ -122,7 +187,14 @@ export default function HomePage() {
         alert("删除失败，请重试");
       } finally {
         setIsDeleting(false);
+        setShowMenu(false);
       }
+    };
+
+    const handleMenuClick = (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setShowMenu(!showMenu);
     };
 
     return (
@@ -133,21 +205,76 @@ export default function HomePage() {
           transition={{ duration: 0.6, delay: index * 0.1 }}
           className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 group cursor-pointer relative"
         >
-          {/* 删除按钮 - 只有作者才能看到 */}
-          {isAuthor && (
+          {/* 三个点菜单按钮 */}
+          <div className="absolute top-2 right-2 z-10" ref={menuRef}>
             <button
-              onClick={handleDeletePost}
-              disabled={isDeleting}
-              className="absolute top-2 right-2 z-10 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-all opacity-0 group-hover:opacity-100 disabled:opacity-50 disabled:cursor-not-allowed"
-              title="删除帖子"
+              onClick={handleMenuClick}
+              className="p-2 bg-white/80 backdrop-blur-sm text-gray-600 rounded-full hover:bg-white hover:text-gray-900 transition-all opacity-0 group-hover:opacity-100 shadow-lg"
+              title="更多选项"
             >
-              {isDeleting ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              ) : (
-                <Trash2 className="w-4 h-4" />
-              )}
+              <MoreVertical className="w-4 h-4" />
             </button>
-          )}
+
+            {/* 下拉菜单 */}
+            {showMenu && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                className="absolute right-0 top-full mt-1 w-32 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
+              >
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowMenu(false);
+                    // 这里可以添加收藏功能
+                  }}
+                  className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
+                >
+                  <Bookmark className="w-4 h-4" />
+                  <span>收藏</span>
+                </button>
+                
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowMenu(false);
+                    // 这里可以添加分享功能
+                  }}
+                  className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
+                >
+                  <Share className="w-4 h-4" />
+                  <span>分享</span>
+                </button>
+
+                {/* 删除选项 - 只有作者才能看到 */}
+                {isAuthor && (
+                  <>
+                    <div className="border-t border-gray-100 my-1"></div>
+                    <button
+                      onClick={handleDeletePost}
+                      disabled={isDeleting}
+                      className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isDeleting ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                          <span>删除中...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 className="w-4 h-4" />
+                          <span>删除</span>
+                        </>
+                      )}
+                    </button>
+                  </>
+                )}
+              </motion.div>
+            )}
+          </div>
           
           <div className="relative overflow-hidden">
             <img
@@ -417,22 +544,54 @@ export default function HomePage() {
 
       {/* 主要内容区域 */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {posts.map((post, index) => (
-            <PostCard key={post.id} post={post} index={index} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="text-center">
+              <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-gray-600">加载帖子中...</p>
+            </div>
+          </div>
+        ) : posts.length === 0 ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="text-center">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">还没有帖子</h3>
+              <p className="text-gray-600 mb-6">数据库中还没有帖子，你可以发布第一篇帖子或初始化一些测试数据。</p>
+              <div className="space-x-4">
+                <Link 
+                  href="/create"
+                  className="inline-block bg-green-500 text-white px-6 py-3 rounded-xl hover:bg-green-600 transition-colors"
+                >
+                  发布第一篇帖子
+                </Link>
+                <button
+                  onClick={handleMigrateData}
+                  className="inline-block bg-blue-500 text-white px-6 py-3 rounded-xl hover:bg-blue-600 transition-colors"
+                >
+                  初始化测试数据
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {posts.map((post, index) => (
+              <PostCard key={post.id} post={post} index={index} />
+            ))}
+          </div>
+        )}
 
         {/* 加载更多 */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center mt-12"
-        >
-          <button className="px-8 py-3 bg-white border-2 border-gray-200 text-gray-600 rounded-full hover:border-green-500 hover:text-green-600 transition-all duration-300 shadow-lg hover:shadow-xl">
-            加载更多精彩内容
-          </button>
-        </motion.div>
+        {!loading && posts.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center mt-12"
+          >
+            <button className="px-8 py-3 bg-white border-2 border-gray-200 text-gray-600 rounded-full hover:border-green-500 hover:text-green-600 transition-all duration-300 shadow-lg hover:shadow-xl">
+              加载更多精彩内容
+            </button>
+          </motion.div>
+        )}
       </main>
 
       {/* 底部导航（移动端） */}

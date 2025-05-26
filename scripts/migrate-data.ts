@@ -1,40 +1,10 @@
-export interface Post {
-  id: number;
-  title: string;
-  content: string;
-  fullContent: string;
-  image: string;
-  author: {
-    name: string;
-    avatar: string;
-    university?: string;
-    year?: string;
-  };
-  likes: number;
-  comments: number;
-  tags: string[];
-  createdAt: string;
-  category: string;
-}
+import { addPostToFirestore } from '../lib/firestore-posts';
 
-export interface Comment {
-  id: number;
-  postId: number;
-  author: {
-    name: string;
-    avatar: string;
-  };
-  content: string;
-  createdAt: string;
-  likes: number;
-}
-
-export let postsData: Post[] = [
+// 测试数据
+const testPosts = [
   {
-    id: 999,
     title: "测试帖子 - 可以删除",
-    content: "这是一个测试帖子，用于测试删除功能。如果你是登录用户，应该可以看到删除选项...",
-    fullContent: `测试帖子 - 可以删除
+    content: `测试帖子 - 可以删除
 
 这是一个测试帖子，专门用于测试删除功能。
 
@@ -59,19 +29,15 @@ export let postsData: Post[] = [
       name: "测试用户",
       avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
       university: "诺丁汉大学",
-      year: "测试"
+      year: "测试",
+      uid: "test-user-uid" // 测试用户UID
     },
-    likes: 0,
-    comments: 0,
     tags: ["测试", "删除", "功能"],
-    createdAt: "2024-01-20",
     category: "学习"
   },
   {
-    id: 1,
     title: "诺丁汉大学新生宿舍攻略",
-    content: "刚到诺丁汉，住宿是个大问题。我整理了一份超全宿舍攻略，包括各个宿舍区的优缺点、价格对比...",
-    fullContent: `诺丁汉大学新生宿舍攻略
+    content: `诺丁汉大学新生宿舍攻略
 
 刚到诺丁汉，住宿是个大问题。作为一个在诺丁汉生活了三年的老学长，我整理了一份超全宿舍攻略，希望能帮到即将到来的新同学们！
 
@@ -140,19 +106,15 @@ export let postsData: Post[] = [
       name: "小红同学",
       avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face",
       university: "诺丁汉大学",
-      year: "大三"
+      year: "大三",
+      uid: "user-xiaohong"
     },
-    likes: 234,
-    comments: 56,
     tags: ["宿舍", "新生", "攻略"],
-    createdAt: "2024-01-15",
     category: "生活"
   },
   {
-    id: 2,
     title: "诺丁汉周边美食探店",
-    content: "在诺丁汉生活了两年，今天分享一些我发现的宝藏餐厅，有中餐、西餐、还有当地特色...",
-    fullContent: `诺丁汉周边美食探店
+    content: `诺丁汉周边美食探店
 
 在诺丁汉生活了两年，作为一个资深吃货，今天分享一些我发现的宝藏餐厅！从中餐到西餐，从平价到高档，应有尽有～
 
@@ -223,19 +185,15 @@ export let postsData: Post[] = [
       name: "美食探索者",
       avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face",
       university: "诺丁汉大学",
-      year: "研一"
+      year: "研一",
+      uid: "user-foodie"
     },
-    likes: 189,
-    comments: 42,
     tags: ["美食", "探店", "生活"],
-    createdAt: "2024-01-10",
     category: "美食"
   },
   {
-    id: 3,
     title: "论文季生存指南",
-    content: "又到了论文季，图书馆里人满为患。分享一些我的论文写作技巧和时间管理方法...",
-    fullContent: `论文季生存指南
+    content: `论文季生存指南
 
 又到了论文季，图书馆里人满为患，咖啡厅里都是埋头苦写的同学。作为一个刚刚熬过论文季的过来人，分享一些我的论文写作技巧和时间管理方法，希望能帮到正在奋斗的你们！
 
@@ -351,153 +309,34 @@ export let postsData: Post[] = [
       name: "学霸小王",
       avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
       university: "诺丁汉大学",
-      year: "研二"
+      year: "研二",
+      uid: "user-xueba"
     },
-    likes: 312,
-    comments: 78,
     tags: ["学习", "论文", "技巧"],
-    createdAt: "2024-01-08",
     category: "学习"
   }
 ];
 
-export const commentsData: Comment[] = [
-  {
-    id: 1,
-    postId: 1,
-    author: {
-      name: "新生小李",
-      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=40&h=40&fit=crop&crop=face"
-    },
-    content: "太有用了！正好在纠结选哪个宿舍，这个攻略解决了我的困惑。请问Cripps Hall现在还有位置吗？",
-    createdAt: "2024-01-16",
-    likes: 12
-  },
-  {
-    id: 2,
-    postId: 1,
-    author: {
-      name: "学长张三",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face"
-    },
-    content: "补充一点：Hugh Stewart Hall的网络信号不太好，需要自己买路由器。其他都很不错！",
-    createdAt: "2024-01-16",
-    likes: 8
-  },
-  {
-    id: 3,
-    postId: 2,
-    author: {
-      name: "吃货小美",
-      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face"
-    },
-    content: "川味轩真的很棒！上次和朋友去吃，水煮鱼超级香。老板人也很好，还送了小菜。",
-    createdAt: "2024-01-11",
-    likes: 15
-  },
-  {
-    id: 4,
-    postId: 3,
-    author: {
-      name: "论文苦手",
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face"
-    },
-    content: "番茄工作法真的有效！之前总是拖延，现在每天都能完成计划的写作量。谢谢分享！",
-    createdAt: "2024-01-09",
-    likes: 23
-  }
-];
-
-export function getPostById(id: number): Post | undefined {
-  return postsData.find(post => post.id === id);
-}
-
-export function getCommentsByPostId(postId: number): Comment[] {
-  return commentsData.filter(comment => comment.postId === postId);
-}
-
-export function getAllPosts(): Post[] {
-  return [...postsData].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-}
-
-export function addNewPost(postData: {
-  title: string;
-  content: string;
-  category: string;
-  tags: string[];
-  image?: string;
-  author: {
-    name: string;
-    avatar: string;
-    university?: string;
-    year?: string;
-  };
-}): Post {
-  const newId = Math.max(...postsData.map(p => p.id), 0) + 1;
+export async function migrateTestData() {
+  console.log('开始迁移测试数据到Firestore...');
   
-  const now = new Date();
-  const createdAt = now.toISOString().split('T')[0];
-  
-  const newPost: Post = {
-    id: newId,
-    title: postData.title,
-    content: postData.content.length > 100 ? postData.content.substring(0, 100) + "..." : postData.content,
-    fullContent: postData.content,
-    image: postData.image || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=300&fit=crop",
-    author: postData.author,
-    likes: 0,
-    comments: 0,
-    tags: postData.tags,
-    createdAt,
-    category: postData.category
-  };
-  
-  postsData.unshift(newPost);
-  
-  return newPost;
-}
-
-export function deletePost(postId: number, currentUserIdentifier: string): boolean {
-  const postIndex = postsData.findIndex(post => post.id === postId);
-  
-  if (postIndex === -1) {
-    return false; // 帖子不存在
-  }
-  
-  const post = postsData[postIndex];
-  
-  // 改进的作者身份验证逻辑
-  const isAuthor = (
-    post.author.name === currentUserIdentifier ||
-    (currentUserIdentifier.includes('@') && currentUserIdentifier.split('@')[0] === post.author.name) ||
-    post.author.name.includes(currentUserIdentifier) ||
-    (currentUserIdentifier.includes('@') && post.author.name.includes(currentUserIdentifier.split('@')[0]))
-  );
-  
-  // 调试信息
-  console.log('删除验证 - 帖子作者:', post.author.name);
-  console.log('删除验证 - 当前用户标识:', currentUserIdentifier);
-  console.log('删除验证 - 是否为作者:', isAuthor);
-  
-  if (!isAuthor) {
-    return false; // 不是作者，无权删除
-  }
-  
-  // 删除帖子
-  postsData.splice(postIndex, 1);
-  
-  // 同时删除相关评论
-  const commentIndices = [];
-  for (let i = commentsData.length - 1; i >= 0; i--) {
-    if (commentsData[i].postId === postId) {
-      commentIndices.push(i);
+  for (const post of testPosts) {
+    try {
+      const postId = await addPostToFirestore(post);
+      if (postId) {
+        console.log(`✅ 成功添加帖子: ${post.title} (ID: ${postId})`);
+      } else {
+        console.log(`❌ 添加帖子失败: ${post.title}`);
+      }
+    } catch (error) {
+      console.error(`❌ 添加帖子失败: ${post.title}`, error);
     }
   }
   
-  // 删除评论
-  commentIndices.forEach(index => {
-    commentsData.splice(index, 1);
-  });
-  
-  return true; // 删除成功
+  console.log('数据迁移完成！');
+}
+
+// 如果直接运行此脚本
+if (require.main === module) {
+  migrateTestData().catch(console.error);
 } 

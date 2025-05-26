@@ -6,7 +6,7 @@ import { ArrowLeft, Upload, X, Plus, Eye } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { addNewPost } from "@/lib/posts-data";
+import { addPostToFirestore } from "@/lib/firestore-posts";
 
 const categories = [
   { name: "学习", icon: "📚", color: "bg-blue-100 text-blue-800" },
@@ -94,28 +94,37 @@ export default function CreatePostPage() {
     setIsSubmitting(true);
     
     try {
-      // 添加新帖子到数据中
-      const newPost = addNewPost({
+      // 添加新帖子到Firestore数据库
+      const postId = await addPostToFirestore({
         title: formData.title.trim(),
         content: formData.content.trim(),
         category: formData.category,
         tags: formData.tags,
         image: formData.image,
         author: {
-          name: user.displayName || "匿名用户",
+          name: user.displayName || user.email || "匿名用户",
           avatar: user.photoURL || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
           university: "诺丁汉大学",
-          year: "学生"
+          year: "学生",
+          uid: user.uid // 添加用户UID用于权限验证
         }
       });
       
-      console.log("新帖子已添加:", newPost);
+      // 调试信息
+      console.log("新帖子作者信息:", {
+        name: user.displayName || user.email || "匿名用户",
+        uid: user.uid,
+        userDisplayName: user.displayName,
+        userEmail: user.email
+      });
       
-      // 模拟提交延迟
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      alert("帖子发布成功！");
-      router.push("/");
+      if (postId) {
+        console.log("新帖子已添加到Firestore，ID:", postId);
+        alert("帖子发布成功！");
+        router.push("/");
+      } else {
+        alert("发布失败，请重试");
+      }
     } catch (error) {
       console.error("发布失败:", error);
       alert("发布失败，请重试");

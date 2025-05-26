@@ -1,26 +1,101 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Heart, MessageCircle, Share, Bookmark, MoreHorizontal, Send, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { getPostById, getCommentsByPostId, deletePost } from "@/lib/posts-data";
+import { 
+  getPostByIdFromFirestore, 
+  getCommentsByPostIdFromFirestore, 
+  deletePostFromFirestore,
+  formatTimestamp,
+  type FirestorePost,
+  type FirestoreComment
+} from "@/lib/firestore-posts";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function PostDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
-  const postId = parseInt(params.id as string);
-  const post = getPostById(postId);
-  const comments = getCommentsByPostId(postId);
+  const postId = params.id as string;
   
+  const [post, setPost] = useState<FirestorePost | null>(null);
+  const [comments, setComments] = useState<FirestoreComment[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [showComments, setShowComments] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // 加载帖子和评论数据
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const [postData, commentsData] = await Promise.all([
+          getPostByIdFromFirestore(postId),
+          getCommentsByPostIdFromFirestore(postId)
+        ]);
+        
+        setPost(postData);
+        setComments(commentsData);
+      } catch (error) {
+        console.error('加载数据失败:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (postId) {
+      loadData();
+    }
+  }, [postId]);
+
+  // 点击外部关闭菜单
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // 计算是否为作者（在hooks之后）
+  const isAuthor = user && post?.author.uid && user.uid === post.author.uid;
+
+  // 调试信息（开发环境下显示）- 只在菜单打开时显示
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development' && user && showMenu && post) {
+      console.log('详情页 - 用户信息:', {
+        uid: user.uid,
+        displayName: user.displayName,
+        email: user.email
+      });
+      console.log('详情页 - 帖子作者UID:', post.author.uid);
+      console.log('详情页 - 是否为作者:', isAuthor);
+    }
+  }, [user, showMenu, post, isAuthor]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">加载中...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!post) {
     return (
@@ -34,9 +109,6 @@ export default function PostDetailPage() {
       </div>
     );
   }
-
-  // 检查当前用户是否是帖子作者
-  const isAuthor = user && (user.displayName === post.author.name || user.email === post.author.name);
 
   const handleLike = () => {
     setIsLiked(!isLiked);
@@ -62,13 +134,14 @@ export default function PostDetailPage() {
 
     const confirmDelete = window.confirm("确定要删除这篇帖子吗？删除后无法恢复。");
     if (!confirmDelete) {
+      setShowMenu(false);
       return;
     }
 
     setIsDeleting(true);
     
     try {
-      const success = deletePost(postId, user.displayName || user.email || "");
+      const success = await deletePostFromFirestore(postId, user.uid);
       
       if (success) {
         alert("帖子删除成功！");
@@ -81,7 +154,12 @@ export default function PostDetailPage() {
       alert("删除失败，请重试");
     } finally {
       setIsDeleting(false);
+      setShowMenu(false);
     }
+  };
+
+  const handleMenuClick = () => {
+    setShowMenu(!showMenu);
   };
 
   return (
@@ -113,25 +191,73 @@ export default function PostDetailPage() {
                 <Share className="w-5 h-5" />
               </button>
               
-              {/* 删除按钮 - 只有作者才能看到 */}
-              {isAuthor && (
-                <button
-                  onClick={handleDeletePost}
-                  disabled={isDeleting}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  title="删除帖子"
+              {/* 三个点菜单 */}
+              <div className="relative" ref={menuRef}>
+                <button 
+                  onClick={handleMenuClick}
+                  className="p-2 text-gray-600 hover:bg-gray-100 rounded-xl transition-all"
                 >
-                  {isDeleting ? (
-                    <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
-                  ) : (
-                    <Trash2 className="w-5 h-5" />
-                  )}
+                  <MoreHorizontal className="w-5 h-5" />
                 </button>
-              )}
-              
-              <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-xl transition-all">
-                <MoreHorizontal className="w-5 h-5" />
-              </button>
+
+                {/* 下拉菜单 */}
+                {showMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute right-0 top-full mt-1 w-36 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
+                  >
+                    <button
+                      onClick={() => {
+                        setShowMenu(false);
+                        // 这里可以添加举报功能
+                      }}
+                      className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
+                    >
+                      <span>🚨</span>
+                      <span>举报</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        setShowMenu(false);
+                        // 这里可以添加复制链接功能
+                        navigator.clipboard.writeText(window.location.href);
+                        alert("链接已复制到剪贴板");
+                      }}
+                      className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
+                    >
+                      <span>🔗</span>
+                      <span>复制链接</span>
+                    </button>
+
+                    {/* 删除选项 - 只有作者才能看到 */}
+                    {isAuthor && (
+                      <>
+                        <div className="border-t border-gray-100 my-1"></div>
+                        <button
+                          onClick={handleDeletePost}
+                          disabled={isDeleting}
+                          className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isDeleting ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                              <span>删除中...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Trash2 className="w-4 h-4" />
+                              <span>删除帖子</span>
+                            </>
+                          )}
+                        </button>
+                      </>
+                    )}
+                  </motion.div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -181,7 +307,7 @@ export default function PostDetailPage() {
                 <div>
                   <h3 className="font-semibold text-gray-900">{post.author.name}</h3>
                   <p className="text-sm text-gray-500">
-                    {post.author.university} · {post.author.year} · {post.createdAt}
+                    {post.author.university} · {post.author.year} · {formatTimestamp(post.createdAt)}
                   </p>
                 </div>
               </div>
@@ -284,7 +410,7 @@ export default function PostDetailPage() {
                           {comment.author.name}
                         </h4>
                         <span className="text-sm text-gray-500">
-                          {comment.createdAt}
+                          {formatTimestamp(comment.createdAt)}
                         </span>
                       </div>
                       <p className="text-gray-700 mb-3 leading-relaxed">
