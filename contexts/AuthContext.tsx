@@ -51,7 +51,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = async (email: string, password: string, displayName: string) => {
     setLoading(true);
     try {
-      await authService.register(email, password, displayName);
+      const result = await authService.register(email, password, displayName);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      // 注册成功，Firebase会自动触发onAuthStateChange
     } catch (error) {
       setLoading(false);
       throw error;

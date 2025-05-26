@@ -1,0 +1,198 @@
+"use client";
+
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
+import { User, Settings, Mail, Calendar, MapPin, BookOpen, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
+
+export default function ProfilePage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  const [isEditing, setIsEditing] = useState(false);
+  const [displayName, setDisplayName] = useState('');
+  const [bio, setBio] = useState('');
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+  useEffect(() => {
+    if (user) {
+      setDisplayName(user.displayName || '');
+    }
+  }, [user]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* 头部导航 */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <Link 
+              href="/"
+              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span>返回首页</span>
+            </Link>
+            <h1 className="text-xl font-semibold text-gray-900">个人资料</h1>
+            <button
+              onClick={() => setIsEditing(!isEditing)}
+              className="flex items-center space-x-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+            >
+              <Settings className="w-4 h-4" />
+              <span>{isEditing ? '保存' : '编辑'}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 主要内容 */}
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* 左侧 - 基本信息 */}
+          <div className="lg:col-span-1">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-xl shadow-sm border p-6"
+            >
+              {/* 头像 */}
+              <div className="text-center mb-6">
+                <div className="w-24 h-24 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
+                  {user.photoURL ? (
+                    <img 
+                      src={user.photoURL} 
+                      alt={user.displayName || user.email || "用户"} 
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  ) : (
+                    <User className="w-12 h-12 text-green-600" />
+                  )}
+                </div>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    className="text-xl font-semibold text-center w-full border-b border-gray-300 focus:border-green-500 outline-none"
+                    placeholder="输入姓名"
+                  />
+                ) : (
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    {user.displayName || '未设置姓名'}
+                  </h2>
+                )}
+                <p className="text-gray-500 text-sm mt-1">诺丁汉大学学生</p>
+              </div>
+
+              {/* 基本信息 */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3 text-gray-600">
+                  <Mail className="w-4 h-4" />
+                  <span className="text-sm">{user.email}</span>
+                </div>
+                <div className="flex items-center space-x-3 text-gray-600">
+                  <Calendar className="w-4 h-4" />
+                  <span className="text-sm">
+                    加入时间: {user.metadata.creationTime ? 
+                      new Date(user.metadata.creationTime).toLocaleDateString('zh-CN') : 
+                      '未知'
+                    }
+                  </span>
+                </div>
+                <div className="flex items-center space-x-3 text-gray-600">
+                  <MapPin className="w-4 h-4" />
+                  <span className="text-sm">英国诺丁汉</span>
+                </div>
+                <div className="flex items-center space-x-3 text-gray-600">
+                  <BookOpen className="w-4 h-4" />
+                  <span className="text-sm">留学生</span>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* 右侧 - 详细信息 */}
+          <div className="lg:col-span-2">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="bg-white rounded-xl shadow-sm border p-6"
+            >
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">个人简介</h3>
+              {isEditing ? (
+                <textarea
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  className="w-full h-32 p-3 border border-gray-300 rounded-lg focus:border-green-500 outline-none resize-none"
+                  placeholder="介绍一下自己吧..."
+                />
+              ) : (
+                <p className="text-gray-600 leading-relaxed">
+                  {bio || '这个人很懒，什么都没有留下...'}
+                </p>
+              )}
+            </motion.div>
+
+            {/* 统计信息 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-white rounded-xl shadow-sm border p-6 mt-6"
+            >
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">我的数据</h3>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600">0</div>
+                  <div className="text-sm text-gray-500">发布的攻略</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">0</div>
+                  <div className="text-sm text-gray-500">获得的点赞</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-purple-600">0</div>
+                  <div className="text-sm text-gray-500">收到的评论</div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* 最近活动 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-white rounded-xl shadow-sm border p-6 mt-6"
+            >
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">最近活动</h3>
+              <div className="text-center py-8 text-gray-500">
+                <BookOpen className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                <p>还没有任何活动记录</p>
+                <p className="text-sm">快去分享你的第一个留学攻略吧！</p>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+} 

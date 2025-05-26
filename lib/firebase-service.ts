@@ -29,20 +29,74 @@ import { User, Post, Comment, PostCategory } from "./types";
 export const authService = {
   // 注册
   async register(email: string, password: string, displayName: string) {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
-    
-    // 在 Firestore 中创建用户档案
-    await addDoc(collection(db, "users"), {
-      uid: user.uid,
-      email: user.email,
-      displayName,
-      university: "诺丁汉大学",
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    });
-    
-    return user;
+    try {
+      console.log("Starting registration process...", { email, displayName });
+      
+      // 验证输入
+      if (!email || !password || !displayName) {
+        throw new Error("所有字段都是必填的");
+      }
+      
+      if (password.length < 6) {
+        throw new Error("密码至少需要6个字符");
+      }
+      
+      // 创建用户账户
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      console.log("User created successfully:", user.uid);
+      
+      // 在 Firestore 中创建用户档案
+      const userDoc = await addDoc(collection(db, "users"), {
+        uid: user.uid,
+        email: user.email,
+        displayName,
+        university: "诺丁汉大学",
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+      
+      console.log("User document created:", userDoc.id);
+      
+      return {
+        success: true,
+        user: {
+          uid: user.uid,
+          email: user.email,
+          displayName,
+          docId: userDoc.id
+        },
+        message: "注册成功！"
+      };
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      
+      // 处理常见的Firebase Auth错误
+      let errorMessage = "注册失败，请重试";
+      
+      switch (error.code) {
+        case "auth/email-already-in-use":
+          errorMessage = "该邮箱已被注册";
+          break;
+        case "auth/invalid-email":
+          errorMessage = "邮箱格式不正确";
+          break;
+        case "auth/weak-password":
+          errorMessage = "密码强度不够，至少需要6个字符";
+          break;
+        case "auth/configuration-not-found":
+          errorMessage = "Firebase配置错误，请检查项目设置";
+          break;
+        default:
+          errorMessage = error.message || "注册失败，请重试";
+      }
+      
+      return {
+        success: false,
+        error: errorMessage
+      };
+    }
   },
 
   // 登录
