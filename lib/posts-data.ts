@@ -418,4 +418,37 @@ export function addNewPost(postData: {
   postsData.unshift(newPost);
   
   return newPost;
+}
+
+export function deletePost(postId: number, currentUserName: string): boolean {
+  const postIndex = postsData.findIndex(post => post.id === postId);
+  
+  if (postIndex === -1) {
+    return false; // 帖子不存在
+  }
+  
+  const post = postsData[postIndex];
+  
+  // 检查是否是帖子作者
+  if (post.author.name !== currentUserName) {
+    return false; // 不是作者，无权删除
+  }
+  
+  // 删除帖子
+  postsData.splice(postIndex, 1);
+  
+  // 同时删除相关评论
+  const commentIndices = [];
+  for (let i = commentsData.length - 1; i >= 0; i--) {
+    if (commentsData[i].postId === postId) {
+      commentIndices.push(i);
+    }
+  }
+  
+  // 删除评论
+  commentIndices.forEach(index => {
+    commentsData.splice(index, 1);
+  });
+  
+  return true; // 删除成功
 } 

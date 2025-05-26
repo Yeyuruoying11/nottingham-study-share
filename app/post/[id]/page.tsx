@@ -2,13 +2,16 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Heart, MessageCircle, Share, Bookmark, MoreHorizontal, Send } from "lucide-react";
+import { ArrowLeft, Heart, MessageCircle, Share, Bookmark, MoreHorizontal, Send, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { getPostById, getCommentsByPostId } from "@/lib/posts-data";
+import { useParams, useRouter } from "next/navigation";
+import { getPostById, getCommentsByPostId, deletePost } from "@/lib/posts-data";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function PostDetailPage() {
   const params = useParams();
+  const router = useRouter();
+  const { user } = useAuth();
   const postId = parseInt(params.id as string);
   const post = getPostById(postId);
   const comments = getCommentsByPostId(postId);
@@ -17,6 +20,7 @@ export default function PostDetailPage() {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [showComments, setShowComments] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   if (!post) {
     return (
@@ -31,6 +35,9 @@ export default function PostDetailPage() {
     );
   }
 
+  // 检查当前用户是否是帖子作者
+  const isAuthor = user && (user.displayName === post.author.name || user.email === post.author.name);
+
   const handleLike = () => {
     setIsLiked(!isLiked);
   };
@@ -44,6 +51,36 @@ export default function PostDetailPage() {
     if (newComment.trim()) {
       console.log("New comment:", newComment);
       setNewComment("");
+    }
+  };
+
+  const handleDeletePost = async () => {
+    if (!user || !isAuthor) {
+      alert("您没有权限删除此帖子");
+      return;
+    }
+
+    const confirmDelete = window.confirm("确定要删除这篇帖子吗？删除后无法恢复。");
+    if (!confirmDelete) {
+      return;
+    }
+
+    setIsDeleting(true);
+    
+    try {
+      const success = deletePost(postId, user.displayName || user.email || "");
+      
+      if (success) {
+        alert("帖子删除成功！");
+        router.push("/");
+      } else {
+        alert("删除失败，您可能没有权限删除此帖子");
+      }
+    } catch (error) {
+      console.error("删除失败:", error);
+      alert("删除失败，请重试");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -75,6 +112,23 @@ export default function PostDetailPage() {
               <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-xl transition-all">
                 <Share className="w-5 h-5" />
               </button>
+              
+              {/* 删除按钮 - 只有作者才能看到 */}
+              {isAuthor && (
+                <button
+                  onClick={handleDeletePost}
+                  disabled={isDeleting}
+                  className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="删除帖子"
+                >
+                  {isDeleting ? (
+                    <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <Trash2 className="w-5 h-5" />
+                  )}
+                </button>
+              )}
+              
               <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-xl transition-all">
                 <MoreHorizontal className="w-5 h-5" />
               </button>

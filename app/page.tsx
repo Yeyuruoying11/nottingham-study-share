@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Search, Plus, Heart, MessageCircle, Share, Bookmark, User, Bell, Menu, LogOut, Settings } from "lucide-react";
+import { Search, Plus, Heart, MessageCircle, Share, Bookmark, User, Bell, Menu, LogOut, Settings, Trash2 } from "lucide-react";
 import { InfiniteMovingCards } from "@/components/ui/infinite-moving-cards";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import { getAllPosts } from "@/lib/posts-data";
+import { getAllPosts, deletePost } from "@/lib/posts-data";
 
 const testimonials = [
   {
@@ -85,67 +85,124 @@ export default function HomePage() {
     }
   };
 
-  const PostCard = ({ post, index }: { post: any; index: number }) => (
-    <Link href={`/post/${post.id}`}>
-      <motion.div
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: index * 0.1 }}
-        className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 group cursor-pointer"
-      >
-        <div className="relative overflow-hidden">
-          <img
-            src={post.image}
-            alt={post.title}
-            className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        </div>
+  const PostCard = ({ post, index }: { post: any; index: number }) => {
+    const [isDeleting, setIsDeleting] = useState(false);
+    
+    // 检查当前用户是否是帖子作者
+    const isAuthor = user && (user.displayName === post.author.name || user.email === post.author.name);
+
+    const handleDeletePost = async (e: React.MouseEvent) => {
+      e.preventDefault(); // 阻止Link的跳转
+      e.stopPropagation();
+
+      if (!user || !isAuthor) {
+        alert("您没有权限删除此帖子");
+        return;
+      }
+
+      const confirmDelete = window.confirm("确定要删除这篇帖子吗？删除后无法恢复。");
+      if (!confirmDelete) {
+        return;
+      }
+
+      setIsDeleting(true);
+      
+      try {
+        const success = deletePost(post.id, user.displayName || user.email || "");
         
-        <div className="p-4">
-          <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 text-sm leading-tight">
-            {post.title}
-          </h3>
-          <p className="text-gray-600 text-xs line-clamp-3 mb-3 leading-relaxed">
-            {post.content}
-          </p>
+        if (success) {
+          // 刷新帖子列表
+          setPosts(getAllPosts());
+          alert("帖子删除成功！");
+        } else {
+          alert("删除失败，您可能没有权限删除此帖子");
+        }
+      } catch (error) {
+        console.error("删除失败:", error);
+        alert("删除失败，请重试");
+      } finally {
+        setIsDeleting(false);
+      }
+    };
+
+    return (
+      <Link href={`/post/${post.id}`}>
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: index * 0.1 }}
+          className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 group cursor-pointer relative"
+        >
+          {/* 删除按钮 - 只有作者才能看到 */}
+          {isAuthor && (
+            <button
+              onClick={handleDeletePost}
+              disabled={isDeleting}
+              className="absolute top-2 right-2 z-10 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-all opacity-0 group-hover:opacity-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="删除帖子"
+            >
+              {isDeleting ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <Trash2 className="w-4 h-4" />
+              )}
+            </button>
+          )}
           
-          <div className="flex flex-wrap gap-1 mb-3">
-            {post.tags.map((tag: string, tagIndex: number) => (
-              <span
-                key={tagIndex}
-                className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
-              >
-                #{tag}
-              </span>
-            ))}
+          <div className="relative overflow-hidden">
+            <img
+              src={post.image}
+              alt={post.title}
+              className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           </div>
           
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <img
-                src={post.author.avatar}
-                alt={post.author.name}
-                className="w-6 h-6 rounded-full object-cover"
-              />
-              <span className="text-xs text-gray-600 font-medium">{post.author.name}</span>
+          <div className="p-4">
+            <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 text-sm leading-tight">
+              {post.title}
+            </h3>
+            <p className="text-gray-600 text-xs line-clamp-3 mb-3 leading-relaxed">
+              {post.content}
+            </p>
+            
+            <div className="flex flex-wrap gap-1 mb-3">
+              {post.tags.map((tag: string, tagIndex: number) => (
+                <span
+                  key={tagIndex}
+                  className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
+                >
+                  #{tag}
+                </span>
+              ))}
             </div>
             
-            <div className="flex items-center space-x-4 text-gray-500">
-              <div className="flex items-center space-x-1">
-                <Heart className="w-4 h-4" />
-                <span className="text-xs">{post.likes}</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <img
+                  src={post.author.avatar}
+                  alt={post.author.name}
+                  className="w-6 h-6 rounded-full object-cover"
+                />
+                <span className="text-xs text-gray-600 font-medium">{post.author.name}</span>
               </div>
-              <div className="flex items-center space-x-1">
-                <MessageCircle className="w-4 h-4" />
-                <span className="text-xs">{post.comments}</span>
+              
+              <div className="flex items-center space-x-4 text-gray-500">
+                <div className="flex items-center space-x-1">
+                  <Heart className="w-4 h-4" />
+                  <span className="text-xs">{post.likes}</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <MessageCircle className="w-4 h-4" />
+                  <span className="text-xs">{post.comments}</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </motion.div>
-    </Link>
-  );
+        </motion.div>
+      </Link>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
