@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { addPostToFirestore } from "@/lib/firestore-posts";
+import { uploadImageWithProgress, getImageInfo } from "@/lib/firebase-storage";
 
 const categories = [
   { name: "学习", icon: "📚", color: "bg-blue-100 text-blue-800" },
@@ -32,6 +33,10 @@ export default function CreatePostPage() {
   const [newTag, setNewTag] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string>("");
 
   // 如果用户未登录，重定向到登录页面
   if (!user) {
@@ -83,6 +88,53 @@ export default function CreatePostPage() {
     }));
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      // 验证文件类型
+      if (!file.type.startsWith('image/')) {
+        alert('请选择图片文件');
+        return;
+      }
+
+      // 验证文件大小
+      if (file.size > 5 * 1024 * 1024) {
+        alert('图片文件不能超过5MB');
+        return;
+      }
+
+      // 获取图片信息
+      const imageInfo = await getImageInfo(file);
+      console.log('图片信息:', imageInfo);
+
+      // 设置选中的文件和预览
+      setSelectedFile(file);
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreview(previewUrl);
+      
+      // 清除之前的图片URL
+      setFormData(prev => ({ ...prev, image: "" }));
+      
+    } catch (error) {
+      console.error('处理图片失败:', error);
+      alert('处理图片失败，请重试');
+    }
+  };
+
+  const removeImage = () => {
+    setSelectedFile(null);
+    setImagePreview("");
+    setFormData(prev => ({ ...prev, image: "" }));
+    setUploadProgress(0);
+    
+    // 清理预览URL
+    if (imagePreview && imagePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreview);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -91,36 +143,64 @@ export default function CreatePostPage() {
       return;
     }
 
+    if (!user) {
+      alert("请先登录");
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
+      let imageUrl = "";
+      
+      // 如果有选中的图片文件，先上传图片
+      if (selectedFile) {
+        setIsUploading(true);
+        setUploadProgress(0);
+        
+        try {
+          imageUrl = await uploadImageWithProgress(
+            selectedFile,
+            user.uid,
+            (progress) => {
+              setUploadProgress(progress);
+            }
+          );
+          console.log('图片上传成功:', imageUrl);
+        } catch (uploadError) {
+          console.error('图片上传失败:', uploadError);
+          alert(`图片上传失败: ${uploadError instanceof Error ? uploadError.message : '未知错误'}`);
+          return;
+        } finally {
+          setIsUploading(false);
+        }
+      }
+
       // 添加新帖子到Firestore数据库
       const postId = await addPostToFirestore({
         title: formData.title.trim(),
         content: formData.content.trim(),
         category: formData.category,
         tags: formData.tags,
-        image: formData.image,
+        image: imageUrl, // 使用上传后的永久URL
         author: {
           name: user.displayName || user.email || "匿名用户",
           avatar: user.photoURL || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
           university: "诺丁汉大学",
           year: "学生",
-          uid: user.uid // 添加用户UID用于权限验证
+          uid: user.uid
         }
-      });
-      
-      // 调试信息
-      console.log("新帖子作者信息:", {
-        name: user.displayName || user.email || "匿名用户",
-        uid: user.uid,
-        userDisplayName: user.displayName,
-        userEmail: user.email
       });
       
       if (postId) {
         console.log("新帖子已添加到Firestore，ID:", postId);
         alert("帖子发布成功！");
+        
+        // 清理预览URL
+        if (imagePreview && imagePreview.startsWith('blob:')) {
+          URL.revokeObjectURL(imagePreview);
+        }
+        
         router.push("/");
       } else {
         alert("发布失败，请重试");
@@ -130,21 +210,18 @@ export default function CreatePostPage() {
       alert("发布失败，请重试");
     } finally {
       setIsSubmitting(false);
+      setUploadProgress(0);
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // 这里可以添加图片上传逻辑
-      // 现在只是模拟一个URL
-      const imageUrl = URL.createObjectURL(file);
-      setFormData(prev => ({
-        ...prev,
-        image: imageUrl
-      }));
-    }
-  };
+  // 清理函数
+  React.useEffect(() => {
+    return () => {
+      if (imagePreview && imagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -174,10 +251,15 @@ export default function CreatePostPage() {
               
               <button
                 onClick={handleSubmit}
-                disabled={isSubmitting || !formData.title.trim() || !formData.content.trim() || !formData.category}
+                disabled={isSubmitting || isUploading || !formData.title.trim() || !formData.content.trim() || !formData.category}
                 className="bg-green-500 text-white px-4 py-2 rounded-xl hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center space-x-2"
               >
-                {isSubmitting ? (
+                {isUploading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>上传图片中...</span>
+                  </>
+                ) : isSubmitting ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     <span>发布中...</span>
@@ -251,41 +333,80 @@ export default function CreatePostPage() {
                     封面图片
                   </label>
                   <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-gray-400 transition-colors">
-                    {formData.image ? (
+                    {imagePreview ? (
                       <div className="relative">
                         <img
-                          src={formData.image}
+                          src={imagePreview}
                           alt="预览"
                           className="w-full h-48 object-cover rounded-lg"
                         />
                         <button
                           type="button"
-                          onClick={() => setFormData(prev => ({ ...prev, image: "" }))}
-                          className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                          onClick={removeImage}
+                          disabled={isUploading}
+                          className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors disabled:opacity-50"
                         >
                           <X className="w-4 h-4" />
                         </button>
+                        
+                        {/* 上传进度显示 */}
+                        {isUploading && (
+                          <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">
+                            <div className="text-center text-white">
+                              <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                              <p className="text-sm">上传中... {uploadProgress}%</p>
+                              <div className="w-32 bg-gray-200 rounded-full h-2 mt-2">
+                                <div 
+                                  className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                                  style={{ width: `${uploadProgress}%` }}
+                                ></div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* 文件信息 */}
+                        {selectedFile && !isUploading && (
+                          <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                            {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)}MB)
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <div>
                         <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                        <p className="text-sm text-gray-600 mb-2">点击上传图片</p>
+                        <p className="text-sm text-gray-600 mb-2">点击上传图片或拖拽到此处</p>
+                        <p className="text-xs text-gray-500 mb-3">支持 JPG、PNG、GIF 格式，最大 5MB</p>
                         <input
                           type="file"
                           accept="image/*"
                           onChange={handleImageUpload}
                           className="hidden"
                           id="image-upload"
+                          disabled={isSubmitting}
                         />
                         <label
                           htmlFor="image-upload"
-                          className="inline-block px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer"
+                          className="inline-block px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer disabled:opacity-50"
                         >
                           选择文件
                         </label>
                       </div>
                     )}
                   </div>
+                  
+                  {/* 图片上传提示 */}
+                  {selectedFile && !isUploading && (
+                    <div className="mt-2 text-xs text-green-600">
+                      ✓ 图片已选择，发布时将自动上传
+                    </div>
+                  )}
+                  
+                  {isUploading && (
+                    <div className="mt-2 text-xs text-blue-600">
+                      正在上传图片，请稍候...
+                    </div>
+                  )}
                 </div>
 
                 {/* 内容 */}
@@ -366,10 +487,10 @@ export default function CreatePostPage() {
                   <h3 className="font-semibold text-gray-900">预览效果</h3>
                 </div>
                 
-                {formData.image && (
+                {imagePreview && (
                   <div className="relative h-48">
                     <img
-                      src={formData.image}
+                      src={imagePreview}
                       alt="预览"
                       className="w-full h-full object-cover"
                     />

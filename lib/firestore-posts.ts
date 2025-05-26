@@ -13,6 +13,7 @@ import {
   increment
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { deleteImageFromStorage } from './firebase-storage';
 
 export interface FirestorePost {
   id?: string;
@@ -147,6 +148,16 @@ export async function deletePostFromFirestore(postId: string, currentUserUid: st
     if (post.author.uid !== currentUserUid) {
       console.error('无权限删除此帖子');
       return false;
+    }
+    
+    // 删除帖子关联的图片（如果存在）
+    if (post.image && post.image.includes('firebase')) {
+      try {
+        await deleteImageFromStorage(post.image);
+        console.log('帖子图片已删除');
+      } catch (imageError) {
+        console.warn('删除图片失败，但继续删除帖子:', imageError);
+      }
     }
     
     // 删除帖子
