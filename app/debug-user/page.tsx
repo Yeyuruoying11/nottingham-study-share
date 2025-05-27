@@ -250,6 +250,50 @@ export default function DebugUserPage() {
           )}
         </div>
 
+        {/* 强制刷新按钮 */}
+        <div className="mt-6 bg-white rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold mb-4 text-indigo-600">强制刷新测试</h2>
+          <div className="space-y-4">
+            <button 
+              onClick={async () => {
+                if (user) {
+                  try {
+                    const { doc, getDoc } = await import('firebase/firestore');
+                    const { db } = await import('@/lib/firebase');
+                    
+                    const userDoc = await getDoc(doc(db, 'users', user.uid));
+                    if (userDoc.exists()) {
+                      const userData = userDoc.data();
+                      console.log('最新用户数据:', userData);
+                      alert(`数据库中的用户名: ${userData.displayName}`);
+                      
+                      // 触发全局更新事件
+                      window.dispatchEvent(new CustomEvent('usernameUpdated', { 
+                        detail: { newUsername: userData.displayName } 
+                      }));
+                    }
+                  } catch (error) {
+                    console.error('获取用户数据失败:', error);
+                    alert('获取失败: ' + error.message);
+                  }
+                }
+              }}
+              className="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 mr-4"
+            >
+              强制刷新用户名
+            </button>
+            
+            <button 
+              onClick={() => {
+                window.location.reload();
+              }}
+              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+            >
+              刷新整个页面
+            </button>
+          </div>
+        </div>
+
         {/* 返回按钮 */}
         <div className="mt-6 text-center">
           <button 
