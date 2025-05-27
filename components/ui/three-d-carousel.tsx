@@ -76,7 +76,7 @@ const Carousel = memo(
     isCarouselActive: boolean;
   }) => {
     const isScreenSizeSm = useMediaQuery("(max-width: 640px)");
-    const cylinderWidth = isScreenSizeSm ? 800 : 1200;
+    const cylinderWidth = isScreenSizeSm ? 1000 : 1600;
     const faceCount = images.length;
     const faceWidth = cylinderWidth / faceCount;
     const radius = cylinderWidth / (2 * Math.PI);
@@ -149,7 +149,7 @@ const Carousel = memo(
           {images.map((imgUrl, i) => (
             <motion.div
               key={`key-${imgUrl}-${i}`}
-              className="absolute flex h-full origin-center items-center justify-center rounded-xl bg-white p-2 shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+              className="absolute flex h-full origin-center items-center justify-center rounded-xl bg-white p-1 shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
               style={{
                 width: `${faceWidth}px`,
                 transform: `rotateY(${
@@ -166,7 +166,7 @@ const Carousel = memo(
                 src={imgUrl}
                 alt={`图片 ${i + 1}`}
                 layoutId={`img-${imgUrl}-${i}`}
-                className="w-full rounded-xl object-cover aspect-square max-w-[180px] max-h-[180px] hover:scale-105 transition-transform cursor-pointer"
+                className="w-full rounded-xl object-cover aspect-square max-w-[280px] max-h-[280px] hover:scale-105 transition-transform cursor-pointer"
                 initial={{ filter: "blur(4px)" }}
                 animate={{ filter: "blur(0px)" }}
                 transition={transition}
@@ -411,7 +411,7 @@ export function ThreeDPhotoCarousel({ images, className = "" }: ThreeDPhotoCarou
         )}
       </AnimatePresence>
       
-      <div className="relative h-[300px] w-full overflow-hidden rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 z-10">
+      <div className="relative h-[400px] w-full overflow-hidden rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 z-10">
         <Carousel
           handleClick={handleClick}
           controls={controls}
