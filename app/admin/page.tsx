@@ -14,8 +14,8 @@ export default function AdminPage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
-  const [allPosts, setAllPosts] = useState([]);
-  const [categoryPosts, setCategoryPosts] = useState({});
+  const [allPosts, setAllPosts] = useState<any[]>([]);
+  const [categoryPosts, setCategoryPosts] = useState<Record<string, any[]>>({});
   const [loadingPosts, setLoadingPosts] = useState(false);
 
   useEffect(() => {
@@ -47,7 +47,7 @@ export default function AdminPage() {
       
       // 测试各个分类的帖子
       const categories = ['生活', '美食', '学习', '旅行', '购物', '租房'];
-      const categoryData = {};
+      const categoryData: Record<string, any[]> = {};
       
       for (const category of categories) {
         const categoryPosts = await getPostsByCategoryFromFirestore(category);
