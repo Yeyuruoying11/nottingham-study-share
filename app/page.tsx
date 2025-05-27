@@ -72,29 +72,31 @@ export default function HomePage() {
   
   const { user, logout } = useAuth();
 
-  // 从Firestore加载帖子数据
+  // 加载帖子数据
   useEffect(() => {
     const loadPosts = async () => {
-      setLoading(true);
       try {
-        let firestorePosts: FirestorePost[];
+        setLoading(true);
+        let postsData;
         
+        // 根据选中的分类加载不同的帖子
         if (selectedCategory === "全部") {
-          firestorePosts = await getAllPostsFromFirestore();
+          postsData = await getAllPostsFromFirestore();
         } else {
-          firestorePosts = await getPostsByCategoryFromFirestore(selectedCategory);
+          postsData = await getPostsByCategoryFromFirestore(selectedCategory);
         }
         
-        setPosts(firestorePosts);
+        setPosts(postsData);
       } catch (error) {
-        console.error('加载帖子失败:', error);
+        console.error("加载帖子失败:", error);
+        setPosts([]);
       } finally {
         setLoading(false);
       }
     };
 
     loadPosts();
-  }, [selectedCategory, user]); // 当分类或用户状态变化时重新加载
+  }, [selectedCategory]); // 当选中的分类改变时重新加载帖子
 
   // 加载分类统计信息
   useEffect(() => {
@@ -110,9 +112,9 @@ export default function HomePage() {
     loadCategoryStats();
   }, [posts]); // 当帖子数据变化时更新统计
 
-  // 筛选帖子的逻辑（现在主要用于搜索）
+  // 筛选帖子的逻辑（只处理搜索，分类筛选已经在loadPosts中处理）
   const filteredPosts = posts.filter(post => {
-    // 搜索筛选
+    // 只进行搜索筛选，分类筛选已经在loadPosts中完成
     const searchMatch = searchQuery === "" || 
       post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
