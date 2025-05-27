@@ -69,6 +69,7 @@ export default function HomePage() {
   const [firestoreUserName, setFirestoreUserName] = useState<string>('');
   const [categoryStats, setCategoryStats] = useState<Record<string, number>>({});
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const [showDebug, setShowDebug] = useState(false);
   
   const { user, logout } = useAuth();
 
@@ -776,6 +777,42 @@ export default function HomePage() {
 
       {/* 主要内容区域 */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* 临时调试按钮 */}
+        {user && (
+          <div className="mb-4">
+            <button
+              onClick={() => setShowDebug(!showDebug)}
+              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm"
+            >
+              {showDebug ? '隐藏调试信息' : '显示调试信息'}
+            </button>
+          </div>
+        )}
+
+        {/* 调试信息 */}
+        {showDebug && (
+          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+            <h3 className="font-semibold text-yellow-800 mb-3">🔍 调试信息</h3>
+            <div className="space-y-2 text-sm">
+              <p><strong>当前选择分类:</strong> {selectedCategory}</p>
+              <p><strong>加载的帖子数量:</strong> {posts.length}</p>
+              <p><strong>筛选后帖子数量:</strong> {filteredPosts.length}</p>
+              <p><strong>分类统计:</strong> {JSON.stringify(categoryStats)}</p>
+              
+              <div className="mt-4">
+                <h4 className="font-medium text-yellow-800 mb-2">当前加载的帖子:</h4>
+                <div className="max-h-40 overflow-y-auto space-y-1">
+                  {posts.map((post, index) => (
+                    <div key={index} className="text-xs bg-white p-2 rounded border">
+                      <strong>{post.title}</strong> - 分类: <span className="text-red-600">{post.category || '未设置'}</span> - ID: {post.id}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* 筛选状态提示 */}
         {!loading && posts.length > 0 && (selectedCategory !== "全部" || searchQuery) && (
           <motion.div
