@@ -161,10 +161,8 @@ const Carousel = memo(
               }}
               onClick={(e) => {
                 e.stopPropagation();
-                if (!isDragging) {
-                  console.log(`点击了图片 ${i + 1}: ${imgUrl}`);
-                  handleClick(imgUrl, i);
-                }
+                console.log(`容器点击事件触发: ${i + 1}`);
+                handleClick(imgUrl, i);
               }}
             >
               <motion.img
@@ -177,10 +175,8 @@ const Carousel = memo(
                 transition={transition}
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (!isDragging) {
-                    console.log(`图片点击事件触发: ${i + 1}`);
-                    handleClick(imgUrl, i);
-                  }
+                  console.log(`图片点击事件触发: ${i + 1}`);
+                  handleClick(imgUrl, i);
                 }}
               />
             </motion.div>
@@ -208,11 +204,17 @@ export function ThreeDPhotoCarousel({ images, className = "" }: ThreeDPhotoCarou
     console.log("Images loaded:", images);
   }, [images]);
 
+  useEffect(() => {
+    console.log("activeImg 状态变化:", activeImg);
+  }, [activeImg]);
+
   const handleClick = (imgUrl: string, index: number) => {
+    console.log('handleClick 被调用:', { imgUrl, index, activeImg, isCarouselActive });
     setActiveImg(imgUrl);
     setActiveIndex(index);
     setIsCarouselActive(false);
     controls.stop();
+    console.log('handleClick 执行完成，activeImg 应该是:', imgUrl);
   };
 
   const handleClose = () => {
