@@ -13,7 +13,7 @@
     "@vercel/analytics": "^1.5.0",
     "clsx": "^2.0.0",
     "firebase": "^11.8.1",
-    "framer-motion": "^10.16.4",
+    "framer-motion": "^10.18.0",
     "lucide-react": "^0.292.0",
     "next": "14.0.0",
     "react": "^18",

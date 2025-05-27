@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Search, Plus, Heart, MessageCircle, Share, Bookmark, User, Bell, Menu, LogOut, Settings, Trash2, MoreVertical, X, Crown } from "lucide-react";
 import { InfiniteMovingCards } from "@/components/ui/infinite-moving-cards";
 import Link from "next/link";
@@ -17,6 +17,7 @@ import {
   type FirestorePost 
 } from "@/lib/firestore-posts";
 import { isAdminUser } from "@/lib/admin-config";
+import { ThreeDPhotoCarousel } from "@/components/ui/three-d-carousel";
 
 // 临时导入迁移函数
 const migrateTestData = async () => {
@@ -457,11 +458,19 @@ export default function HomePage() {
           </div>
           
           <div className="relative overflow-hidden">
-            <img
-              src={post.image}
-              alt={post.title}
-              className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
-            />
+            {/* 使用3D轮播展示多张图片，如果只有一张或没有images数组则使用传统显示 */}
+            {post.images && post.images.length > 1 ? (
+              <ThreeDPhotoCarousel 
+                images={post.images} 
+                className="h-48"
+              />
+            ) : (
+              <img
+                src={post.image}
+                alt={post.title}
+                className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
+              />
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           </div>
           

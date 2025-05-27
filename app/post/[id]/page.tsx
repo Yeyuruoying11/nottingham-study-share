@@ -16,6 +16,7 @@ import {
   type FirestoreComment
 } from "@/lib/firestore-posts";
 import { useAuth } from "@/contexts/AuthContext";
+import { ThreeDPhotoCarousel } from "@/components/ui/three-d-carousel";
 
 export default function PostDetailPage() {
   const params = useParams();
@@ -321,11 +322,19 @@ export default function PostDetailPage() {
         >
           {/* 帖子头图 */}
           <div className="relative h-64 md:h-80">
-            <img
-              src={post.image}
-              alt={post.title}
-              className="w-full h-full object-cover"
-            />
+            {/* 使用3D轮播展示多张图片，如果只有一张或没有images数组则使用传统显示 */}
+            {post.images && post.images.length > 1 ? (
+              <ThreeDPhotoCarousel 
+                images={post.images} 
+                className="h-full"
+              />
+            ) : (
+              <img
+                src={post.image}
+                alt={post.title}
+                className="w-full h-full object-cover"
+              />
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
             <div className="absolute bottom-6 left-6 right-6">
               <div className="flex flex-wrap gap-2 mb-4">
