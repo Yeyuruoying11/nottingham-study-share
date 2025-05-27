@@ -1,0 +1,18 @@
+# Vercel 环境变量配置
+# 请在 Vercel Dashboard 中设置以下环境变量
+
+NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyBLxCAIw1BjHWoVekUW9yj7i3P6_HMWpO4
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=guidin-db601.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=guidin-db601
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=guidin-db601.firebasestorage.app
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=831633555817
+NEXT_PUBLIC_FIREBASE_APP_ID=1:831633555817:web:cf598c871c41f83a4dfdf8
+NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=G-EHKPF1364Q
+
+# 重要提示：
+# 1. 访问 https://vercel.com/dashboard
+# 2. 选择你的项目 nottingham-study-share
+# 3. 进入 Settings -> Environment Variables
+# 4. 添加或更新上述环境变量
+# 5. 确保 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET 设置为 guidin-db601.firebasestorage.app
+# 6. 重新部署项目 
