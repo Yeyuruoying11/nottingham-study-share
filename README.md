@@ -197,4 +197,111 @@ npm start
 
 ## 🤝 贡献
 
-欢迎提交 Issues 和 Pull Requests 来改进这个项目！ 
+欢迎提交 Issues 和 Pull Requests 来改进这个项目！
+
+### 🎯 帖子分类筛选
+- **智能分类系统**：支持学习、生活、美食、旅行、购物、租房等6大分类
+- **实时筛选**：点击分类标签即可筛选对应类型的帖子
+- **分类统计**：显示每个分类的帖子数量
+- **组合筛选**：支持分类和搜索的组合筛选
+- **性能优化**：使用 Firestore 查询优化，按需加载数据
+
+### 📝 内容管理
+- 发布帖子（支持图片上传）
+- 分类标签系统
+- 搜索功能（标题、内容、标签）
+- 点赞和评论
+- 帖子删除（仅作者可删除）
+
+### 👤 用户系统
+- Firebase 身份验证
+- 用户名设置（限制修改次数）
+- 个人资料管理
+- 权限控制
+
+### 🎨 用户体验
+- 响应式设计
+- 流畅的动画效果
+- 现代化 UI 界面
+- 移动端适配
+
+## 🛠️ 技术栈
+
+- **前端**: Next.js 14, React, TypeScript, Tailwind CSS
+- **后端**: Firebase (Firestore, Authentication, Storage)
+- **动画**: Framer Motion
+- **图标**: Lucide React
+- **部署**: Vercel
+
+## 🚀 快速开始
+
+### 分类筛选功能
+
+1. **查看所有帖子**：点击"全部"标签
+2. **按分类筛选**：点击任意分类标签（学习、生活、美食等）
+3. **搜索筛选**：在搜索框输入关键词
+4. **组合筛选**：选择分类后再搜索，可以在特定分类中搜索
+5. **清除筛选**：点击筛选提示条中的"清除筛选"按钮
+
+### 发布帖子
+
+1. 点击右上角"发布"按钮
+2. 填写标题和内容
+3. 选择合适的分类
+4. 添加标签（可选）
+5. 上传图片（可选）
+6. 点击发布
+
+## 🛠️ 本地开发
+
+```bash
+# 安装依赖
+npm install
+
+# 启动开发服务器
+npm run dev
+
+# 构建项目
+npm run build
+
+# 类型检查
+npx tsc --noEmit
+```
+
+## 📄 许可证
+
+MIT License
+
+## 环境配置
+
+创建 `.env.local` 文件并配置 Firebase：
+
+```env
+NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+```
+
+## 更新日志
+
+### v2.1.0 - 分类筛选功能
+- ✨ 新增帖子分类筛选功能
+- 🚀 优化数据库查询性能
+- 📊 添加分类统计显示
+- 🎨 改进用户界面和交互体验
+- 🔍 增强搜索和筛选组合功能
+
+### v2.0.0 - 用户名管理系统
+- ✨ 新增用户名设置功能
+- 🔒 实现修改次数限制（3次/30天）
+- 📝 添加用户名历史记录
+- ✅ 完善验证规则和安全检查
+
+### v1.0.0 - 基础功能
+- 🎉 初始版本发布
+- 📝 帖子发布和管理
+- 👤 用户认证系统
+- 💾 Firebase 集成 

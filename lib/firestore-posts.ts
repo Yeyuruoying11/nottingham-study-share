@@ -13,7 +13,8 @@ import {
   updateDoc,
   increment,
   arrayUnion,
-  arrayRemove
+  arrayRemove,
+  where
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { deleteImageFromStorage } from './firebase-storage';
@@ -86,6 +87,68 @@ export async function getAllPostsFromFirestore(): Promise<FirestorePost[]> {
   } catch (error) {
     console.error("获取帖子失败:", error);
     return [];
+  }
+}
+
+// 按分类获取帖子
+export async function getPostsByCategoryFromFirestore(category: string): Promise<FirestorePost[]> {
+  try {
+    const postsRef = collection(db, 'posts');
+    const q = query(
+      postsRef, 
+      where('category', '==', category),
+      orderBy('createdAt', 'desc')
+    );
+    const querySnapshot = await getDocs(q);
+    
+    const posts: FirestorePost[] = [];
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      posts.push({
+        id: doc.id,
+        title: data.title,
+        content: data.content,
+        fullContent: data.fullContent || data.content,
+        category: data.category,
+        tags: data.tags || [],
+        image: data.image || "",
+        author: data.author,
+        likes: data.likes || 0,
+        likedBy: data.likedBy || [],
+        comments: data.comments || 0,
+        createdAt: data.createdAt
+      });
+    });
+    
+    return posts;
+  } catch (error) {
+    console.error(`获取${category}分类帖子失败:`, error);
+    return [];
+  }
+}
+
+// 获取分类统计信息
+export async function getCategoryStatsFromFirestore(): Promise<Record<string, number>> {
+  try {
+    const postsRef = collection(db, 'posts');
+    const querySnapshot = await getDocs(postsRef);
+    
+    const stats: Record<string, number> = {};
+    let totalCount = 0;
+    
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      const category = data.category || '其他';
+      stats[category] = (stats[category] || 0) + 1;
+      totalCount++;
+    });
+    
+    stats['全部'] = totalCount;
+    
+    return stats;
+  } catch (error) {
+    console.error("获取分类统计失败:", error);
+    return {};
   }
 }
 

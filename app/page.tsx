@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Search, Plus, Heart, MessageCircle, Share, Bookmark, User, Bell, Menu, LogOut, Settings, Trash2, MoreVertical } from "lucide-react";
+import { Search, Plus, Heart, MessageCircle, Share, Bookmark, User, Bell, Menu, LogOut, Settings, Trash2, MoreVertical, X } from "lucide-react";
 import { InfiniteMovingCards } from "@/components/ui/infinite-moving-cards";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { 
   getAllPostsFromFirestore, 
+  getPostsByCategoryFromFirestore,
+  getCategoryStatsFromFirestore,
   deletePostFromFirestore, 
   formatTimestamp,
   toggleLike,
@@ -64,6 +66,7 @@ export default function HomePage() {
   const [posts, setPosts] = useState<FirestorePost[]>([]);
   const [loading, setLoading] = useState(true);
   const [firestoreUserName, setFirestoreUserName] = useState<string>('');
+  const [categoryStats, setCategoryStats] = useState<Record<string, number>>({});
   const userMenuRef = useRef<HTMLDivElement>(null);
   
   const { user, logout } = useAuth();
@@ -73,7 +76,14 @@ export default function HomePage() {
     const loadPosts = async () => {
       setLoading(true);
       try {
-        const firestorePosts = await getAllPostsFromFirestore();
+        let firestorePosts: FirestorePost[];
+        
+        if (selectedCategory === "全部") {
+          firestorePosts = await getAllPostsFromFirestore();
+        } else {
+          firestorePosts = await getPostsByCategoryFromFirestore(selectedCategory);
+        }
+        
         setPosts(firestorePosts);
       } catch (error) {
         console.error('加载帖子失败:', error);
@@ -83,7 +93,37 @@ export default function HomePage() {
     };
 
     loadPosts();
-  }, [user]); // 只在用户状态变化时重新加载
+  }, [selectedCategory, user]); // 当分类或用户状态变化时重新加载
+
+  // 加载分类统计信息
+  useEffect(() => {
+    const loadCategoryStats = async () => {
+      try {
+        const stats = await getCategoryStatsFromFirestore();
+        setCategoryStats(stats);
+      } catch (error) {
+        console.error('加载分类统计失败:', error);
+      }
+    };
+
+    loadCategoryStats();
+  }, [posts]); // 当帖子数据变化时更新统计
+
+  // 筛选帖子的逻辑（现在主要用于搜索）
+  const filteredPosts = posts.filter(post => {
+    // 搜索筛选
+    const searchMatch = searchQuery === "" || 
+      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    return searchMatch;
+  });
+
+  // 计算每个分类的帖子数量
+  const getCategoryCount = (categoryName: string) => {
+    return categoryStats[categoryName] || 0;
+  };
 
   // 获取Firestore中的用户名
   useEffect(() => {
@@ -467,8 +507,17 @@ export default function HomePage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="搜索攻略、美食、生活经验..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full pl-10 pr-10 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    title="清除搜索"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             </div>
 
@@ -610,21 +659,38 @@ export default function HomePage() {
             >
               <span>🌟</span>
               <span className="text-sm font-medium">全部</span>
+              <span className={`text-xs px-2 py-1 rounded-full ${
+                selectedCategory === "全部" 
+                  ? "bg-white/20 text-white" 
+                  : "bg-gray-200 text-gray-500"
+              }`}>
+                {getCategoryCount("全部")}
+              </span>
             </button>
-            {categories.map((category) => (
-              <button
-                key={category.name}
-                onClick={() => setSelectedCategory(category.name)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-full whitespace-nowrap transition-all duration-300 ${
-                  selectedCategory === category.name
-                    ? "bg-green-500 text-white shadow-lg"
-                    : `${category.color} hover:shadow-md`
-                }`}
-              >
-                <span>{category.icon}</span>
-                <span className="text-sm font-medium">{category.name}</span>
-              </button>
-            ))}
+            {categories.map((category) => {
+              const count = getCategoryCount(category.name);
+              return (
+                <button
+                  key={category.name}
+                  onClick={() => setSelectedCategory(category.name)}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-full whitespace-nowrap transition-all duration-300 ${
+                    selectedCategory === category.name
+                      ? "bg-green-500 text-white shadow-lg"
+                      : `${category.color} hover:shadow-md`
+                  }`}
+                >
+                  <span>{category.icon}</span>
+                  <span className="text-sm font-medium">{category.name}</span>
+                  <span className={`text-xs px-2 py-1 rounded-full ${
+                    selectedCategory === category.name 
+                      ? "bg-white/20 text-white" 
+                      : "bg-white/50 text-gray-600"
+                  }`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </motion.div>
@@ -650,6 +716,41 @@ export default function HomePage() {
 
       {/* 主要内容区域 */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* 筛选状态提示 */}
+        {!loading && posts.length > 0 && (selectedCategory !== "全部" || searchQuery) && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-blue-600 text-sm">
+                  {selectedCategory !== "全部" && searchQuery ? (
+                    <>正在显示 <strong>"{selectedCategory}"</strong> 分类中包含 <strong>"{searchQuery}"</strong> 的帖子</>
+                  ) : selectedCategory !== "全部" ? (
+                    <>正在显示 <strong>"{selectedCategory}"</strong> 分类的帖子</>
+                  ) : (
+                    <>正在搜索 <strong>"{searchQuery}"</strong></>
+                  )}
+                  <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
+                    {filteredPosts.length} 个结果
+                  </span>
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  setSelectedCategory("全部");
+                  setSearchQuery("");
+                }}
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
+              >
+                清除筛选
+              </button>
+            </div>
+          </motion.div>
+        )}
+
         {loading ? (
           <div className="flex justify-center items-center py-12">
             <div className="text-center">
@@ -678,16 +779,57 @@ export default function HomePage() {
               </div>
             </div>
           </div>
+        ) : filteredPosts.length === 0 ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="text-center">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                {selectedCategory !== "全部" ? `没有找到"${selectedCategory}"分类的帖子` : "没有找到相关帖子"}
+              </h3>
+              <p className="text-gray-600 mb-6">
+                {searchQuery ? `搜索"${searchQuery}"没有找到相关内容` : "该分类下暂时没有帖子"}
+              </p>
+              <div className="space-x-4">
+                {selectedCategory !== "全部" && (
+                  <button
+                    onClick={() => setSelectedCategory("全部")}
+                    className="inline-block bg-gray-500 text-white px-6 py-3 rounded-xl hover:bg-gray-600 transition-colors"
+                  >
+                    查看全部帖子
+                  </button>
+                )}
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="inline-block bg-blue-500 text-white px-6 py-3 rounded-xl hover:bg-blue-600 transition-colors"
+                  >
+                    清除搜索
+                  </button>
+                )}
+                <Link 
+                  href="/create"
+                  className="inline-block bg-green-500 text-white px-6 py-3 rounded-xl hover:bg-green-600 transition-colors"
+                >
+                  发布新帖子
+                </Link>
+              </div>
+            </div>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {posts.map((post, index) => (
+          <motion.div 
+            key={selectedCategory + searchQuery} // 当分类或搜索改变时重新渲染动画
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+          >
+            {filteredPosts.map((post, index) => (
               <PostCard key={post.id} post={post} index={index} />
             ))}
-          </div>
+          </motion.div>
         )}
 
         {/* 加载更多 */}
-        {!loading && posts.length > 0 && (
+        {!loading && filteredPosts.length > 0 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
