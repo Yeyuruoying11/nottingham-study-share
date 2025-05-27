@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { addPostToFirestore } from "@/lib/firestore-posts";
 import { uploadImageWithProgress, uploadImageSimple, uploadImageSmart, uploadImageTurbo, uploadImageUltimate, getImageInfo } from "@/lib/firebase-storage";
+import { uploadImageSmart as uploadImageSmartCloud } from "@/lib/firebase-storage-cloud";
 
 const categories = [
   { name: "学习", icon: "📚", color: "bg-blue-100 text-blue-800" },
@@ -161,28 +162,41 @@ export default function CreatePostPage() {
         try {
           console.log('开始上传图片...');
           
-          // 优化的上传策略：优先使用智能上传，失败后使用简化上传
+          // 优化的上传策略：优先使用云端智能上传，失败后使用本地智能上传，最后使用简化上传
           try {
-            imageUrl = await uploadImageSmart(
+            imageUrl = await uploadImageSmartCloud(
               selectedFile,
               user.uid,
               (progress) => {
                 setUploadProgress(progress);
               }
             );
-            console.log('智能上传成功:', imageUrl);
-          } catch (smartError) {
-            console.warn('智能上传失败，尝试简化上传:', smartError);
+            console.log('云端智能上传成功:', imageUrl);
+          } catch (cloudError) {
+            console.warn('云端智能上传失败，尝试本地智能上传:', cloudError);
             
-            // 如果智能上传失败，使用简化上传作为备选
-            imageUrl = await uploadImageSimple(
-              selectedFile,
-              user.uid,
-              (progress) => {
-                setUploadProgress(progress);
-              }
-            );
-            console.log('简化上传成功:', imageUrl);
+            try {
+              imageUrl = await uploadImageSmart(
+                selectedFile,
+                user.uid,
+                (progress) => {
+                  setUploadProgress(progress);
+                }
+              );
+              console.log('本地智能上传成功:', imageUrl);
+            } catch (smartError) {
+              console.warn('智能上传失败，尝试简化上传:', smartError);
+              
+              // 如果智能上传失败，使用简化上传作为最后备选
+              imageUrl = await uploadImageSimple(
+                selectedFile,
+                user.uid,
+                (progress) => {
+                  setUploadProgress(progress);
+                }
+              );
+              console.log('简化上传成功:', imageUrl);
+            }
           }
           
         } catch (uploadError) {
