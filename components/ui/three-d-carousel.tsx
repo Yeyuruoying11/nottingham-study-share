@@ -8,6 +8,7 @@ import {
   useMotionValue,
   useTransform,
 } from "framer-motion";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 
 export const useIsomorphicLayoutEffect =
   typeof window !== "undefined" ? useLayoutEffect : useEffect;
@@ -75,14 +76,19 @@ const Carousel = memo(
     isCarouselActive: boolean;
   }) => {
     const isScreenSizeSm = useMediaQuery("(max-width: 640px)");
-    const cylinderWidth = isScreenSizeSm ? 1100 : 1800;
+    const cylinderWidth = isScreenSizeSm ? 800 : 1200;
     const faceCount = images.length;
     const faceWidth = cylinderWidth / faceCount;
     const radius = cylinderWidth / (2 * Math.PI);
     const rotation = useMotionValue(0);
+    
+    // 计算初始旋转角度，让第一张图片正对前方
+    const anglePerImage = 360 / faceCount;
+    const initialRotation = 0; // 第一张图片在0度位置
+    
     const transform = useTransform(
       rotation,
-      (value) => `rotate3d(0, 1, 0, ${value}deg)`
+      (value) => `rotate3d(0, 1, 0, ${value + initialRotation}deg)`
     );
 
     return (
@@ -103,32 +109,44 @@ const Carousel = memo(
             width: cylinderWidth,
             transformStyle: "preserve-3d",
           }}
-          onDrag={(_, info) =>
-            isCarouselActive &&
-            rotation.set(rotation.get() + info.offset.x * 0.05)
-          }
-          onDragEnd={(_, info) =>
-            isCarouselActive &&
-            controls.start({
-              rotateY: rotation.get() + info.velocity.x * 0.05,
-              transition: {
-                type: "spring",
-                stiffness: 100,
-                damping: 30,
-                mass: 0.1,
-              },
-            })
-          }
+          onDrag={(_, info) => {
+            if (isCarouselActive) {
+              // 增加拖拽敏感度
+              rotation.set(rotation.get() + info.offset.x * 0.2);
+            }
+          }}
+          onDragEnd={(_, info) => {
+            if (isCarouselActive) {
+              // 添加惯性效果
+              const velocity = info.velocity.x * 0.1;
+              const finalRotation = rotation.get() + velocity;
+              
+              // 可选：添加吸附到最近图片的效果
+              const snapToNearest = Math.round(finalRotation / anglePerImage) * anglePerImage;
+              
+              controls.start({
+                rotateY: snapToNearest,
+                transition: {
+                  type: "spring",
+                  stiffness: 200,
+                  damping: 30,
+                  mass: 0.8,
+                },
+              });
+              
+              rotation.set(snapToNearest);
+            }
+          }}
           animate={controls}
         >
           {images.map((imgUrl, i) => (
             <motion.div
               key={`key-${imgUrl}-${i}`}
-              className="absolute flex h-full origin-center items-center justify-center rounded-xl bg-white p-2 shadow-lg"
+              className="absolute flex h-full origin-center items-center justify-center rounded-xl bg-white p-2 shadow-lg hover:shadow-xl transition-shadow"
               style={{
                 width: `${faceWidth}px`,
                 transform: `rotateY(${
-                  i * (360 / faceCount)
+                  i * anglePerImage
                 }deg) translateZ(${radius}px)`,
               }}
               onClick={() => handleClick(imgUrl, i)}
@@ -136,10 +154,9 @@ const Carousel = memo(
               <motion.img
                 src={imgUrl}
                 alt={`图片 ${i + 1}`}
-                layoutId={`img-${imgUrl}`}
-                className="pointer-events-none w-full rounded-xl object-cover aspect-square max-w-[200px] max-h-[200px]"
+                layoutId={`img-${imgUrl}-${i}`}
+                className="pointer-events-none w-full rounded-xl object-cover aspect-square max-w-[180px] max-h-[180px] hover:scale-105 transition-transform"
                 initial={{ filter: "blur(4px)" }}
-                layout="position"
                 animate={{ filter: "blur(0px)" }}
                 transition={transition}
               />
@@ -160,6 +177,7 @@ interface ThreeDPhotoCarouselProps {
 
 export function ThreeDPhotoCarousel({ images, className = "" }: ThreeDPhotoCarouselProps) {
   const [activeImg, setActiveImg] = useState<string | null>(null);
+  const [activeIndex, setActiveIndex] = useState<number>(0);
   const [isCarouselActive, setIsCarouselActive] = useState(true);
   const controls = useAnimation();
 
@@ -167,8 +185,9 @@ export function ThreeDPhotoCarousel({ images, className = "" }: ThreeDPhotoCarou
     console.log("Images loaded:", images);
   }, [images]);
 
-  const handleClick = (imgUrl: string) => {
+  const handleClick = (imgUrl: string, index: number) => {
     setActiveImg(imgUrl);
+    setActiveIndex(index);
     setIsCarouselActive(false);
     controls.stop();
   };
@@ -177,6 +196,36 @@ export function ThreeDPhotoCarousel({ images, className = "" }: ThreeDPhotoCarou
     setActiveImg(null);
     setIsCarouselActive(true);
   };
+
+  const goToPrevious = () => {
+    const newIndex = activeIndex === 0 ? images.length - 1 : activeIndex - 1;
+    setActiveIndex(newIndex);
+    setActiveImg(images[newIndex]);
+  };
+
+  const goToNext = () => {
+    const newIndex = activeIndex === images.length - 1 ? 0 : activeIndex + 1;
+    setActiveIndex(newIndex);
+    setActiveImg(images[newIndex]);
+  };
+
+  // 键盘导航
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!activeImg) return;
+      
+      if (event.key === 'ArrowLeft') {
+        goToPrevious();
+      } else if (event.key === 'ArrowRight') {
+        goToNext();
+      } else if (event.key === 'Escape') {
+        handleClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeImg, activeIndex]);
 
   // 如果没有图片或只有一张图片，不显示3D轮播
   if (!images || images.length === 0) {
@@ -190,7 +239,7 @@ export function ThreeDPhotoCarousel({ images, className = "" }: ThreeDPhotoCarou
           src={images[0]}
           alt="图片"
           className="w-full h-64 object-cover rounded-xl cursor-pointer hover:opacity-90 transition-opacity"
-          onClick={() => handleClick(images[0])}
+          onClick={() => handleClick(images[0], 0)}
         />
         
         {/* 灯箱 */}
@@ -208,7 +257,7 @@ export function ThreeDPhotoCarousel({ images, className = "" }: ThreeDPhotoCarou
               transition={transitionOverlay}
             >
               <motion.img
-                layoutId={`img-${activeImg}`}
+                layoutId={`img-${activeImg}-0`}
                 src={activeImg}
                 className="max-w-full max-h-full rounded-lg shadow-lg"
                 initial={{ scale: 0.5 }}
@@ -221,12 +270,13 @@ export function ThreeDPhotoCarousel({ images, className = "" }: ThreeDPhotoCarou
                 style={{
                   willChange: "transform",
                 }}
+                onClick={(e) => e.stopPropagation()}
               />
               <button
                 onClick={handleClose}
-                className="absolute top-4 right-4 text-white hover:text-gray-300 text-2xl"
+                className="absolute top-4 right-4 text-white hover:text-gray-300 text-2xl z-10"
               >
-                ×
+                <X className="w-8 h-8" />
               </button>
             </motion.div>
           )}
@@ -250,27 +300,78 @@ export function ThreeDPhotoCarousel({ images, className = "" }: ThreeDPhotoCarou
             style={{ willChange: "opacity" }}
             transition={transitionOverlay}
           >
+            {/* 关闭按钮 */}
+            <button
+              onClick={handleClose}
+              className="absolute top-4 right-4 text-white hover:text-gray-300 z-10"
+            >
+              <X className="w-8 h-8" />
+            </button>
+            
+            {/* 左右导航按钮 */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                goToPrevious();
+              }}
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 z-10 p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-70 transition-all"
+            >
+              <ChevronLeft className="w-8 h-8" />
+            </button>
+            
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                goToNext();
+              }}
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 z-10 p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-70 transition-all"
+            >
+              <ChevronRight className="w-8 h-8" />
+            </button>
+
             <motion.img
-              layoutId={`img-${activeImg}`}
+              key={activeIndex} // 添加key确保动画正确触发
+              layoutId={`img-${activeImg}-${activeIndex}`}
               src={activeImg}
               className="max-w-full max-h-full rounded-lg shadow-lg"
-              initial={{ scale: 0.5 }}
-              animate={{ scale: 1 }}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
               transition={{
-                delay: 0.2,
-                duration: 0.5,
+                duration: 0.3,
                 ease: [0.25, 0.1, 0.25, 1],
               }}
               style={{
                 willChange: "transform",
               }}
+              onClick={(e) => e.stopPropagation()}
             />
-            <button
-              onClick={handleClose}
-              className="absolute top-4 right-4 text-white hover:text-gray-300 text-2xl"
-            >
-              ×
-            </button>
+            
+            {/* 图片计数和指示器 */}
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex flex-col items-center space-y-2">
+              <div className="bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
+                {activeIndex + 1} / {images.length}
+              </div>
+              
+              {/* 小圆点指示器 */}
+              <div className="flex space-x-2">
+                {images.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveIndex(index);
+                      setActiveImg(images[index]);
+                    }}
+                    className={`w-2 h-2 rounded-full transition-all ${
+                      index === activeIndex 
+                        ? 'bg-white' 
+                        : 'bg-white bg-opacity-50 hover:bg-opacity-75'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
