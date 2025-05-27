@@ -592,10 +592,14 @@ export default function HomePage() {
                           <span>个人资料</span>
                         </Link>
                         
-                        <button className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2">
+                        <Link 
+                          href="/settings/username"
+                          className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
+                          onClick={() => setShowUserMenu(false)}
+                        >
                           <Settings className="w-4 h-4" />
                           <span>设置</span>
-                        </button>
+                        </Link>
                         
                         <div className="border-t border-gray-100 mt-1 pt-1">
                           <button 
