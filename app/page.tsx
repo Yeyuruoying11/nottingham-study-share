@@ -148,6 +148,10 @@ export default function HomePage() {
 
   // 计算每个分类的帖子数量
   const getCategoryCount = (categoryName: string) => {
+    if (categoryName === "全部") {
+      // 对于"全部"分类，返回所有帖子的总数
+      return posts.length;
+    }
     return categoryStats[categoryName] || 0;
   };
 
