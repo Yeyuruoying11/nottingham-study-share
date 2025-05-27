@@ -104,13 +104,6 @@ function SortableImageItem({
           </div>
         </div>
       )}
-      
-      {/* 主图标识 */}
-      {isMainImage && (
-        <div className="absolute bottom-1 left-1 bg-green-500 text-white text-xs px-1 py-0.5 rounded">
-          主图
-        </div>
-      )}
     </div>
   );
 }
@@ -599,7 +592,7 @@ export default function CreatePostPage() {
                           已选择 {imagePreviews.length} 张图片
                         </p>
                         <p className="text-xs text-gray-500">
-                          拖拽图片可调整顺序，第一张为主图
+                          拖拽图片可调整顺序
                         </p>
                       </div>
                       <DndContext
