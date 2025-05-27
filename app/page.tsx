@@ -154,13 +154,24 @@ export default function HomePage() {
     
     // 监听用户名更新事件
     const handleUsernameUpdate = (event: CustomEvent) => {
+      console.log('收到用户名更新事件:', event.detail.newUsername);
       setFirestoreUserName(event.detail.newUsername);
     };
 
+    // 监听storage事件作为备用方案
+    const handleStorageUpdate = (event: StorageEvent) => {
+      if (event.key === 'usernameUpdate' && event.newValue) {
+        console.log('收到storage用户名更新事件:', event.newValue);
+        setFirestoreUserName(event.newValue);
+      }
+    };
+
     window.addEventListener('usernameUpdated', handleUsernameUpdate as EventListener);
+    window.addEventListener('storage', handleStorageUpdate);
     
     return () => {
       window.removeEventListener('usernameUpdated', handleUsernameUpdate as EventListener);
+      window.removeEventListener('storage', handleStorageUpdate);
     };
   }, [user]);
 

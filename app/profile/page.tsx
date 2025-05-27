@@ -70,16 +70,26 @@ export default function ProfilePage() {
     };
 
     const handleUsernameUpdate = (event: CustomEvent) => {
-      console.log('用户名已更新:', event.detail.newUsername);
+      console.log('个人资料页面 - 用户名已更新:', event.detail.newUsername);
       setFirestoreUserName(event.detail.newUsername);
+    };
+
+    // 监听storage事件作为备用方案
+    const handleStorageUpdate = (event: StorageEvent) => {
+      if (event.key === 'usernameUpdate' && event.newValue) {
+        console.log('个人资料页面 - 收到storage用户名更新:', event.newValue);
+        setFirestoreUserName(event.newValue);
+      }
     };
 
     window.addEventListener('focus', handleFocus);
     window.addEventListener('usernameUpdated', handleUsernameUpdate as EventListener);
+    window.addEventListener('storage', handleStorageUpdate);
     
     return () => {
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('usernameUpdated', handleUsernameUpdate as EventListener);
+      window.removeEventListener('storage', handleStorageUpdate);
     };
   }, [user]);
 

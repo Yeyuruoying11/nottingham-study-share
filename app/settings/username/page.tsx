@@ -154,13 +154,29 @@ export default function UsernameSettingsPage() {
       
       if (result.success) {
         setMessage({ type: 'success', text: result.message });
-        // 重新加载数据
+        
+        // 先重新加载数据，确保获取最新的用户名
         await loadUserData();
         
-        // 通知其他页面用户名已更新
-        window.dispatchEvent(new CustomEvent('usernameUpdated', { 
-          detail: { newUsername: newUsername.trim() } 
-        }));
+        // 等待一小段时间确保数据已更新
+        setTimeout(() => {
+          // 通知其他页面用户名已更新
+          console.log('触发用户名更新事件:', newUsername.trim());
+          window.dispatchEvent(new CustomEvent('usernameUpdated', { 
+            detail: { newUsername: newUsername.trim() } 
+          }));
+          
+          // 也可以尝试直接刷新页面缓存
+          if (typeof window !== 'undefined') {
+            // 强制刷新其他页面的用户名显示
+            const event = new StorageEvent('storage', {
+              key: 'usernameUpdate',
+              newValue: newUsername.trim(),
+              oldValue: null
+            });
+            window.dispatchEvent(event);
+          }
+        }, 500);
       } else {
         setMessage({ type: 'error', text: result.message });
       }
