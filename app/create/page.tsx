@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { addPostToFirestore } from "@/lib/firestore-posts";
 import { uploadImageWithProgress, uploadImageSimple, uploadImageSmart, uploadImageTurbo, uploadImageUltimate, getImageInfo } from "@/lib/firebase-storage";
 import { uploadImageSmart as uploadImageSmartCloud } from "@/lib/firebase-storage-cloud";
+import { uploadImageSmart as uploadImageCORSFix } from "@/lib/firebase-storage-cors-fix";
 
 const categories = [
   { name: "学习", icon: "📚", color: "bg-blue-100 text-blue-800" },
@@ -162,32 +163,32 @@ export default function CreatePostPage() {
         try {
           console.log('开始上传图片...');
           
-          // 优化的上传策略：优先使用云端智能上传，失败后使用本地智能上传，最后使用简化上传
+          // 优化的上传策略：优先使用CORS修复版本，然后是云端智能上传，最后是简化上传
           try {
-            imageUrl = await uploadImageSmartCloud(
+            imageUrl = await uploadImageCORSFix(
               selectedFile,
               user.uid,
               (progress) => {
                 setUploadProgress(progress);
               }
             );
-            console.log('云端智能上传成功:', imageUrl);
-          } catch (cloudError) {
-            console.warn('云端智能上传失败，尝试本地智能上传:', cloudError);
+            console.log('CORS修复上传成功:', imageUrl);
+          } catch (corsError) {
+            console.warn('CORS修复上传失败，尝试云端智能上传:', corsError);
             
             try {
-              imageUrl = await uploadImageSmart(
+              imageUrl = await uploadImageSmartCloud(
                 selectedFile,
                 user.uid,
                 (progress) => {
                   setUploadProgress(progress);
                 }
               );
-              console.log('本地智能上传成功:', imageUrl);
-            } catch (smartError) {
-              console.warn('智能上传失败，尝试简化上传:', smartError);
+              console.log('云端智能上传成功:', imageUrl);
+            } catch (cloudError) {
+              console.warn('云端智能上传失败，尝试简化上传:', cloudError);
               
-              // 如果智能上传失败，使用简化上传作为最后备选
+              // 如果所有优化上传都失败，使用简化上传作为最后备选
               imageUrl = await uploadImageSimple(
                 selectedFile,
                 user.uid,
