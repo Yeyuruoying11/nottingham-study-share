@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { User, Settings, Mail, Calendar, MapPin, BookOpen, ArrowLeft } from 'lucide-react';
+import { User, Settings, Mail, Calendar, MapPin, BookOpen, ArrowLeft, Edit3 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ProfilePage() {
@@ -95,9 +95,18 @@ export default function ProfilePage() {
                     placeholder="输入姓名"
                   />
                 ) : (
-                  <h2 className="text-xl font-semibold text-gray-900">
-                    {user.displayName || '未设置姓名'}
-                  </h2>
+                  <div className="flex items-center justify-center space-x-2">
+                    <h2 className="text-xl font-semibold text-gray-900">
+                      {user.displayName || '未设置姓名'}
+                    </h2>
+                    <Link 
+                      href="/settings/username"
+                      className="p-1 hover:bg-gray-100 rounded transition-colors"
+                      title="修改用户名"
+                    >
+                      <Edit3 className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                    </Link>
+                  </div>
                 )}
                 <p className="text-gray-500 text-sm mt-1">诺丁汉大学学生</p>
               </div>
@@ -125,6 +134,22 @@ export default function ProfilePage() {
                   <BookOpen className="w-4 h-4" />
                   <span className="text-sm">留学生</span>
                 </div>
+              </div>
+
+              {/* 用户名设置快捷入口 */}
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <Link 
+                  href="/settings/username"
+                  className="flex items-center justify-between w-full p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors group"
+                >
+                  <div className="flex items-center space-x-3">
+                    <Edit3 className="w-4 h-4 text-gray-500 group-hover:text-gray-700" />
+                    <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+                      用户名设置
+                    </span>
+                  </div>
+                  <ArrowLeft className="w-4 h-4 text-gray-400 group-hover:text-gray-600 rotate-180" />
+                </Link>
               </div>
             </motion.div>
           </div>

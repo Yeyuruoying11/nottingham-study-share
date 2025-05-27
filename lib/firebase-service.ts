@@ -53,6 +53,9 @@ export const authService = {
         email: user.email,
         displayName,
         university: "诺丁汉大学",
+        // 用户名修改记录初始化
+        usernameChangeCount: 0,
+        usernameHistory: [],
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });

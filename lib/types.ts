@@ -8,6 +8,10 @@ export interface User {
   major?: string;
   year?: number;
   bio?: string;
+  // 用户名修改记录
+  usernameChangeCount: number; // 已修改次数
+  lastUsernameChange?: Date; // 最后一次修改时间
+  usernameHistory: string[]; // 历史用户名记录
   createdAt: Date;
   updatedAt: Date;
 }
