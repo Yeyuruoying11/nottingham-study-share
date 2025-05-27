@@ -13,29 +13,92 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
+  const [mounted, setMounted] = useState(false);
+  const [firestoreUserName, setFirestoreUserName] = useState<string>('');
+  const [loadingUserName, setLoadingUserName] = useState(true);
 
+  // 确保组件已挂载
   useEffect(() => {
-    if (!loading && !user) {
+    setMounted(true);
+  }, []);
+
+  // 处理用户认证状态
+  useEffect(() => {
+    if (mounted && !loading && !user) {
+      console.log('用户未登录，重定向到登录页面');
       router.push('/login');
     }
-  }, [user, loading, router]);
+  }, [mounted, user, loading, router]);
+
+  // 从Firestore获取用户名
+  const fetchUserName = async () => {
+    if (!user) return;
+    
+    try {
+      setLoadingUserName(true);
+      const { doc, getDoc } = await import('firebase/firestore');
+      const { db } = await import('@/lib/firebase');
+      
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        setFirestoreUserName(userData.displayName || '未设置姓名');
+      } else {
+        setFirestoreUserName('未设置姓名');
+      }
+    } catch (error) {
+      console.error('获取用户名失败:', error);
+      setFirestoreUserName(user.displayName || '未设置姓名');
+    } finally {
+      setLoadingUserName(false);
+    }
+  };
 
   useEffect(() => {
     if (user) {
+      fetchUserName();
       setDisplayName(user.displayName || '');
     }
   }, [user]);
 
-  if (loading) {
+  // 当页面获得焦点时刷新用户名（从用户名设置页面返回时）
+  useEffect(() => {
+    const handleFocus = () => {
+      if (user) {
+        fetchUserName();
+      }
+    };
+
+    const handleUsernameUpdate = (event: CustomEvent) => {
+      console.log('用户名已更新:', event.detail.newUsername);
+      setFirestoreUserName(event.detail.newUsername);
+    };
+
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('usernameUpdated', handleUsernameUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('usernameUpdated', handleUsernameUpdate as EventListener);
+    };
+  }, [user]);
+
+  // 如果组件未挂载或正在加载，显示加载状态
+  if (!mounted || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
+  // 如果用户未登录，显示空白页面（避免闪烁）
   if (!user) {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-gray-600">正在跳转到登录页面...</div>
+      </div>
+    );
   }
 
   return (
@@ -97,7 +160,11 @@ export default function ProfilePage() {
                 ) : (
                   <div className="flex items-center justify-center space-x-2">
                     <h2 className="text-xl font-semibold text-gray-900">
-                      {user.displayName || '未设置姓名'}
+                      {loadingUserName ? (
+                        <span className="text-gray-400">加载中...</span>
+                      ) : (
+                        firestoreUserName
+                      )}
                     </h2>
                     <Link 
                       href="/settings/username"

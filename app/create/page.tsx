@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Upload, X, Plus, Eye } from "lucide-react";
 import Link from "next/link";
@@ -39,6 +39,35 @@ export default function CreatePostPage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>("");
+  const [firestoreUserName, setFirestoreUserName] = useState<string>('');
+
+  // 获取Firestore中的用户名
+  useEffect(() => {
+    const fetchUserName = async () => {
+      if (!user) {
+        setFirestoreUserName('');
+        return;
+      }
+      
+      try {
+        const { doc, getDoc } = await import('firebase/firestore');
+        const { db } = await import('@/lib/firebase');
+        
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setFirestoreUserName(userData.displayName || user.displayName || '用户');
+        } else {
+          setFirestoreUserName(user.displayName || '用户');
+        }
+      } catch (error) {
+        console.error('获取用户名失败:', error);
+        setFirestoreUserName(user.displayName || '用户');
+      }
+    };
+
+    fetchUserName();
+  }, [user]);
 
   // 如果用户未登录，重定向到登录页面
   if (!user) {
@@ -234,7 +263,7 @@ export default function CreatePostPage() {
         tags: formData.tags,
         image: imageUrl, // 使用上传后的永久URL
         author: {
-          name: user.displayName || user.email || "匿名用户",
+          name: firestoreUserName,
           avatar: user.photoURL || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
           university: "诺丁汉大学",
           year: "学生",
@@ -576,7 +605,7 @@ export default function CreatePostPage() {
                         className="w-8 h-8 rounded-full object-cover"
                       />
                       <span className="text-sm text-gray-600 font-medium">
-                        {user.displayName || "用户"}
+                        {firestoreUserName}
                       </span>
                     </div>
                     

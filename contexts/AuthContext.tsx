@@ -20,36 +20,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [userProfile, setUserProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     const unsubscribe = authService.onAuthStateChange(async (firebaseUser) => {
-      if (firebaseUser) {
-        setUser(firebaseUser);
-        // 这里可以获取用户详细信息
-        // const profile = await getUserProfile(firebaseUser.uid);
-        // setUserProfile(profile);
-      } else {
-        setUser(null);
-        setUserProfile(null);
+      console.log('Auth state changed:', firebaseUser ? 'User logged in' : 'User logged out');
+      
+      try {
+        if (firebaseUser) {
+          setUser(firebaseUser);
+          // 这里可以获取用户详细信息
+          // const profile = await getUserProfile(firebaseUser.uid);
+          // setUserProfile(profile);
+        } else {
+          setUser(null);
+          setUserProfile(null);
+        }
+      } catch (error) {
+        console.error('Error handling auth state change:', error);
+      } finally {
+        setLoading(false);
+        setInitialized(true);
       }
-      setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
-    setLoading(true);
     try {
       await authService.login(email, password);
+      // 不需要手动设置loading，onAuthStateChange会处理
     } catch (error) {
-      setLoading(false);
       throw error;
     }
   };
 
   const register = async (email: string, password: string, displayName: string) => {
-    setLoading(true);
     try {
       const result = await authService.register(email, password, displayName);
       if (!result.success) {
@@ -57,7 +64,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       // 注册成功，Firebase会自动触发onAuthStateChange
     } catch (error) {
-      setLoading(false);
       throw error;
     }
   };
@@ -65,6 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       await authService.logout();
+      // onAuthStateChange会处理状态清理
     } catch (error) {
       throw error;
     }
@@ -73,7 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value = {
     user,
     userProfile,
-    loading,
+    loading: loading || !initialized,
     login,
     register,
     logout,

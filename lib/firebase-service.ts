@@ -6,6 +6,7 @@ import {
   addDoc, 
   updateDoc, 
   deleteDoc, 
+  setDoc,
   query, 
   where, 
   orderBy, 
@@ -47,8 +48,9 @@ export const authService = {
       
       console.log("User created successfully:", user.uid);
       
-      // 在 Firestore 中创建用户档案
-      const userDoc = await addDoc(collection(db, "users"), {
+      // 在 Firestore 中创建用户档案 - 使用用户UID作为文档ID
+      const userDocRef = doc(db, "users", user.uid);
+      await setDoc(userDocRef, {
         uid: user.uid,
         email: user.email,
         displayName,
@@ -60,7 +62,7 @@ export const authService = {
         updatedAt: serverTimestamp(),
       });
       
-      console.log("User document created:", userDoc.id);
+      console.log("User document created with UID:", user.uid);
       
       return {
         success: true,
@@ -68,7 +70,7 @@ export const authService = {
           uid: user.uid,
           email: user.email,
           displayName,
-          docId: userDoc.id
+          docId: user.uid
         },
         message: "注册成功！"
       };

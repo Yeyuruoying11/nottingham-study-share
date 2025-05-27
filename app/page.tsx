@@ -59,10 +59,11 @@ const categories = [
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("全部");
+  const [selectedCategory, setSelectedCategory] = useState<string>("全部");
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [posts, setPosts] = useState<FirestorePost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [firestoreUserName, setFirestoreUserName] = useState<string>('');
   const userMenuRef = useRef<HTMLDivElement>(null);
   
   const { user, logout } = useAuth();
@@ -83,6 +84,45 @@ export default function HomePage() {
 
     loadPosts();
   }, [user]); // 只在用户状态变化时重新加载
+
+  // 获取Firestore中的用户名
+  useEffect(() => {
+    const fetchUserName = async () => {
+      if (!user) {
+        setFirestoreUserName('');
+        return;
+      }
+      
+      try {
+        const { doc, getDoc } = await import('firebase/firestore');
+        const { db } = await import('@/lib/firebase');
+        
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setFirestoreUserName(userData.displayName || user.displayName || '用户');
+        } else {
+          setFirestoreUserName(user.displayName || '用户');
+        }
+      } catch (error) {
+        console.error('获取用户名失败:', error);
+        setFirestoreUserName(user.displayName || '用户');
+      }
+    };
+
+    fetchUserName();
+    
+    // 监听用户名更新事件
+    const handleUsernameUpdate = (event: CustomEvent) => {
+      setFirestoreUserName(event.detail.newUsername);
+    };
+
+    window.addEventListener('usernameUpdated', handleUsernameUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('usernameUpdated', handleUsernameUpdate as EventListener);
+    };
+  }, [user]);
 
   // 临时的数据迁移函数
   const handleMigrateData = async () => {
@@ -487,7 +527,7 @@ export default function HomePage() {
                       >
                         <div className="px-4 py-3 border-b border-gray-100">
                           <p className="text-sm font-medium text-gray-900 truncate">
-                            {user.displayName || "用户"}
+                            {firestoreUserName || '用户'}
                           </p>
                           <p className="text-xs text-gray-500 truncate">
                             {user.email}

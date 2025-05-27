@@ -61,22 +61,33 @@ export function validateUsername(username: string): { valid: boolean; message: s
 // 检查用户名修改状态
 export async function checkUsernameChangeStatus(userId: string): Promise<UsernameStatus> {
   try {
+    console.log('checkUsernameChangeStatus - 开始检查用户:', userId);
+    
     const userDoc = await getDoc(doc(db, 'users', userId));
     
+    console.log('checkUsernameChangeStatus - 文档存在:', userDoc.exists());
+    
     if (!userDoc.exists()) {
+      console.error('checkUsernameChangeStatus - 用户文档不存在:', userId);
       throw new Error('用户不存在');
     }
 
     const userData = userDoc.data();
+    console.log('checkUsernameChangeStatus - 用户数据:', userData);
+    
     const changeCount = userData.usernameChangeCount || 0;
     const lastChange = userData.lastUsernameChange?.toDate();
 
+    console.log('checkUsernameChangeStatus - 修改次数:', changeCount, '最后修改:', lastChange);
+
     // 如果还没有达到最大修改次数
     if (changeCount < MAX_USERNAME_CHANGES) {
-      return {
+      const result = {
         canChange: true,
         remainingChanges: MAX_USERNAME_CHANGES - changeCount
       };
+      console.log('checkUsernameChangeStatus - 结果:', result);
+      return result;
     }
 
     // 如果已达到最大次数，检查冷却期
@@ -85,31 +96,42 @@ export async function checkUsernameChangeStatus(userId: string): Promise<Usernam
       
       if (timeSinceLastChange >= COOLDOWN_MS) {
         // 冷却期已过，重置计数
-        return {
+        const result = {
           canChange: true,
           remainingChanges: MAX_USERNAME_CHANGES
         };
+        console.log('checkUsernameChangeStatus - 冷却期已过，结果:', result);
+        return result;
       } else {
         // 还在冷却期内
         const nextChangeDate = new Date(lastChange.getTime() + COOLDOWN_MS);
-        return {
+        const result = {
           canChange: false,
           remainingChanges: 0,
           nextChangeDate,
           reason: `已达到修改次数上限，请等待至 ${nextChangeDate.toLocaleDateString()} 后再试`
         };
+        console.log('checkUsernameChangeStatus - 冷却期内，结果:', result);
+        return result;
       }
     }
 
     // 如果没有最后修改时间记录，但计数已满（异常情况）
-    return {
+    const result = {
       canChange: false,
       remainingChanges: 0,
       reason: '已达到修改次数上限'
     };
+    console.log('checkUsernameChangeStatus - 异常情况，结果:', result);
+    return result;
 
   } catch (error) {
     console.error('检查用户名修改状态失败:', error);
+    console.error('错误详情:', {
+      message: error.message,
+      code: error.code,
+      userId: userId
+    });
     throw error;
   }
 }
@@ -212,23 +234,37 @@ export async function getUsernameHistory(userId: string): Promise<{
   lastChange?: Date;
 }> {
   try {
+    console.log('getUsernameHistory - 开始获取用户历史:', userId);
+    
     const userDoc = await getDoc(doc(db, 'users', userId));
     
+    console.log('getUsernameHistory - 文档存在:', userDoc.exists());
+    
     if (!userDoc.exists()) {
+      console.error('getUsernameHistory - 用户文档不存在:', userId);
       throw new Error('用户不存在');
     }
 
     const userData = userDoc.data();
+    console.log('getUsernameHistory - 用户数据:', userData);
     
-    return {
+    const result = {
       current: userData.displayName || '',
       history: userData.usernameHistory || [],
       changeCount: userData.usernameChangeCount || 0,
       lastChange: userData.lastUsernameChange?.toDate()
     };
+    
+    console.log('getUsernameHistory - 结果:', result);
+    return result;
 
   } catch (error) {
     console.error('获取用户名历史失败:', error);
+    console.error('错误详情:', {
+      message: error.message,
+      code: error.code,
+      userId: userId
+    });
     throw error;
   }
 }

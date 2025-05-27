@@ -32,32 +32,86 @@ export default function UsernameSettingsPage() {
   const [changing, setChanging] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
   const [validationError, setValidationError] = useState('');
+  const [mounted, setMounted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // 确保组件已挂载
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
-    if (!user) {
+    if (mounted && !user) {
+      console.log('用户未登录，重定向到登录页面');
       router.push('/login');
       return;
     }
     
-    loadUserData();
-  }, [user, router]);
+    if (mounted && user) {
+      loadUserData();
+    }
+  }, [mounted, user, router]);
 
   const loadUserData = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('loadUserData: 用户不存在');
+      return;
+    }
     
     try {
       setLoading(true);
-      const [statusData, historyData] = await Promise.all([
-        checkUsernameChangeStatus(user.uid),
-        getUsernameHistory(user.uid)
-      ]);
+      setError(null);
       
+      console.log('loadUserData: 开始加载用户数据，UID:', user.uid);
+      
+      // 先尝试简单的状态检查
+      console.log('loadUserData: 检查用户名状态...');
+      const statusData = await checkUsernameChangeStatus(user.uid);
+      console.log('loadUserData: 状态数据:', statusData);
       setStatus(statusData);
+      
+      // 再获取历史数据
+      console.log('loadUserData: 获取用户名历史...');
+      const historyData = await getUsernameHistory(user.uid);
+      console.log('loadUserData: 历史数据:', historyData);
       setHistory(historyData);
-      setNewUsername(historyData.current);
-    } catch (error) {
-      console.error('加载用户数据失败:', error);
-      setMessage({ type: 'error', text: '加载数据失败，请刷新页面重试' });
+      
+      // 设置初始用户名
+      setNewUsername(historyData.current || user.displayName || '');
+      
+      console.log('loadUserData: 数据加载完成');
+      
+    } catch (error: any) {
+      console.error('loadUserData: 加载失败:', error);
+      setError(`加载失败: ${error.message}`);
+      
+      // 如果是用户不存在的错误，尝试创建用户文档
+      if (error.message.includes('用户不存在')) {
+        console.log('loadUserData: 尝试创建用户文档...');
+        try {
+          const { setDoc, doc, serverTimestamp } = await import('firebase/firestore');
+          const { db } = await import('@/lib/firebase');
+          
+          await setDoc(doc(db, 'users', user.uid), {
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName || '未设置姓名',
+            university: "诺丁汉大学",
+            usernameChangeCount: 0,
+            usernameHistory: [],
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          });
+          
+          console.log('loadUserData: 用户文档创建成功，重新加载...');
+          // 重新加载数据
+          setTimeout(() => loadUserData(), 1000);
+          return;
+        } catch (createError) {
+          console.error('loadUserData: 创建用户文档失败:', createError);
+          setError(`创建用户文档失败: ${createError.message}`);
+        }
+      }
     } finally {
       setLoading(false);
     }
@@ -102,6 +156,11 @@ export default function UsernameSettingsPage() {
         setMessage({ type: 'success', text: result.message });
         // 重新加载数据
         await loadUserData();
+        
+        // 通知其他页面用户名已更新
+        window.dispatchEvent(new CustomEvent('usernameUpdated', { 
+          detail: { newUsername: newUsername.trim() } 
+        }));
       } else {
         setMessage({ type: 'error', text: result.message });
       }
@@ -113,7 +172,7 @@ export default function UsernameSettingsPage() {
     }
   };
 
-  if (loading) {
+  if (loading || !mounted) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>
@@ -121,17 +180,45 @@ export default function UsernameSettingsPage() {
     );
   }
 
-  if (!user || !status || !history) {
+  if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <p className="text-gray-600">加载失败</p>
-          <button 
-            onClick={loadUserData}
-            className="mt-4 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-          >
-            重试
-          </button>
+        <div className="text-gray-600">正在跳转到登录页面...</div>
+      </div>
+    );
+  }
+
+  if (!status || !history) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center max-w-md">
+          {error ? (
+            <>
+              <p className="text-red-600 mb-4">错误: {error}</p>
+              <button 
+                onClick={loadUserData}
+                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 mr-4"
+              >
+                重试
+              </button>
+              <button 
+                onClick={() => router.push('/test-auth')}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              >
+                检查认证状态
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="text-gray-600 mb-4">加载失败</p>
+              <button 
+                onClick={loadUserData}
+                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+              >
+                重试
+              </button>
+            </>
+          )}
         </div>
       </div>
     );
