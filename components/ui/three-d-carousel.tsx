@@ -140,7 +140,7 @@ const Carousel = memo(
               src={images[currentIndex]}
               alt={`图片 ${currentIndex + 1}`}
               layoutId={`img-${images[currentIndex]}-${currentIndex}`}
-              className="w-full h-64 object-contain rounded-xl shadow-xl hover:shadow-2xl transition-shadow bg-white"
+              className="w-full h-80 object-contain rounded-xl shadow-xl hover:shadow-2xl transition-shadow bg-white"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
@@ -264,7 +264,7 @@ export function ThreeDPhotoCarousel({ images, className = "" }: ThreeDPhotoCarou
         <img
           src={images[0]}
           alt="图片"
-          className="w-full h-64 object-contain rounded-xl cursor-pointer hover:opacity-90 transition-opacity bg-white shadow-lg"
+          className="w-full h-80 object-contain rounded-xl cursor-pointer hover:opacity-90 transition-opacity bg-white shadow-lg"
           onClick={() => handleClick(images[0], 0)}
         />
         
@@ -402,7 +402,7 @@ export function ThreeDPhotoCarousel({ images, className = "" }: ThreeDPhotoCarou
         )}
       </AnimatePresence>
       
-      <div className="relative h-[320px] w-full overflow-hidden rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 z-10">
+      <div className="relative h-[400px] w-full overflow-hidden rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 z-10">
         <Carousel
           handleClick={handleClick}
           controls={controls}
