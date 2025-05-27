@@ -94,17 +94,19 @@ export async function getAllPostsFromFirestore(): Promise<FirestorePost[]> {
 // 按分类获取帖子
 export async function getPostsByCategoryFromFirestore(category: string): Promise<FirestorePost[]> {
   try {
+    console.log(`正在查询分类: ${category}`);
     const postsRef = collection(db, 'posts');
-    const q = query(
-      postsRef, 
-      where('category', '==', category),
-      orderBy('createdAt', 'desc')
-    );
+    
+    // 先尝试简单查询，不使用orderBy避免索引问题
+    const q = query(postsRef, where('category', '==', category));
     const querySnapshot = await getDocs(q);
+    
+    console.log(`分类 ${category} 查询结果: ${querySnapshot.size} 个帖子`);
     
     const posts: FirestorePost[] = [];
     querySnapshot.forEach((doc) => {
       const data = doc.data();
+      console.log(`找到帖子: ${data.title}, 分类: ${data.category}`);
       posts.push({
         id: doc.id,
         title: data.title,
@@ -119,6 +121,17 @@ export async function getPostsByCategoryFromFirestore(category: string): Promise
         comments: data.comments || 0,
         createdAt: data.createdAt
       });
+    });
+    
+    // 手动按时间排序
+    posts.sort((a, b) => {
+      const timeA = a.createdAt instanceof Date ? a.createdAt.getTime() : 
+                   a.createdAt && typeof a.createdAt === 'object' && 'toDate' in a.createdAt ? 
+                   (a.createdAt as any).toDate().getTime() : 0;
+      const timeB = b.createdAt instanceof Date ? b.createdAt.getTime() : 
+                   b.createdAt && typeof b.createdAt === 'object' && 'toDate' in b.createdAt ? 
+                   (b.createdAt as any).toDate().getTime() : 0;
+      return timeB - timeA; // 降序排列
     });
     
     return posts;

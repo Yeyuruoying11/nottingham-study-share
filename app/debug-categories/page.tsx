@@ -8,15 +8,26 @@ export default function DebugCategoriesPage() {
   const [categoryPosts, setCategoryPosts] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [debugLogs, setDebugLogs] = useState<string[]>([]);
+
+  const addLog = (message: string) => {
+    console.log(message);
+    setDebugLogs(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
+  };
 
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
         setError(null);
+        setDebugLogs([]);
+        
+        addLog('开始加载数据...');
         
         // 获取所有帖子
+        addLog('正在获取所有帖子...');
         const posts = await getAllPostsFromFirestore();
+        addLog(`获取到 ${posts.length} 个帖子`);
         setAllPosts(posts);
         
         // 测试各个分类
@@ -25,18 +36,26 @@ export default function DebugCategoriesPage() {
         
         for (const category of categories) {
           try {
+            addLog(`正在查询分类: ${category}`);
             const catPosts = await getPostsByCategoryFromFirestore(category);
+            addLog(`分类 ${category} 返回 ${catPosts.length} 个帖子`);
             categoryData[category] = catPosts;
           } catch (err) {
-            console.error(`获取${category}分类失败:`, err);
+            const errorMsg = `获取${category}分类失败: ${err instanceof Error ? err.message : String(err)}`;
+            addLog(errorMsg);
+            console.error(errorMsg, err);
             categoryData[category] = [];
           }
         }
         
         setCategoryPosts(categoryData);
+        addLog('数据加载完成');
+        
       } catch (err) {
+        const errorMsg = `加载数据失败: ${err instanceof Error ? err.message : String(err)}`;
+        addLog(errorMsg);
         console.error('加载数据失败:', err);
-        setError(err instanceof Error ? err.message : String(err));
+        setError(errorMsg);
       } finally {
         setLoading(false);
       }
@@ -73,6 +92,18 @@ export default function DebugCategoriesPage() {
     <div className="min-h-screen p-8 bg-gray-50">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">🔍 分类调试页面</h1>
+        
+        {/* 调试日志 */}
+        <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
+          <h2 className="text-xl font-semibold mb-4">📋 调试日志</h2>
+          <div className="bg-gray-100 rounded-lg p-4 max-h-60 overflow-y-auto">
+            {debugLogs.map((log, index) => (
+              <div key={index} className="text-xs font-mono text-gray-700 mb-1">
+                {log}
+              </div>
+            ))}
+          </div>
+        </div>
         
         {/* 总览 */}
         <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
