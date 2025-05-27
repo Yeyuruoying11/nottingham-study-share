@@ -175,7 +175,7 @@ export default function AdminPage() {
                     }
                   } catch (error) {
                     console.error('修复失败:', error);
-                    alert('修复失败: ' + error.message);
+                    alert('修复失败: ' + (error instanceof Error ? error.message : String(error)));
                   }
                 }
               }}
