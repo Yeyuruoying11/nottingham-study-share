@@ -817,41 +817,6 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* 筛选状态提示 */}
-        {!loading && posts.length > 0 && (selectedCategory !== "全部" || searchQuery) && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <span className="text-blue-600 text-sm">
-                  {selectedCategory !== "全部" && searchQuery ? (
-                    <>正在显示 <strong>"{selectedCategory}"</strong> 分类中包含 <strong>"{searchQuery}"</strong> 的帖子</>
-                  ) : selectedCategory !== "全部" ? (
-                    <>正在显示 <strong>"{selectedCategory}"</strong> 分类的帖子</>
-                  ) : (
-                    <>正在搜索 <strong>"{searchQuery}"</strong></>
-                  )}
-                  <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
-                    {filteredPosts.length} 个结果
-                  </span>
-                </span>
-              </div>
-              <button
-                onClick={() => {
-                  setSelectedCategory("全部");
-                  setSearchQuery("");
-                }}
-                className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
-              >
-                清除筛选
-              </button>
-            </div>
-          </motion.div>
-        )}
-
         {loading ? (
           <div className="flex justify-center items-center py-12">
             <div className="text-center">
