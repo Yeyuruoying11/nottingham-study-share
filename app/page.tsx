@@ -96,6 +96,28 @@ export default function HomePage() {
     };
 
     loadPosts();
+
+    // 监听帖子更新事件
+    const handlePostUpdate = () => {
+      console.log('收到帖子更新事件，重新加载帖子');
+      loadPosts();
+    };
+
+    // 监听storage事件作为备用方案
+    const handleStoragePostUpdate = (event: StorageEvent) => {
+      if (event.key === 'postUpdate') {
+        console.log('收到storage帖子更新事件');
+        loadPosts();
+      }
+    };
+
+    window.addEventListener('postUpdated', handlePostUpdate);
+    window.addEventListener('storage', handleStoragePostUpdate);
+
+    return () => {
+      window.removeEventListener('postUpdated', handlePostUpdate);
+      window.removeEventListener('storage', handleStoragePostUpdate);
+    };
   }, [selectedCategory]); // 当选中的分类改变时重新加载帖子
 
   // 加载分类统计信息
@@ -322,8 +344,13 @@ export default function HomePage() {
         const success = await deletePostFromFirestore(post.id!, user.uid);
         
         if (success) {
-          // 刷新帖子列表
-          const updatedPosts = await getAllPostsFromFirestore();
+          // 根据当前选中的分类重新加载帖子
+          let updatedPosts;
+          if (selectedCategory === "全部") {
+            updatedPosts = await getAllPostsFromFirestore();
+          } else {
+            updatedPosts = await getPostsByCategoryFromFirestore(selectedCategory);
+          }
           setPosts(updatedPosts);
           alert("帖子删除成功！");
         } else {

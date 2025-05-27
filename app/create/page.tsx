@@ -275,6 +275,19 @@ export default function CreatePostPage() {
         console.log("新帖子已添加到Firestore，ID:", postId);
         alert("帖子发布成功！");
         
+        // 触发全局帖子更新事件
+        window.dispatchEvent(new CustomEvent('postUpdated'));
+        
+        // 也触发storage事件作为备用方案
+        if (typeof window !== 'undefined') {
+          const event = new StorageEvent('storage', {
+            key: 'postUpdate',
+            newValue: Date.now().toString(),
+            oldValue: null
+          });
+          window.dispatchEvent(event);
+        }
+        
         // 清理预览URL
         if (imagePreview && imagePreview.startsWith('blob:')) {
           URL.revokeObjectURL(imagePreview);
