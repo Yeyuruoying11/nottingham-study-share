@@ -82,6 +82,7 @@ const Carousel = memo(
     const radius = cylinderWidth / (2 * Math.PI);
     const rotation = useMotionValue(0);
     const [isDragging, setIsDragging] = useState(false);
+    const [currentIndex, setCurrentIndex] = useState(0);
     
     // 计算初始旋转角度，让第一张图片正对前方
     const anglePerImage = 360 / faceCount;
@@ -91,6 +92,39 @@ const Carousel = memo(
       rotation,
       (value) => `rotate3d(0, 1, 0, ${value + initialRotation}deg)`
     );
+
+    // 自动旋转到指定索引
+    const rotateToIndex = (targetIndex: number) => {
+      const targetRotation = -targetIndex * anglePerImage;
+      setCurrentIndex(targetIndex);
+      
+      controls.start({
+        rotateY: targetRotation,
+        transition: {
+          type: "spring",
+          stiffness: 200,
+          damping: 30,
+          mass: 0.8,
+        },
+      });
+      
+      rotation.set(targetRotation);
+    };
+
+    // 点击时旋转到下一张
+    const handleImageClick = (clickedIndex: number) => {
+      console.log(`点击了图片 ${clickedIndex + 1}，当前索引: ${currentIndex}`);
+      
+      // 如果点击的是当前正面的图片，则打开灯箱
+      if (clickedIndex === currentIndex) {
+        console.log('点击正面图片，打开灯箱');
+        handleClick(images[clickedIndex], clickedIndex);
+      } else {
+        // 否则旋转到被点击的图片
+        console.log(`旋转到图片 ${clickedIndex + 1}`);
+        rotateToIndex(clickedIndex);
+      }
+    };
 
     return (
       <div
@@ -102,50 +136,13 @@ const Carousel = memo(
         }}
       >
         <motion.div
-          drag={isCarouselActive ? "x" : false}
-          className="relative flex h-full origin-center cursor-grab justify-center active:cursor-grabbing"
+          drag={false}
+          className="relative flex h-full origin-center justify-center"
           style={{
             transform,
             rotateY: rotation,
             width: cylinderWidth,
             transformStyle: "preserve-3d",
-          }}
-          onDrag={(_, info) => {
-            if (isCarouselActive) {
-              setIsDragging(true);
-              // 增加拖拽敏感度
-              rotation.set(rotation.get() + info.offset.x * 0.2);
-            }
-          }}
-          onDragEnd={(_, info) => {
-            if (isCarouselActive) {
-              // 添加惯性效果
-              const velocity = info.velocity.x * 0.1;
-              const finalRotation = rotation.get() + velocity;
-              
-              // 可选：添加吸附到最近图片的效果
-              const snapToNearest = Math.round(finalRotation / anglePerImage) * anglePerImage;
-              
-              controls.start({
-                rotateY: snapToNearest,
-                transition: {
-                  type: "spring",
-                  stiffness: 200,
-                  damping: 30,
-                  mass: 0.8,
-                },
-              });
-              
-              rotation.set(snapToNearest);
-              
-              // 延迟重置拖拽状态，避免拖拽结束时误触发点击
-              setTimeout(() => setIsDragging(false), 100);
-            }
-          }}
-          onDragStart={() => {
-            if (isCarouselActive) {
-              setIsDragging(true);
-            }
           }}
           animate={controls}
         >
@@ -162,7 +159,7 @@ const Carousel = memo(
               onClick={(e) => {
                 e.stopPropagation();
                 console.log(`容器点击事件触发: ${i + 1}`);
-                handleClick(imgUrl, i);
+                handleImageClick(i);
               }}
             >
               <motion.img
@@ -176,7 +173,7 @@ const Carousel = memo(
                 onClick={(e) => {
                   e.stopPropagation();
                   console.log(`图片点击事件触发: ${i + 1}`);
-                  handleClick(imgUrl, i);
+                  handleImageClick(i);
                 }}
               />
             </motion.div>
@@ -198,6 +195,7 @@ export function ThreeDPhotoCarousel({ images, className = "" }: ThreeDPhotoCarou
   const [activeImg, setActiveImg] = useState<string | null>(null);
   const [activeIndex, setActiveIndex] = useState<number>(0);
   const [isCarouselActive, setIsCarouselActive] = useState(true);
+  const [isAutoPlay, setIsAutoPlay] = useState(true);
   const controls = useAnimation();
 
   useEffect(() => {
@@ -207,6 +205,18 @@ export function ThreeDPhotoCarousel({ images, className = "" }: ThreeDPhotoCarou
   useEffect(() => {
     console.log("activeImg 状态变化:", activeImg);
   }, [activeImg]);
+
+  // 自动播放功能
+  useEffect(() => {
+    if (!isAutoPlay || !isCarouselActive || images.length <= 1) return;
+
+    const interval = setInterval(() => {
+      // 这里需要通过ref或其他方式调用Carousel组件的rotateToIndex
+      // 暂时先实现基础功能
+    }, 3000); // 每3秒自动切换
+
+    return () => clearInterval(interval);
+  }, [isAutoPlay, isCarouselActive, images.length]);
 
   const handleClick = (imgUrl: string, index: number) => {
     console.log('handleClick 被调用:', { imgUrl, index, activeImg, isCarouselActive });
@@ -411,7 +421,7 @@ export function ThreeDPhotoCarousel({ images, className = "" }: ThreeDPhotoCarou
         
         {/* 操作提示 */}
         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm z-20">
-          拖拽旋转 • 点击查看大图 • {images.length} 张图片
+          点击图片旋转 • 点击正面图片查看大图 • {images.length} 张图片
         </div>
       </div>
     </motion.div>
