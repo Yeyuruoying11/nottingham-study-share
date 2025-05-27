@@ -60,7 +60,7 @@ function SortableImageItem({
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    transition: isDragging ? 'none' : transition,
     opacity: isDragging ? 0.5 : 1,
   };
 
@@ -138,10 +138,15 @@ export default function CreatePostPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [firestoreUserName, setFirestoreUserName] = useState<string>('');
+  const [imageIds, setImageIds] = useState<string[]>([]);
 
   // 拖拽传感器设置
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -152,13 +157,14 @@ export default function CreatePostPage() {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      const oldIndex = parseInt(active.id as string);
-      const newIndex = parseInt(over.id as string);
+      const oldIndex = imageIds.findIndex(id => id === active.id);
+      const newIndex = imageIds.findIndex(id => id === over.id);
 
       // 重新排序文件和预览
       setSelectedFiles(prev => arrayMove(prev, oldIndex, newIndex));
       setImagePreviews(prev => arrayMove(prev, oldIndex, newIndex));
       setUploadProgress(prev => arrayMove(prev, oldIndex, newIndex));
+      setImageIds(prev => arrayMove(prev, oldIndex, newIndex));
     }
   };
 
@@ -280,6 +286,10 @@ export default function CreatePostPage() {
       const newPreviewUrls = fileArray.map(file => URL.createObjectURL(file));
       setImagePreviews(prev => [...prev, ...newPreviewUrls]);
       
+      // 为新图片生成唯一ID
+      const newIds = fileArray.map(() => `img-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+      setImageIds(prev => [...prev, ...newIds]);
+      
       // 清除表单中的文件选择，允许重复选择相同文件
       e.target.value = '';
       
@@ -297,6 +307,7 @@ export default function CreatePostPage() {
     
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
     setImagePreviews(prev => prev.filter((_, i) => i !== index));
+    setImageIds(prev => prev.filter((_, i) => i !== index));
     setFormData(prev => ({ ...prev, image: "", images: [] }));
     setUploadProgress(prev => prev.filter((_, i) => i !== index));
   };
@@ -601,14 +612,14 @@ export default function CreatePostPage() {
                         onDragEnd={handleDragEnd}
                       >
                         <SortableContext
-                          items={imagePreviews.map((_, index) => index.toString())}
+                          items={imageIds}
                           strategy={rectSortingStrategy}
                         >
                           <div className="grid grid-cols-3 gap-2">
                             {imagePreviews.map((preview, index) => (
                               <SortableImageItem
-                                key={index}
-                                id={index.toString()}
+                                key={imageIds[index]}
+                                id={imageIds[index]}
                                 preview={preview}
                                 index={index}
                                 isUploading={isUploading}
