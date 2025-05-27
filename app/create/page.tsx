@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { addPostToFirestore } from "@/lib/firestore-posts";
-import { uploadImageWithProgress, getImageInfo } from "@/lib/firebase-storage";
+import { uploadImageWithProgress, uploadImageSimple, uploadImageSmart, uploadImageTurbo, uploadImageUltimate, getImageInfo } from "@/lib/firebase-storage";
 
 const categories = [
   { name: "学习", icon: "📚", color: "bg-blue-100 text-blue-800" },
@@ -124,15 +124,15 @@ export default function CreatePostPage() {
   };
 
   const removeImage = () => {
-    setSelectedFile(null);
-    setImagePreview("");
-    setFormData(prev => ({ ...prev, image: "" }));
-    setUploadProgress(0);
-    
     // 清理预览URL
     if (imagePreview && imagePreview.startsWith('blob:')) {
       URL.revokeObjectURL(imagePreview);
     }
+    
+    setSelectedFile(null);
+    setImagePreview("");
+    setFormData(prev => ({ ...prev, image: "" }));
+    setUploadProgress(0);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -159,17 +159,52 @@ export default function CreatePostPage() {
         setUploadProgress(0);
         
         try {
-          imageUrl = await uploadImageWithProgress(
-            selectedFile,
-            user.uid,
-            (progress) => {
-              setUploadProgress(progress);
-            }
-          );
-          console.log('图片上传成功:', imageUrl);
+          console.log('开始上传图片...');
+          
+          // 优化的上传策略：优先使用智能上传，失败后使用简化上传
+          try {
+            imageUrl = await uploadImageSmart(
+              selectedFile,
+              user.uid,
+              (progress) => {
+                setUploadProgress(progress);
+              }
+            );
+            console.log('智能上传成功:', imageUrl);
+          } catch (smartError) {
+            console.warn('智能上传失败，尝试简化上传:', smartError);
+            
+            // 如果智能上传失败，使用简化上传作为备选
+            imageUrl = await uploadImageSimple(
+              selectedFile,
+              user.uid,
+              (progress) => {
+                setUploadProgress(progress);
+              }
+            );
+            console.log('简化上传成功:', imageUrl);
+          }
+          
         } catch (uploadError) {
           console.error('图片上传失败:', uploadError);
-          alert(`图片上传失败: ${uploadError instanceof Error ? uploadError.message : '未知错误'}`);
+          
+          // 提供更详细的错误信息
+          let errorMessage = '图片上传失败';
+          if (uploadError instanceof Error) {
+            if (uploadError.message.includes('unauthorized') || uploadError.message.includes('权限')) {
+              errorMessage = '上传权限不足，请确保已登录并重试';
+            } else if (uploadError.message.includes('network') || uploadError.message.includes('网络')) {
+              errorMessage = '网络连接问题，请检查网络后重试';
+            } else if (uploadError.message.includes('timeout') || uploadError.message.includes('超时')) {
+              errorMessage = '上传超时，请尝试压缩图片或检查网络';
+            } else if (uploadError.message.includes('size') || uploadError.message.includes('大小')) {
+              errorMessage = '图片文件过大，请选择小于5MB的图片';
+            } else {
+              errorMessage = `上传失败: ${uploadError.message}`;
+            }
+          }
+          
+          alert(errorMessage);
           return;
         } finally {
           setIsUploading(false);
@@ -213,15 +248,6 @@ export default function CreatePostPage() {
       setUploadProgress(0);
     }
   };
-
-  // 清理函数
-  React.useEffect(() => {
-    return () => {
-      if (imagePreview && imagePreview.startsWith('blob:')) {
-        URL.revokeObjectURL(imagePreview);
-      }
-    };
-  }, [imagePreview]);
 
   return (
     <div className="min-h-screen bg-gray-50">

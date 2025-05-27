@@ -8,6 +8,7 @@ import {
   orderBy, 
   serverTimestamp,
   Timestamp,
+  FieldValue,
   getDoc,
   updateDoc,
   increment
@@ -31,7 +32,7 @@ export interface FirestorePost {
   likes: number;
   comments: number;
   tags: string[];
-  createdAt: Timestamp | Date;
+  createdAt: Timestamp | Date | FieldValue;
   category: string;
 }
 
@@ -44,7 +45,7 @@ export interface FirestoreComment {
     uid?: string;
   };
   content: string;
-  createdAt: Timestamp | Date;
+  createdAt: Timestamp | Date | FieldValue;
   likes: number;
 }
 
@@ -273,12 +274,13 @@ export async function unlikePostInFirestore(postId: string): Promise<boolean> {
 }
 
 // 格式化时间戳为字符串
-export function formatTimestamp(timestamp: Timestamp | Date): string {
+export function formatTimestamp(timestamp: Timestamp | Date | FieldValue): string {
   if (timestamp instanceof Timestamp) {
     return timestamp.toDate().toLocaleDateString('zh-CN');
   } else if (timestamp instanceof Date) {
     return timestamp.toLocaleDateString('zh-CN');
   } else {
+    // 如果是FieldValue（如serverTimestamp），返回当前时间
     return new Date().toLocaleDateString('zh-CN');
   }
 } 
