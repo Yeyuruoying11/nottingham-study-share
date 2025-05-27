@@ -123,7 +123,7 @@ const Carousel = memo(
             <img
               src={images[prevIndex]}
               alt={`图片 ${prevIndex + 1}`}
-              className="w-full h-32 object-cover rounded-lg shadow-md"
+              className="w-full h-32 object-contain rounded-lg shadow-md bg-white"
             />
           </motion.div>
 
@@ -140,7 +140,7 @@ const Carousel = memo(
               src={images[currentIndex]}
               alt={`图片 ${currentIndex + 1}`}
               layoutId={`img-${images[currentIndex]}-${currentIndex}`}
-              className="w-full h-64 object-cover rounded-xl shadow-xl hover:shadow-2xl transition-shadow"
+              className="w-full h-64 object-contain rounded-xl shadow-xl hover:shadow-2xl transition-shadow bg-white"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
@@ -165,7 +165,7 @@ const Carousel = memo(
             <img
               src={images[nextIndex]}
               alt={`图片 ${nextIndex + 1}`}
-              className="w-full h-32 object-cover rounded-lg shadow-md"
+              className="w-full h-32 object-contain rounded-lg shadow-md bg-white"
             />
           </motion.div>
 
@@ -264,7 +264,7 @@ export function ThreeDPhotoCarousel({ images, className = "" }: ThreeDPhotoCarou
         <img
           src={images[0]}
           alt="图片"
-          className="w-full h-64 object-cover rounded-xl cursor-pointer hover:opacity-90 transition-opacity"
+          className="w-full h-64 object-contain rounded-xl cursor-pointer hover:opacity-90 transition-opacity bg-white shadow-lg"
           onClick={() => handleClick(images[0], 0)}
         />
         
