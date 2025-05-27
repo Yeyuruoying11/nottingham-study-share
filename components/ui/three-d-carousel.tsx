@@ -401,7 +401,7 @@ export function ThreeDPhotoCarousel({ images, className = "" }: ThreeDPhotoCarou
         )}
       </AnimatePresence>
       
-      <div className="relative h-[300px] w-full overflow-hidden rounded-xl bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="relative h-[300px] w-full overflow-hidden rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 z-10">
         <Carousel
           handleClick={handleClick}
           controls={controls}
@@ -410,7 +410,7 @@ export function ThreeDPhotoCarousel({ images, className = "" }: ThreeDPhotoCarou
         />
         
         {/* 操作提示 */}
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm z-20">
           拖拽旋转 • 点击查看大图 • {images.length} 张图片
         </div>
       </div>

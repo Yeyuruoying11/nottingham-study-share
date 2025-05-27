@@ -335,8 +335,12 @@ export default function PostDetailPage() {
                 className="w-full h-full object-cover"
               />
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-            <div className="absolute bottom-6 left-6 right-6">
+            {/* 只在非3D轮播时显示渐变层 */}
+            {!(post.images && post.images.length > 1) && (
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+            )}
+            {/* 文字层 - 设置pointer-events-none让点击穿透 */}
+            <div className="absolute bottom-6 left-6 right-6 pointer-events-none">
               <div className="flex flex-wrap gap-2 mb-4">
                 {post.tags.map((tag, index) => (
                   <span
