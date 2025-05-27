@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Upload, X, Plus, Eye } from "lucide-react";
+import { ArrowLeft, Upload, X, Plus, Eye, GripVertical } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,6 +10,110 @@ import { addPostToFirestore } from "@/lib/firestore-posts";
 import { uploadImageWithProgress, uploadImageSimple, uploadImageSmart, uploadImageTurbo, uploadImageUltimate, getImageInfo } from "@/lib/firebase-storage";
 import { uploadImageSmart as uploadImageSmartCloud } from "@/lib/firebase-storage-cloud";
 import { uploadImageSmart as uploadImageCORSFix } from "@/lib/firebase-storage-cors-fix";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  rectSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+// 可拖拽的图片项组件
+function SortableImageItem({ 
+  id, 
+  preview, 
+  index, 
+  isUploading, 
+  uploadProgress, 
+  onRemove, 
+  isMainImage 
+}: {
+  id: string;
+  preview: string;
+  index: number;
+  isUploading: boolean;
+  uploadProgress?: number;
+  onRemove: () => void;
+  isMainImage: boolean;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="relative group"
+    >
+      <img
+        src={preview}
+        alt={`预览 ${index + 1}`}
+        className="w-full h-24 object-cover rounded-lg"
+      />
+      
+      {/* 拖拽手柄 */}
+      <div
+        {...attributes}
+        {...listeners}
+        className="absolute top-1 left-1 p-1 bg-black bg-opacity-50 text-white rounded cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
+      >
+        <GripVertical className="w-3 h-3" />
+      </div>
+      
+      {/* 删除按钮 */}
+      <button
+        type="button"
+        onClick={onRemove}
+        disabled={isUploading}
+        className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors disabled:opacity-50 opacity-0 group-hover:opacity-100"
+      >
+        <X className="w-3 h-3" />
+      </button>
+      
+      {/* 上传进度 */}
+      {isUploading && uploadProgress !== undefined && (
+        <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">
+          <div className="text-center text-white">
+            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-1"></div>
+            <p className="text-xs">{uploadProgress}%</p>
+          </div>
+        </div>
+      )}
+      
+      {/* 主图标识 */}
+      {isMainImage && (
+        <div className="absolute bottom-1 left-1 bg-green-500 text-white text-xs px-1 py-0.5 rounded">
+          主图
+        </div>
+      )}
+    </div>
+  );
+}
 
 const categories = [
   { name: "学习", icon: "📚", color: "bg-blue-100 text-blue-800" },
@@ -41,6 +145,29 @@ export default function CreatePostPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [firestoreUserName, setFirestoreUserName] = useState<string>('');
+
+  // 拖拽传感器设置
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // 处理拖拽结束事件
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = parseInt(active.id as string);
+      const newIndex = parseInt(over.id as string);
+
+      // 重新排序文件和预览
+      setSelectedFiles(prev => arrayMove(prev, oldIndex, newIndex));
+      setImagePreviews(prev => arrayMove(prev, oldIndex, newIndex));
+      setUploadProgress(prev => arrayMove(prev, oldIndex, newIndex));
+    }
+  };
 
   // 获取Firestore中的用户名
   useEffect(() => {
@@ -128,6 +255,13 @@ export default function CreatePostPage() {
       // 将FileList转换为数组
       const fileArray = Array.from(files);
       
+      // 检查是否超过最大数量限制
+      const totalFiles = selectedFiles.length + fileArray.length;
+      if (totalFiles > 9) {
+        alert(`最多只能上传9张图片，当前已有${selectedFiles.length}张，只能再添加${9 - selectedFiles.length}张`);
+        return;
+      }
+      
       // 验证文件类型
       for (const file of fileArray) {
         if (!file.type.startsWith('image/')) {
@@ -148,13 +282,13 @@ export default function CreatePostPage() {
       const imageInfos = await Promise.all(fileArray.map(file => getImageInfo(file)));
       console.log('图片信息:', imageInfos);
 
-      // 设置选中的文件和预览
-      setSelectedFiles(fileArray);
-      const previewUrls = fileArray.map(file => URL.createObjectURL(file));
-      setImagePreviews(previewUrls);
+      // 累加文件而不是覆盖
+      setSelectedFiles(prev => [...prev, ...fileArray]);
+      const newPreviewUrls = fileArray.map(file => URL.createObjectURL(file));
+      setImagePreviews(prev => [...prev, ...newPreviewUrls]);
       
-      // 清除之前的图片URL
-      setFormData(prev => ({ ...prev, image: "", images: [] }));
+      // 清除表单中的文件选择，允许重复选择相同文件
+      e.target.value = '';
       
     } catch (error) {
       console.error('处理图片失败:', error);
@@ -459,41 +593,40 @@ export default function CreatePostPage() {
                   
                   {/* 多图片预览网格 */}
                   {imagePreviews.length > 0 && (
-                    <div className="grid grid-cols-3 gap-2 mb-4">
-                      {imagePreviews.map((preview, index) => (
-                        <div key={index} className="relative group">
-                          <img
-                            src={preview}
-                            alt={`预览 ${index + 1}`}
-                            className="w-full h-24 object-cover rounded-lg"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeImage(index)}
-                            disabled={isUploading}
-                            className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors disabled:opacity-50 opacity-0 group-hover:opacity-100"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                          
-                          {/* 上传进度 */}
-                          {isUploading && uploadProgress[index] !== undefined && (
-                            <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">
-                              <div className="text-center text-white">
-                                <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-1"></div>
-                                <p className="text-xs">{uploadProgress[index]}%</p>
-                              </div>
-                            </div>
-                          )}
-                          
-                          {/* 主图标识 */}
-                          {index === 0 && (
-                            <div className="absolute bottom-1 left-1 bg-green-500 text-white text-xs px-1 py-0.5 rounded">
-                              主图
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-sm text-gray-600">
+                          已选择 {imagePreviews.length} 张图片
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          拖拽图片可调整顺序，第一张为主图
+                        </p>
+                      </div>
+                      <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={handleDragEnd}
+                      >
+                        <SortableContext
+                          items={imagePreviews.map((_, index) => index.toString())}
+                          strategy={rectSortingStrategy}
+                        >
+                          <div className="grid grid-cols-3 gap-2">
+                            {imagePreviews.map((preview, index) => (
+                              <SortableImageItem
+                                key={index}
+                                id={index.toString()}
+                                preview={preview}
+                                index={index}
+                                isUploading={isUploading}
+                                uploadProgress={uploadProgress[index]}
+                                onRemove={() => removeImage(index)}
+                                isMainImage={index === 0}
+                              />
+                            ))}
+                          </div>
+                        </SortableContext>
+                      </DndContext>
                     </div>
                   )}
                   
