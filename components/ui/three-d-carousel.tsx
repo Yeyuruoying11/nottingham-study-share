@@ -76,48 +76,25 @@ const Carousel = memo(
     isCarouselActive: boolean;
   }) => {
     const isScreenSizeSm = useMediaQuery("(max-width: 640px)");
-    const cylinderWidth = isScreenSizeSm ? 1000 : 1600;
-    const faceCount = images.length;
-    const faceWidth = cylinderWidth / faceCount;
-    const radius = cylinderWidth / (2 * Math.PI);
-    const rotation = useMotionValue(0);
-    const [isDragging, setIsDragging] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
     
-    // 计算初始旋转角度，让第一张图片正对前方
-    const anglePerImage = 360 / faceCount;
-    const initialRotation = 0; // 第一张图片在0度位置
-    
-    const transform = useTransform(
-      rotation,
-      (value) => `rotate3d(0, 1, 0, ${value + initialRotation}deg)`
-    );
+    // 简化为平面轮播，中间大图，两边小图
+    const centerImageWidth = isScreenSizeSm ? 280 : 400;
+    const sideImageWidth = isScreenSizeSm ? 60 : 80;
+    const gap = isScreenSizeSm ? 10 : 20;
 
     // 自动旋转到指定索引
     const rotateToIndex = (targetIndex: number) => {
-      const targetRotation = -targetIndex * anglePerImage;
       setCurrentIndex(targetIndex);
-      
-      controls.start({
-        rotateY: targetRotation,
-        transition: {
-          type: "spring",
-          stiffness: 200,
-          damping: 30,
-          mass: 0.8,
-        },
-      });
-      
-      rotation.set(targetRotation);
     };
 
     // 点击时旋转到下一张
     const handleImageClick = (clickedIndex: number) => {
       console.log(`点击了图片 ${clickedIndex + 1}，当前索引: ${currentIndex}`);
       
-      // 如果点击的是当前正面的图片，则打开灯箱
+      // 如果点击的是当前中心的图片，则打开灯箱
       if (clickedIndex === currentIndex) {
-        console.log('点击正面图片，打开灯箱');
+        console.log('点击中心图片，打开灯箱');
         handleClick(images[clickedIndex], clickedIndex);
       } else {
         // 否则旋转到被点击的图片
@@ -126,59 +103,73 @@ const Carousel = memo(
       }
     };
 
+    // 获取前一张和后一张的索引
+    const prevIndex = currentIndex === 0 ? images.length - 1 : currentIndex - 1;
+    const nextIndex = currentIndex === images.length - 1 ? 0 : currentIndex + 1;
+
     return (
-      <div
-        className="flex h-full items-center justify-center"
-        style={{
-          perspective: "1000px",
-          transformStyle: "preserve-3d",
-          willChange: "transform",
-        }}
-      >
-        <motion.div
-          drag={false}
-          className="relative flex h-full origin-center justify-center"
-          style={{
-            transform,
-            rotateY: rotation,
-            width: cylinderWidth,
-            transformStyle: "preserve-3d",
-          }}
-          animate={controls}
-        >
-          {images.map((imgUrl, i) => (
-            <motion.div
-              key={`key-${imgUrl}-${i}`}
-              className="absolute flex h-full origin-center items-center justify-center rounded-xl bg-white p-1 shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
-              style={{
-                width: `${faceWidth}px`,
-                transform: `rotateY(${
-                  i * anglePerImage
-                }deg) translateZ(${radius}px)`,
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                console.log(`容器点击事件触发: ${i + 1}`);
-                handleImageClick(i);
-              }}
-            >
-              <motion.img
-                src={imgUrl}
-                alt={`图片 ${i + 1}`}
-                layoutId={`img-${imgUrl}-${i}`}
-                className="w-full rounded-xl object-cover aspect-square max-w-[280px] max-h-[280px] hover:scale-105 transition-transform cursor-pointer"
-                initial={{ filter: "blur(4px)" }}
-                animate={{ filter: "blur(0px)" }}
-                transition={transition}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  console.log(`图片点击事件触发: ${i + 1}`);
-                  handleImageClick(i);
-                }}
-              />
-            </motion.div>
-          ))}
-        </motion.div>
+      <div className="flex h-full items-center justify-center relative overflow-hidden">
+        <div className="flex items-center justify-center relative" style={{ width: centerImageWidth + sideImageWidth * 2 + gap * 2 }}>
+          
+          {/* 左侧图片 */}
+          <motion.div
+            className="absolute left-0 top-1/2 transform -translate-y-1/2 cursor-pointer opacity-60 hover:opacity-80 transition-opacity z-10"
+            style={{ width: sideImageWidth }}
+            onClick={() => handleImageClick(prevIndex)}
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 0.6 }}
+            transition={{ duration: 0.3 }}
+          >
+            <img
+              src={images[prevIndex]}
+              alt={`图片 ${prevIndex + 1}`}
+              className="w-full h-32 object-cover rounded-lg shadow-md"
+            />
+          </motion.div>
+
+          {/* 中心图片 */}
+          <motion.div
+            className="relative z-20 cursor-pointer"
+            style={{ width: centerImageWidth }}
+            onClick={() => handleImageClick(currentIndex)}
+            layout
+            layoutId={`center-image-${currentIndex}`}
+          >
+            <motion.img
+              key={currentIndex}
+              src={images[currentIndex]}
+              alt={`图片 ${currentIndex + 1}`}
+              layoutId={`img-${images[currentIndex]}-${currentIndex}`}
+              className="w-full h-64 object-cover rounded-xl shadow-xl hover:shadow-2xl transition-shadow"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
+            />
+            
+            {/* 中心图片指示器 */}
+            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-2 py-1 rounded-full text-xs">
+              {currentIndex + 1} / {images.length}
+            </div>
+          </motion.div>
+
+          {/* 右侧图片 */}
+          <motion.div
+            className="absolute right-0 top-1/2 transform -translate-y-1/2 cursor-pointer opacity-60 hover:opacity-80 transition-opacity z-10"
+            style={{ width: sideImageWidth }}
+            onClick={() => handleImageClick(nextIndex)}
+            initial={{ x: 20, opacity: 0 }}
+            animate={{ x: 0, opacity: 0.6 }}
+            transition={{ duration: 0.3 }}
+          >
+            <img
+              src={images[nextIndex]}
+              alt={`图片 ${nextIndex + 1}`}
+              className="w-full h-32 object-cover rounded-lg shadow-md"
+            />
+          </motion.div>
+
+        </div>
       </div>
     );
   }
@@ -411,7 +402,7 @@ export function ThreeDPhotoCarousel({ images, className = "" }: ThreeDPhotoCarou
         )}
       </AnimatePresence>
       
-      <div className="relative h-[400px] w-full overflow-hidden rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 z-10">
+      <div className="relative h-[320px] w-full overflow-hidden rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 z-10">
         <Carousel
           handleClick={handleClick}
           controls={controls}
@@ -421,7 +412,7 @@ export function ThreeDPhotoCarousel({ images, className = "" }: ThreeDPhotoCarou
         
         {/* 操作提示 */}
         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm z-20">
-          点击图片旋转 • 点击正面图片查看大图 • {images.length} 张图片
+          点击侧边图片切换 • 点击中心图片查看大图 • {images.length} 张图片
         </div>
       </div>
     </motion.div>
