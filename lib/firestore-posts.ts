@@ -18,6 +18,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { deleteImageFromStorage } from './firebase-storage';
+import { isAdmin } from './admin-config';
 
 export interface FirestorePost {
   id?: string;
@@ -222,11 +223,18 @@ export async function deletePostFromFirestore(postId: string, currentUserUid: st
       return false;
     }
     
-    // 验证是否是帖子作者
-    if (post.author.uid !== currentUserUid) {
+    // 获取当前用户信息以检查管理员权限
+    const userDoc = await getDoc(doc(db, 'users', currentUserUid));
+    const userData = userDoc.exists() ? userDoc.data() : null;
+    const isAdminUser = userData && userData.email && isAdmin(userData.email);
+    
+    // 验证是否是帖子作者或管理员
+    if (post.author.uid !== currentUserUid && !isAdminUser) {
       console.error('无权限删除此帖子');
       return false;
     }
+    
+    console.log(isAdminUser ? '管理员删除帖子' : '作者删除帖子', postId);
     
     // 删除帖子关联的图片（如果存在）
     if (post.image && post.image.includes('firebase')) {

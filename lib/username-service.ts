@@ -1,6 +1,7 @@
 import { doc, updateDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase';
 import { User } from './types';
+import { isAdmin } from './admin-config';
 
 // 用户名修改限制常量
 const MAX_USERNAME_CHANGES = 3;
@@ -74,6 +75,16 @@ export async function checkUsernameChangeStatus(userId: string): Promise<Usernam
 
     const userData = userDoc.data();
     console.log('checkUsernameChangeStatus - 用户数据:', userData);
+    
+    // 检查是否为管理员
+    if (userData.email && isAdmin(userData.email)) {
+      console.log('checkUsernameChangeStatus - 管理员用户，无限修改权限');
+      return {
+        canChange: true,
+        remainingChanges: 999, // 显示为无限
+        reason: '管理员账户，无限修改权限'
+      };
+    }
     
     const changeCount = userData.usernameChangeCount || 0;
     const lastChange = userData.lastUsernameChange?.toDate();

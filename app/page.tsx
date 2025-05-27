@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Search, Plus, Heart, MessageCircle, Share, Bookmark, User, Bell, Menu, LogOut, Settings, Trash2, MoreVertical, X } from "lucide-react";
+import { Search, Plus, Heart, MessageCircle, Share, Bookmark, User, Bell, Menu, LogOut, Settings, Trash2, MoreVertical, X, Crown } from "lucide-react";
 import { InfiniteMovingCards } from "@/components/ui/infinite-moving-cards";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,6 +16,7 @@ import {
   getUserLikeStatuses,
   type FirestorePost 
 } from "@/lib/firestore-posts";
+import { isAdminUser } from "@/lib/admin-config";
 
 // 临时导入迁移函数
 const migrateTestData = async () => {
@@ -222,8 +223,10 @@ export default function HomePage() {
     const [localLiked, setLocalLiked] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
     
-    // 改进的作者身份验证逻辑 - 使用UID进行验证
+    // 改进的作者身份验证逻辑 - 使用UID进行验证，管理员可以删除任何帖子
     const isAuthor = user && post.author.uid && user.uid === post.author.uid;
+    const isAdmin = user && isAdminUser(user);
+    const canDelete = isAuthor || isAdmin;
 
     // 只在组件挂载时获取一次点赞状态，避免依赖全局状态
     useEffect(() => {
@@ -300,7 +303,7 @@ export default function HomePage() {
       e.preventDefault(); // 阻止Link的跳转
       e.stopPropagation();
 
-      if (!user || !isAuthor) {
+      if (!user || !canDelete) {
         alert("您没有权限删除此帖子");
         return;
       }
@@ -392,13 +395,14 @@ export default function HomePage() {
                 </button>
 
                 {/* 删除选项 - 只有作者才能看到 */}
-                {isAuthor && (
+                {canDelete && (
                   <>
                     <div className="border-t border-gray-100 my-1"></div>
                     <button
                       onClick={handleDeletePost}
                       disabled={isDeleting}
                       className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      title={isAdmin ? "管理员删除" : "删除帖子"}
                     >
                       {isDeleting ? (
                         <>
@@ -408,7 +412,7 @@ export default function HomePage() {
                       ) : (
                         <>
                           <Trash2 className="w-4 h-4" />
-                          <span>删除</span>
+                          <span>{isAdmin && !isAuthor ? "管理员删除" : "删除"}</span>
                         </>
                       )}
                     </button>
@@ -611,7 +615,19 @@ export default function HomePage() {
                           <Settings className="w-4 h-4" />
                           <span>设置</span>
                         </Link>
-                        
+
+                        {/* 管理员面板入口 */}
+                        {isAdminUser(user) && (
+                          <Link 
+                            href="/admin"
+                            className="w-full px-4 py-2 text-left text-sm text-yellow-600 hover:bg-yellow-50 flex items-center space-x-2"
+                            onClick={() => setShowUserMenu(false)}
+                          >
+                            <Crown className="w-4 h-4" />
+                            <span>管理面板</span>
+                          </Link>
+                        )}
+
                         <div className="border-t border-gray-100 mt-1 pt-1">
                           <button 
                             onClick={handleLogout}
