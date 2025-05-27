@@ -2,8 +2,12 @@
   {
     "origin": [
       "*",
+      "https://nottingham-study-share.vercel.app",
+      "https://nottingham-study-share-*.vercel.app",
+      "https://nottingham-study-share-git-*.vercel.app",
       "https://nottingham-study-share-llhka0qae-yeyuruoyings-projects-263dab2e.vercel.app",
       "https://*.vercel.app",
+      "https://vercel.app",
       "http://localhost:3000",
       "http://localhost:3001",
       "http://localhost:3002",
@@ -22,7 +26,9 @@
       "x-firebase-storage-version",
       "access-control-allow-origin",
       "access-control-allow-methods",
-      "access-control-allow-headers"
+      "access-control-allow-headers",
+      "x-goog-upload-url",
+      "x-goog-upload-header-*"
     ]
   }
 ] 
