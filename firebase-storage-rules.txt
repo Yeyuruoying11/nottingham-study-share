@@ -1,34 +1,61 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    // 允许所有人读取文件（查看图片）
-    // 只允许已登录用户上传文件
-    match /{allPaths=**} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-    
-    // 更详细的规则（可选，如果需要更精细控制可以使用）
-    /*
     // 用户头像 - 只能修改自己的头像
     match /avatars/{userId}/{allPaths=**} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null 
+                   && request.auth.uid == userId
+                   && request.resource.size < 2 * 1024 * 1024  // 最大2MB
+                   && request.resource.contentType.matches('image/.*');
     }
     
-    // 帖子图片 - 已登录用户可以上传
-    match /posts/{postId}/{allPaths=**} {
+    // 帖子图片 - 已登录用户可以上传，限制文件大小和类型
+    match /posts/{userId}/{allPaths=**} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if request.auth != null 
+                   && request.auth.uid == userId  // 只能上传到自己的文件夹
+                   && request.resource.size < 5 * 1024 * 1024  // 最大5MB
+                   && request.resource.contentType.matches('image/.*');
     }
     
-    // 限制文件大小（最大5MB）和类型
+    // 临时上传文件夹 - 用于测试和临时存储
+    match /temp/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null 
+                   && request.auth.uid == userId
+                   && request.resource.size < 10 * 1024 * 1024;  // 最大10MB
+    }
+    
+    // 公共资源 - 只读
+    match /public/{allPaths=**} {
+      allow read: if true;
+      allow write: if false;  // 公共资源不允许写入
+    }
+    
+    // 测试文件 - 开发环境使用
+    match /test/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null;  // 任何已登录用户都可以测试
+    }
+    
+    // 系统文件 - 严格限制
+    match /system/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if false;  // 系统文件不允许写入
+    }
+    
+    // 默认规则 - 兜底保护
     match /{allPaths=**} {
       allow read: if true;
       allow write: if request.auth != null 
-                   && request.resource.size < 5 * 1024 * 1024
-                   && request.resource.contentType.matches('image/.*');
+                   && request.resource.size < 5 * 1024 * 1024  // 默认最大5MB
+                   && (
+                     request.resource.contentType.matches('image/.*') ||
+                     request.resource.contentType.matches('video/.*') ||
+                     request.resource.contentType.matches('application/pdf') ||
+                     request.resource.contentType.matches('text/.*')
+                   );
     }
-    */
   }
 } 
