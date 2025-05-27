@@ -199,121 +199,43 @@ const testPosts = [
 
 ⏰ 时间管理
 
-制定详细计划
-- 8周前: 确定论文题目和大纲
-- 6周前: 完成文献调研
-- 4周前: 完成初稿
-- 2周前: 修改和完善
-- 1周前: 最终检查和格式调整
+制定详细的时间表是关键。我建议把整个论文写作过程分成几个阶段：
+1. 文献调研（2-3周）
+2. 大纲制定（1周）
+3. 初稿写作（4-5周）
+4. 修改完善（2-3周）
 
-番茄工作法
-- 25分钟专注写作
-- 5分钟休息
-- 每4个番茄休息15-30分钟
+每天设定具体的目标，比如"今天要读完5篇文献"或"今天要写完第二章的第一节"。
 
 📚 写作技巧
 
-1. 文献管理
-推荐使用 Zotero 或 Mendeley：
-- 自动生成引用格式
-- 方便整理和搜索文献
-- 支持多设备同步
+- 先写大纲，再填充内容
+- 每天写一点，不要拖到最后
+- 使用番茄工作法，25分钟专注写作，5分钟休息
+- 找一个安静的环境，关掉手机通知
 
-2. 写作结构
-1. Introduction (10%)
-   - Background
-   - Research question
-   - Thesis statement
+💡 实用工具
 
-2. Literature Review (20%)
-   - Current research
-   - Research gap
-   - Theoretical framework
+推荐几个我用过的工具：
+- Zotero：文献管理神器
+- Grammarly：语法检查
+- Forest：专注力APP
+- Google Docs：实时保存，不怕丢失
 
-3. Methodology (15%)
-   - Research design
-   - Data collection
-   - Analysis methods
-
-4. Results/Analysis (30%)
-   - Findings
-   - Data analysis
-   - Discussion
-
-5. Conclusion (15%)
-   - Summary
-   - Implications
-   - Future research
-
-6. References (10%)
-
-3. 写作小贴士
-- 每天写一点: 不要等到最后一刻
-- 先写再改: 完美主义是效率杀手
-- 大声朗读: 检查语言流畅性
-- 寻求反馈: 让朋友或导师提意见
-
-🏛️ 学习地点推荐
-
-图书馆
-- Hallward Library: 安静，适合深度思考
-- Kings Meadow Campus Library: 人少，环境好
-- Law Library: 24小时开放
-
-咖啡厅
-- 200 Degrees: 氛围好，咖啡棒
-- Starbucks: 熟悉环境，长时间学习
-- Costa: 相对安静
-
-在家学习
-- 创造专门的学习空间
-- 远离干扰源（手机、电视）
-- 保持良好的学习姿势
-
-💪 保持健康
-
-身体健康
-- 规律作息，保证7-8小时睡眠
-- 适量运动，哪怕只是散步
-- 健康饮食，多吃蔬果
-
-心理健康
-- 适当休息，不要过度压力
-- 和朋友聊天，分享压力
-- 必要时寻求学校心理咨询
-
-🛠️ 实用工具
-
-写作工具
-- Grammarly: 语法检查
-- Hemingway Editor: 提高可读性
-- Google Docs: 实时保存和协作
-
-时间管理
-- Forest: 专注力训练
-- Todoist: 任务管理
-- Google Calendar: 时间规划
-
-🎯 最后的建议
-
-1. 开始永远不嫌早: 越早开始压力越小
-2. 质量胜过数量: 专注比时长更重要
-3. 寻求帮助: 不要独自承受压力
-4. 相信自己: 你比想象中更强大
-
-记住，论文只是学习过程的一部分，不要让它成为你的全部。保持平衡，照顾好自己，你一定可以的！
-
-加油！💪`,
-    image: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=500&fit=crop",
+记住，论文写作是一个过程，不要给自己太大压力。相信自己，你一定可以的！`,
+    image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&h=600&fit=crop",
     author: {
       name: "学霸小王",
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face",
       university: "诺丁汉大学",
-      year: "研二",
-      uid: "user-xueba"
+      year: "研二学生",
+      uid: "test-user-1"
     },
-    tags: ["学习", "论文", "技巧"],
-    category: "学习"
+    tags: ["论文", "学习技巧", "时间管理"],
+    category: "学习",
+    likes: 15,
+    likedBy: ["test-user-2", "test-user-3"],
+    comments: 8
   }
 ];
 

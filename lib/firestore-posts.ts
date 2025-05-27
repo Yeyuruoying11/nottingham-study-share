@@ -11,7 +11,9 @@ import {
   FieldValue,
   getDoc,
   updateDoc,
-  increment
+  increment,
+  arrayUnion,
+  arrayRemove
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { deleteImageFromStorage } from './firebase-storage';
@@ -30,6 +32,7 @@ export interface FirestorePost {
     uid?: string; // 添加用户UID用于权限验证
   };
   likes: number;
+  likedBy?: string[]; // 点赞用户的UID列表
   comments: number;
   tags: string[];
   createdAt: Timestamp | Date | FieldValue;
@@ -56,21 +59,32 @@ export const commentsCollection = collection(db, 'comments');
 // 获取所有帖子
 export async function getAllPostsFromFirestore(): Promise<FirestorePost[]> {
   try {
-    const q = query(postsCollection, orderBy('createdAt', 'desc'));
+    const postsRef = collection(db, 'posts');
+    const q = query(postsRef, orderBy('createdAt', 'desc'));
     const querySnapshot = await getDocs(q);
     
     const posts: FirestorePost[] = [];
     querySnapshot.forEach((doc) => {
-      const data = doc.data() as Omit<FirestorePost, 'id'>;
+      const data = doc.data();
       posts.push({
         id: doc.id,
-        ...data
+        title: data.title,
+        content: data.content,
+        fullContent: data.fullContent || data.content,
+        category: data.category,
+        tags: data.tags || [],
+        image: data.image || "",
+        author: data.author,
+        likes: data.likes || 0, // 确保包含点赞数
+        likedBy: data.likedBy || [], // 点赞用户列表
+        comments: data.comments || 0,
+        createdAt: data.createdAt
       });
     });
     
     return posts;
   } catch (error) {
-    console.error('获取帖子失败:', error);
+    console.error("获取帖子失败:", error);
     return [];
   }
 }
@@ -270,6 +284,92 @@ export async function unlikePostInFirestore(postId: string): Promise<boolean> {
   } catch (error) {
     console.error('取消点赞失败:', error);
     return false;
+  }
+}
+
+// 点赞相关功能
+export async function toggleLike(postId: string, userId: string): Promise<{ liked: boolean; likesCount: number }> {
+  try {
+    const postRef = doc(db, 'posts', postId);
+    const postDoc = await getDoc(postRef);
+    
+    if (!postDoc.exists()) {
+      throw new Error('帖子不存在');
+    }
+    
+    const postData = postDoc.data();
+    const likedBy = postData.likedBy || [];
+    const isLiked = likedBy.includes(userId);
+    
+    if (isLiked) {
+      // 取消点赞
+      await updateDoc(postRef, {
+        likes: increment(-1),
+        likedBy: arrayRemove(userId)
+      });
+      
+      return {
+        liked: false,
+        likesCount: (postData.likes || 0) - 1
+      };
+    } else {
+      // 添加点赞
+      await updateDoc(postRef, {
+        likes: increment(1),
+        likedBy: arrayUnion(userId)
+      });
+      
+      return {
+        liked: true,
+        likesCount: (postData.likes || 0) + 1
+      };
+    }
+  } catch (error) {
+    console.error('点赞操作失败:', error);
+    throw error;
+  }
+}
+
+// 获取用户对特定帖子的点赞状态
+export async function getUserLikeStatus(postId: string, userId: string): Promise<boolean> {
+  try {
+    const postRef = doc(db, 'posts', postId);
+    const postDoc = await getDoc(postRef);
+    
+    if (!postDoc.exists()) {
+      return false;
+    }
+    
+    const postData = postDoc.data();
+    const likedBy = postData.likedBy || [];
+    return likedBy.includes(userId);
+  } catch (error) {
+    console.error('获取点赞状态失败:', error);
+    return false;
+  }
+}
+
+// 批量获取用户对多个帖子的点赞状态
+export async function getUserLikeStatuses(postIds: string[], userId: string): Promise<Record<string, boolean>> {
+  try {
+    const statuses: Record<string, boolean> = {};
+    
+    // 并行获取所有帖子的点赞状态
+    const promises = postIds.map(async (postId) => {
+      const status = await getUserLikeStatus(postId, userId);
+      return { postId, status };
+    });
+    
+    const results = await Promise.all(promises);
+    
+    results.forEach(({ postId, status }) => {
+      statuses[postId] = status;
+    });
+    
+    return statuses;
+  } catch (error) {
+    console.error('批量获取点赞状态失败:', error);
+    return {};
   }
 }
 

@@ -10,6 +10,8 @@ import {
   getAllPostsFromFirestore, 
   deletePostFromFirestore, 
   formatTimestamp,
+  toggleLike,
+  getUserLikeStatuses,
   type FirestorePost 
 } from "@/lib/firestore-posts";
 
@@ -80,7 +82,7 @@ export default function HomePage() {
     };
 
     loadPosts();
-  }, []);
+  }, [user]); // 只在用户状态变化时重新加载
 
   // 临时的数据迁移函数
   const handleMigrateData = async () => {
@@ -124,21 +126,70 @@ export default function HomePage() {
   const PostCard = ({ post, index }: { post: any; index: number }) => {
     const [isDeleting, setIsDeleting] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
+    const [isLiking, setIsLiking] = useState(false);
+    const [localLikes, setLocalLikes] = useState(post.likes || 0);
+    const [localLiked, setLocalLiked] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
     
     // 改进的作者身份验证逻辑 - 使用UID进行验证
     const isAuthor = user && post.author.uid && user.uid === post.author.uid;
 
-    // 调试信息（开发环境下显示）- 只在菜单打开时显示
-    if (process.env.NODE_ENV === 'development' && user && showMenu) {
-      console.log('用户信息:', {
-        uid: user.uid,
-        displayName: user.displayName,
-        email: user.email
-      });
-      console.log('帖子作者UID:', post.author.uid);
-      console.log('是否为作者:', isAuthor);
-    }
+    // 只在组件挂载时获取一次点赞状态，避免依赖全局状态
+    useEffect(() => {
+      const initializeLikeStatus = async () => {
+        if (user && post.id) {
+          try {
+            const { getUserLikeStatus } = await import("@/lib/firestore-posts");
+            const status = await getUserLikeStatus(post.id, user.uid);
+            setLocalLiked(status);
+          } catch (error) {
+            console.error('获取点赞状态失败:', error);
+          }
+        }
+      };
+      
+      initializeLikeStatus();
+    }, [user?.uid, post.id]); // 只依赖用户ID和帖子ID
+
+    // 处理点赞
+    const handleLike = async (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (!user) {
+        alert('请先登录才能点赞');
+        return;
+      }
+
+      if (isLiking) return;
+
+      // 先更新本地状态，提供即时反馈
+      const newLiked = !localLiked;
+      const newLikes = newLiked ? localLikes + 1 : localLikes - 1;
+      
+      setLocalLiked(newLiked);
+      setLocalLikes(newLikes);
+      setIsLiking(true);
+      
+      try {
+        const result = await toggleLike(post.id!, user.uid);
+        
+        // 确保本地状态与服务器状态一致
+        setLocalLikes(result.likesCount);
+        setLocalLiked(result.liked);
+        
+        // 完全移除全局状态更新，避免触发其他组件重新渲染
+        
+      } catch (error) {
+        console.error('点赞失败:', error);
+        // 如果失败，恢复原来的状态
+        setLocalLiked(!newLiked);
+        setLocalLikes(localLikes);
+        alert('点赞失败，请重试');
+      } finally {
+        setIsLiking(false);
+      }
+    };
 
     // 点击外部关闭菜单
     useEffect(() => {
@@ -315,10 +366,25 @@ export default function HomePage() {
               </div>
               
               <div className="flex items-center space-x-4 text-gray-500">
-                <div className="flex items-center space-x-1">
-                  <Heart className="w-4 h-4" />
-                  <span className="text-xs">{post.likes}</span>
-                </div>
+                {/* 点赞按钮 */}
+                <button
+                  onClick={handleLike}
+                  disabled={isLiking}
+                  className={`flex items-center space-x-1 transition-colors duration-150 ${
+                    localLiked 
+                      ? 'text-red-500' 
+                      : 'text-gray-500 hover:text-red-500'
+                  } ${isLiking ? 'opacity-75' : ''}`}
+                  title={localLiked ? '取消点赞' : '点赞'}
+                >
+                  <Heart 
+                    className={`w-4 h-4 transition-all duration-150 ${
+                      localLiked ? 'fill-current scale-110' : ''
+                    }`} 
+                  />
+                  <span className="text-xs font-medium">{localLikes}</span>
+                </button>
+                
                 <div className="flex items-center space-x-1">
                   <MessageCircle className="w-4 h-4" />
                   <span className="text-xs">{post.comments}</span>

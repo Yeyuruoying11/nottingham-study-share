@@ -10,6 +10,8 @@ import {
   getCommentsByPostIdFromFirestore, 
   deletePostFromFirestore,
   formatTimestamp,
+  toggleLike,
+  getUserLikeStatus,
   type FirestorePost,
   type FirestoreComment
 } from "@/lib/firestore-posts";
@@ -25,6 +27,8 @@ export default function PostDetailPage() {
   const [comments, setComments] = useState<FirestoreComment[]>([]);
   const [loading, setLoading] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
+  const [isLiking, setIsLiking] = useState(false);
+  const [localLikes, setLocalLikes] = useState(0);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [showComments, setShowComments] = useState(true);
@@ -44,6 +48,13 @@ export default function PostDetailPage() {
         
         setPost(postData);
         setComments(commentsData);
+        setLocalLikes(postData?.likes || 0);
+        
+        // 如果用户已登录，获取点赞状态
+        if (user && postData) {
+          const likeStatus = await getUserLikeStatus(postId, user.uid);
+          setIsLiked(likeStatus);
+        }
       } catch (error) {
         console.error('加载数据失败:', error);
       } finally {
@@ -54,7 +65,7 @@ export default function PostDetailPage() {
     if (postId) {
       loadData();
     }
-  }, [postId]);
+  }, [postId, user]);
 
   // 点击外部关闭菜单
   useEffect(() => {
@@ -110,8 +121,46 @@ export default function PostDetailPage() {
     );
   }
 
-  const handleLike = () => {
-    setIsLiked(!isLiked);
+  const handleLike = async () => {
+    if (!user) {
+      alert('请先登录才能点赞');
+      return;
+    }
+
+    if (isLiking) return;
+
+    // 先更新本地状态，提供即时反馈
+    const newLiked = !isLiked;
+    const newLikes = newLiked ? localLikes + 1 : localLikes - 1;
+    
+    setIsLiked(newLiked);
+    setLocalLikes(newLikes);
+    setIsLiking(true);
+    
+    try {
+      const result = await toggleLike(postId, user.uid);
+      
+      // 确保本地状态与服务器状态一致
+      setIsLiked(result.liked);
+      setLocalLikes(result.likesCount);
+      
+      // 更新帖子数据
+      if (post) {
+        setPost({
+          ...post,
+          likes: result.likesCount
+        });
+      }
+      
+    } catch (error) {
+      console.error('点赞失败:', error);
+      // 如果失败，恢复原来的状态
+      setIsLiked(!newLiked);
+      setLocalLikes(localLikes);
+      alert('点赞失败，请重试');
+    } finally {
+      setIsLiking(false);
+    }
   };
 
   const handleBookmark = () => {
@@ -315,12 +364,18 @@ export default function PostDetailPage() {
               <div className="flex items-center space-x-6">
                 <button
                   onClick={handleLike}
-                  className={`flex items-center space-x-2 transition-all ${
+                  disabled={isLiking}
+                  className={`flex items-center space-x-2 transition-colors duration-150 ${
                     isLiked ? "text-red-500" : "text-gray-500 hover:text-red-500"
-                  }`}
+                  } ${isLiking ? 'opacity-75' : ''}`}
+                  title={isLiked ? '取消点赞' : '点赞'}
                 >
-                  <Heart className={`w-5 h-5 ${isLiked ? "fill-current" : ""}`} />
-                  <span className="font-medium">{post.likes + (isLiked ? 1 : 0)}</span>
+                  <Heart 
+                    className={`w-5 h-5 transition-all duration-150 ${
+                      isLiked ? "fill-current scale-110" : ""
+                    }`} 
+                  />
+                  <span className="font-medium">{localLikes}</span>
                 </button>
                 
                 <button
