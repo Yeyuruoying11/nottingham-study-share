@@ -274,7 +274,7 @@ export default function DebugUserPage() {
                     }
                   } catch (error) {
                     console.error('获取用户数据失败:', error);
-                    alert('获取失败: ' + error.message);
+                    alert('获取失败: ' + (error instanceof Error ? error.message : String(error)));
                   }
                 }
               }}

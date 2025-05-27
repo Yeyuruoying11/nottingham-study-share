@@ -109,7 +109,7 @@ export default function UsernameSettingsPage() {
           return;
         } catch (createError) {
           console.error('loadUserData: 创建用户文档失败:', createError);
-          setError(`创建用户文档失败: ${createError.message}`);
+          setError(`创建用户文档失败: ${createError instanceof Error ? createError.message : String(createError)}`);
         }
       }
     } finally {

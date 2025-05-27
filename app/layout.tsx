@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/contexts/AuthContext'
-import DevErrorFilter from '@/components/DevErrorFilter'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -23,7 +22,6 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body className={inter.className}>
-        <DevErrorFilter />
         <AuthProvider>
           {children}
         </AuthProvider>

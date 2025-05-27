@@ -128,8 +128,8 @@ export async function checkUsernameChangeStatus(userId: string): Promise<Usernam
   } catch (error) {
     console.error('检查用户名修改状态失败:', error);
     console.error('错误详情:', {
-      message: error.message,
-      code: error.code,
+      message: error instanceof Error ? error.message : String(error),
+      code: (error as any)?.code || 'unknown',
       userId: userId
     });
     throw error;
@@ -261,8 +261,8 @@ export async function getUsernameHistory(userId: string): Promise<{
   } catch (error) {
     console.error('获取用户名历史失败:', error);
     console.error('错误详情:', {
-      message: error.message,
-      code: error.code,
+      message: error instanceof Error ? error.message : String(error),
+      code: (error as any)?.code || 'unknown',
       userId: userId
     });
     throw error;
