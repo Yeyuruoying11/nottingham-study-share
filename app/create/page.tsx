@@ -60,7 +60,7 @@ function SortableImageItem({
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition: isDragging ? 'none' : transition,
+    transition: 'none',
     opacity: isDragging ? 0.5 : 1,
   };
 
@@ -144,7 +144,7 @@ export default function CreatePostPage() {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: 3,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -160,11 +160,18 @@ export default function CreatePostPage() {
       const oldIndex = imageIds.findIndex(id => id === active.id);
       const newIndex = imageIds.findIndex(id => id === over.id);
 
-      // 重新排序文件和预览
-      setSelectedFiles(prev => arrayMove(prev, oldIndex, newIndex));
-      setImagePreviews(prev => arrayMove(prev, oldIndex, newIndex));
-      setUploadProgress(prev => arrayMove(prev, oldIndex, newIndex));
-      setImageIds(prev => arrayMove(prev, oldIndex, newIndex));
+      if (oldIndex !== -1 && newIndex !== -1) {
+        // 立即更新所有状态，不使用动画
+        const newSelectedFiles = arrayMove(selectedFiles, oldIndex, newIndex);
+        const newImagePreviews = arrayMove(imagePreviews, oldIndex, newIndex);
+        const newUploadProgress = arrayMove(uploadProgress, oldIndex, newIndex);
+        const newImageIds = arrayMove(imageIds, oldIndex, newIndex);
+
+        setSelectedFiles(newSelectedFiles);
+        setImagePreviews(newImagePreviews);
+        setUploadProgress(newUploadProgress);
+        setImageIds(newImageIds);
+      }
     }
   };
 
@@ -610,6 +617,7 @@ export default function CreatePostPage() {
                         sensors={sensors}
                         collisionDetection={closestCenter}
                         onDragEnd={handleDragEnd}
+                        autoScroll={false}
                       >
                         <SortableContext
                           items={imageIds}
