@@ -27,19 +27,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('Auth state changed:', firebaseUser ? 'User logged in' : 'User logged out');
       
       try {
-        if (firebaseUser) {
-          setUser(firebaseUser);
-          // 这里可以获取用户详细信息
-          // const profile = await getUserProfile(firebaseUser.uid);
-          // setUserProfile(profile);
-        } else {
-          setUser(null);
-          setUserProfile(null);
-        }
+      if (firebaseUser) {
+        setUser(firebaseUser);
+        // 这里可以获取用户详细信息
+        // const profile = await getUserProfile(firebaseUser.uid);
+        // setUserProfile(profile);
+      } else {
+        setUser(null);
+        setUserProfile(null);
+      }
       } catch (error) {
         console.error('Error handling auth state change:', error);
       } finally {
-        setLoading(false);
+      setLoading(false);
         setInitialized(true);
       }
     });
