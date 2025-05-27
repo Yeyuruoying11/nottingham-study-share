@@ -139,9 +139,49 @@ export default function AdminPage() {
                   loadPostsData();
                 }
               }}
-              className="w-full bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition-colors"
+              className="w-full bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition-colors mb-2"
             >
               {showDebug ? '隐藏调试信息' : '显示调试信息'}
+            </button>
+            
+            {/* 快速修复按钮 */}
+            <button
+              onClick={async () => {
+                if (confirm('确定要修复所有帖子的分类吗？这将检查并修复分类字段。')) {
+                  try {
+                    const { doc, updateDoc, getDocs, collection } = await import('firebase/firestore');
+                    const { db } = await import('@/lib/firebase');
+                    
+                    const postsRef = collection(db, 'posts');
+                    const snapshot = await getDocs(postsRef);
+                    
+                    let fixed = 0;
+                    for (const docSnap of snapshot.docs) {
+                      const data = docSnap.data();
+                      const currentCategory = data.category;
+                      
+                      // 检查分类是否需要修复
+                      if (!currentCategory || currentCategory.trim() === '') {
+                        await updateDoc(doc(db, 'posts', docSnap.id), {
+                          category: '生活' // 默认分类
+                        });
+                        fixed++;
+                      }
+                    }
+                    
+                    alert(`修复完成！共修复了 ${fixed} 个帖子的分类。`);
+                    if (showDebug) {
+                      loadPostsData(); // 重新加载数据
+                    }
+                  } catch (error) {
+                    console.error('修复失败:', error);
+                    alert('修复失败: ' + error.message);
+                  }
+                }
+              }}
+              className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors text-sm"
+            >
+              快速修复分类
             </button>
           </motion.div>
 
