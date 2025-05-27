@@ -25,7 +25,8 @@ export interface FirestorePost {
   title: string;
   content: string;
   fullContent: string;
-  image: string;
+  image: string; // 保留作为主图片（向后兼容）
+  images?: string[]; // 新增：多图片数组
   author: {
     name: string;
     avatar: string;
@@ -194,6 +195,7 @@ export async function addPostToFirestore(postData: {
   category: string;
   tags: string[];
   image?: string;
+  images?: string[]; // 新增：多图片支持
   author: {
     name: string;
     avatar: string;
@@ -207,7 +209,8 @@ export async function addPostToFirestore(postData: {
       title: postData.title,
       content: postData.content.length > 100 ? postData.content.substring(0, 100) + "..." : postData.content,
       fullContent: postData.content,
-      image: postData.image || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=300&fit=crop",
+      image: postData.image || (postData.images && postData.images.length > 0 ? postData.images[0] : "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=300&fit=crop"),
+      images: postData.images || (postData.image ? [postData.image] : []), // 如果有多图片使用多图片，否则将单图片转为数组
       author: postData.author,
       likes: 0,
       comments: 0,

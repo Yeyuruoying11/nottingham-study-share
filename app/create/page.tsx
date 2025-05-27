@@ -29,16 +29,17 @@ export default function CreatePostPage() {
     content: "",
     category: "",
     tags: [] as string[],
-    image: ""
+    image: "",
+    images: [] as string[]
   });
   
   const [newTag, setNewTag] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [uploadProgress, setUploadProgress] = useState<number[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string>("");
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [firestoreUserName, setFirestoreUserName] = useState<string>('');
 
   // 获取Firestore中的用户名
@@ -120,33 +121,40 @@ export default function CreatePostPage() {
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
     try {
+      // 将FileList转换为数组
+      const fileArray = Array.from(files);
+      
       // 验证文件类型
-      if (!file.type.startsWith('image/')) {
-        alert('请选择图片文件');
-        return;
+      for (const file of fileArray) {
+        if (!file.type.startsWith('image/')) {
+          alert('请选择图片文件');
+          return;
+        }
       }
 
       // 验证文件大小
-      if (file.size > 5 * 1024 * 1024) {
-        alert('图片文件不能超过5MB');
-        return;
+      for (const file of fileArray) {
+        if (file.size > 5 * 1024 * 1024) {
+          alert('图片文件不能超过5MB');
+          return;
+        }
       }
 
       // 获取图片信息
-      const imageInfo = await getImageInfo(file);
-      console.log('图片信息:', imageInfo);
+      const imageInfos = await Promise.all(fileArray.map(file => getImageInfo(file)));
+      console.log('图片信息:', imageInfos);
 
       // 设置选中的文件和预览
-      setSelectedFile(file);
-      const previewUrl = URL.createObjectURL(file);
-      setImagePreview(previewUrl);
+      setSelectedFiles(fileArray);
+      const previewUrls = fileArray.map(file => URL.createObjectURL(file));
+      setImagePreviews(previewUrls);
       
       // 清除之前的图片URL
-      setFormData(prev => ({ ...prev, image: "" }));
+      setFormData(prev => ({ ...prev, image: "", images: [] }));
       
     } catch (error) {
       console.error('处理图片失败:', error);
@@ -154,16 +162,16 @@ export default function CreatePostPage() {
     }
   };
 
-  const removeImage = () => {
+  const removeImage = (index: number) => {
     // 清理预览URL
-    if (imagePreview && imagePreview.startsWith('blob:')) {
-      URL.revokeObjectURL(imagePreview);
+    if (imagePreviews[index] && imagePreviews[index].startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreviews[index]);
     }
     
-    setSelectedFile(null);
-    setImagePreview("");
-    setFormData(prev => ({ ...prev, image: "" }));
-    setUploadProgress(0);
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+    setFormData(prev => ({ ...prev, image: "", images: [] }));
+    setUploadProgress(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -182,52 +190,82 @@ export default function CreatePostPage() {
     setIsSubmitting(true);
     
     try {
-      let imageUrl = "";
+      let imageUrls = [] as string[];
       
       // 如果有选中的图片文件，先上传图片
-      if (selectedFile) {
+      if (selectedFiles.length > 0) {
         setIsUploading(true);
-        setUploadProgress(0);
+        setUploadProgress(new Array(selectedFiles.length).fill(0));
         
         try {
           console.log('开始上传图片...');
           
-          // 优化的上传策略：优先使用CORS修复版本，然后是云端智能上传，最后是简化上传
-          try {
-            imageUrl = await uploadImageCORSFix(
-              selectedFile,
-              user.uid,
-              (progress) => {
-                setUploadProgress(progress);
-              }
-            );
-            console.log('CORS修复上传成功:', imageUrl);
-          } catch (corsError) {
-            console.warn('CORS修复上传失败，尝试云端智能上传:', corsError);
-            
+          // 并行上传所有图片
+          const uploadPromises = selectedFiles.map(async (file, index) => {
             try {
-              imageUrl = await uploadImageSmartCloud(
-                selectedFile,
-                user.uid,
-                (progress) => {
-                  setUploadProgress(progress);
-                }
-              );
-              console.log('云端智能上传成功:', imageUrl);
-            } catch (cloudError) {
-              console.warn('云端智能上传失败，尝试简化上传:', cloudError);
+              console.log(`开始上传第${index+1}张图片...`);
               
-              // 如果所有优化上传都失败，使用简化上传作为最后备选
-              imageUrl = await uploadImageSimple(
-                selectedFile,
-                user.uid,
-                (progress) => {
-                  setUploadProgress(progress);
+              let imageUrl = "";
+              
+              try {
+                imageUrl = await uploadImageCORSFix(
+                  file,
+                  user.uid,
+                  (progress) => {
+                    setUploadProgress(prev => {
+                      const newProgress = [...prev];
+                      newProgress[index] = progress;
+                      return newProgress;
+                    });
+                  }
+                );
+                console.log(`CORS修复上传成功: ${imageUrl}`);
+              } catch (corsError) {
+                console.warn(`CORS修复上传失败，尝试云端智能上传: ${corsError}`);
+                
+                try {
+                  imageUrl = await uploadImageSmartCloud(
+                    file,
+                    user.uid,
+                    (progress) => {
+                      setUploadProgress(prev => {
+                        const newProgress = [...prev];
+                        newProgress[index] = progress;
+                        return newProgress;
+                      });
+                    }
+                  );
+                  console.log(`云端智能上传成功: ${imageUrl}`);
+                } catch (cloudError) {
+                  console.warn(`云端智能上传失败，尝试简化上传: ${cloudError}`);
+                  
+                  // 如果所有优化上传都失败，使用简化上传作为最后备选
+                  imageUrl = await uploadImageSimple(
+                    file,
+                    user.uid,
+                    (progress) => {
+                      setUploadProgress(prev => {
+                        const newProgress = [...prev];
+                        newProgress[index] = progress;
+                        return newProgress;
+                      });
+                    }
+                  );
+                  console.log(`简化上传成功: ${imageUrl}`);
                 }
-              );
-              console.log('简化上传成功:', imageUrl);
+              }
+              
+              return imageUrl;
+              
+            } catch (uploadError) {
+              console.error(`第${index+1}张图片上传失败: ${uploadError}`);
+              throw uploadError;
             }
-          }
+          });
+          
+          // 等待所有图片上传完成
+          imageUrls = await Promise.all(uploadPromises);
+          console.log('所有图片上传完成:', imageUrls);
           
         } catch (uploadError) {
           console.error('图片上传失败:', uploadError);
@@ -261,7 +299,8 @@ export default function CreatePostPage() {
         content: formData.content.trim(),
         category: formData.category,
         tags: formData.tags,
-        image: imageUrl, // 使用上传后的永久URL
+        image: imageUrls.length > 0 ? imageUrls[0] : "",
+        images: imageUrls,
         author: {
           name: firestoreUserName,
           avatar: user.photoURL || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
@@ -289,9 +328,11 @@ export default function CreatePostPage() {
         }
         
         // 清理预览URL
-        if (imagePreview && imagePreview.startsWith('blob:')) {
-          URL.revokeObjectURL(imagePreview);
-        }
+        imagePreviews.forEach(preview => {
+          if (preview && preview.startsWith('blob:')) {
+            URL.revokeObjectURL(preview);
+          }
+        });
         
         router.push("/");
       } else {
@@ -302,7 +343,7 @@ export default function CreatePostPage() {
       alert("发布失败，请重试");
     } finally {
       setIsSubmitting(false);
-      setUploadProgress(0);
+      setUploadProgress([]);
     }
   };
 
@@ -413,81 +454,87 @@ export default function CreatePostPage() {
                 {/* 图片上传 */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    封面图片
+                    图片 (最多9张)
                   </label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-gray-400 transition-colors">
-                    {imagePreview ? (
-                      <div className="relative">
-                        <img
-                          src={imagePreview}
-                          alt="预览"
-                          className="w-full h-48 object-cover rounded-lg"
-                        />
-                        <button
-                          type="button"
-                          onClick={removeImage}
-                          disabled={isUploading}
-                          className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors disabled:opacity-50"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                        
-                        {/* 上传进度显示 */}
-                        {isUploading && (
-                          <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">
-                            <div className="text-center text-white">
-                              <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                              <p className="text-sm">上传中... {uploadProgress}%</p>
-                              <div className="w-32 bg-gray-200 rounded-full h-2 mt-2">
-                                <div 
-                                  className="bg-green-500 h-2 rounded-full transition-all duration-300"
-                                  style={{ width: `${uploadProgress}%` }}
-                                ></div>
+                  
+                  {/* 多图片预览网格 */}
+                  {imagePreviews.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2 mb-4">
+                      {imagePreviews.map((preview, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={preview}
+                            alt={`预览 ${index + 1}`}
+                            className="w-full h-24 object-cover rounded-lg"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            disabled={isUploading}
+                            className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors disabled:opacity-50 opacity-0 group-hover:opacity-100"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                          
+                          {/* 上传进度 */}
+                          {isUploading && uploadProgress[index] !== undefined && (
+                            <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">
+                              <div className="text-center text-white">
+                                <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-1"></div>
+                                <p className="text-xs">{uploadProgress[index]}%</p>
                               </div>
                             </div>
-                          </div>
-                        )}
-                        
-                        {/* 文件信息 */}
-                        {selectedFile && !isUploading && (
-                          <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-                            {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)}MB)
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div>
-                        <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                        <p className="text-sm text-gray-600 mb-2">点击上传图片或拖拽到此处</p>
-                        <p className="text-xs text-gray-500 mb-3">支持 JPG、PNG、GIF 格式，最大 5MB</p>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageUpload}
-                          className="hidden"
-                          id="image-upload"
-                          disabled={isSubmitting}
-                        />
-                        <label
-                          htmlFor="image-upload"
-                          className="inline-block px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer disabled:opacity-50"
-                        >
-                          选择文件
-                        </label>
-                      </div>
-                    )}
-                  </div>
+                          )}
+                          
+                          {/* 主图标识 */}
+                          {index === 0 && (
+                            <div className="absolute bottom-1 left-1 bg-green-500 text-white text-xs px-1 py-0.5 rounded">
+                              主图
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* 上传区域 */}
+                  {imagePreviews.length < 9 && (
+                    <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-gray-400 transition-colors">
+                      <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-sm text-gray-600 mb-2">
+                        {imagePreviews.length === 0 ? '点击上传图片或拖拽到此处' : '继续添加图片'}
+                      </p>
+                      <p className="text-xs text-gray-500 mb-3">
+                        支持 JPG、PNG、GIF 格式，最大 5MB，最多9张
+                      </p>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        id="image-upload"
+                        disabled={isSubmitting || isUploading}
+                      />
+                      <label
+                        htmlFor="image-upload"
+                        className="inline-block px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer disabled:opacity-50"
+                      >
+                        {imagePreviews.length === 0 ? '选择图片' : '添加更多'}
+                      </label>
+                    </div>
+                  )}
                   
                   {/* 图片上传提示 */}
-                  {selectedFile && !isUploading && (
+                  {selectedFiles.length > 0 && !isUploading && (
                     <div className="mt-2 text-xs text-green-600">
-                      ✓ 图片已选择，发布时将自动上传
+                      ✓ 已选择 {selectedFiles.length} 张图片，发布时将自动上传
                     </div>
                   )}
                   
                   {isUploading && (
                     <div className="mt-2 text-xs text-blue-600">
-                      正在上传图片，请稍候...
+                      正在上传图片，请稍候... ({uploadProgress.filter(p => p === 100).length}/{selectedFiles.length})
                     </div>
                   )}
                 </div>
@@ -570,13 +617,37 @@ export default function CreatePostPage() {
                   <h3 className="font-semibold text-gray-900">预览效果</h3>
                 </div>
                 
-                {imagePreview && (
-                  <div className="relative h-48">
-                    <img
-                      src={imagePreview}
-                      alt="预览"
-                      className="w-full h-full object-cover"
-                    />
+                {/* 预览区域的图片显示 */}
+                {imagePreviews.length > 0 && (
+                  <div className="mb-4">
+                    {imagePreviews.length === 1 ? (
+                      <div className="relative h-48">
+                        <img
+                          src={imagePreviews[0]}
+                          alt="预览"
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-2">
+                        {imagePreviews.slice(0, 4).map((preview, index) => (
+                          <div key={index} className="relative">
+                            <img
+                              src={preview}
+                              alt={`预览 ${index + 1}`}
+                              className="w-full h-24 object-cover rounded-lg"
+                            />
+                            {index === 3 && imagePreviews.length > 4 && (
+                              <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">
+                                <span className="text-white text-sm font-medium">
+                                  +{imagePreviews.length - 4}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
                 
