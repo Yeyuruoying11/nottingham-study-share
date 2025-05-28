@@ -16,7 +16,7 @@ export default function MapClickHandler({ onLocationSelect }: MapClickHandlerPro
       try {
         // 使用反向地理编码获取地址信息
         const response = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&addressdetails=1`
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&addressdetails=1&accept-language=zh-CN,zh,en`
         );
         const data = await response.json();
         
