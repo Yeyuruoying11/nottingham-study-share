@@ -6,23 +6,13 @@ import { ArrowLeft, MapPin, Calendar, Heart, MessageCircle, User } from 'lucide-
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import TravelMap from '@/components/Map/TravelMap';
-import { getPostsByCategoryFromFirestore } from '@/lib/firestore-posts';
+import { getPostsByCategoryFromFirestore, type FirestorePost } from '@/lib/firestore-posts';
 import { Post } from '@/lib/types';
-
-interface TravelPost extends Post {
-  location?: {
-    latitude: number;
-    longitude: number;
-    address?: string;
-    country?: string;
-    city?: string;
-  };
-}
 
 export default function TravelPage() {
   const router = useRouter();
-  const [travelPosts, setTravelPosts] = useState<TravelPost[]>([]);
-  const [selectedPost, setSelectedPost] = useState<TravelPost | null>(null);
+  const [travelPosts, setTravelPosts] = useState<FirestorePost[]>([]);
+  const [selectedPost, setSelectedPost] = useState<FirestorePost | null>(null);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'map' | 'list' | 'both'>('both');
 
@@ -32,7 +22,7 @@ export default function TravelPage() {
       try {
         setLoading(true);
         const posts = await getPostsByCategoryFromFirestore('旅行');
-        setTravelPosts(posts as TravelPost[]);
+        setTravelPosts(posts);
       } catch (error) {
         console.error('加载旅行帖子失败:', error);
       } finally {
@@ -43,8 +33,8 @@ export default function TravelPage() {
     loadTravelPosts();
   }, []);
 
-  const handlePostSelect = (post: Post) => {
-    setSelectedPost(post as TravelPost);
+  const handlePostSelect = (post: FirestorePost) => {
+    setSelectedPost(post);
   };
 
   const formatDate = (date: any): string => {
@@ -267,7 +257,7 @@ export default function TravelPage() {
                             <div className="flex items-center space-x-4 text-sm text-gray-500">
                               <div className="flex items-center space-x-1">
                                 <User className="w-4 h-4" />
-                                <span>{post.author.displayName}</span>
+                                <span>{post.author.name}</span>
                               </div>
                               <div className="flex items-center space-x-1">
                                 <Calendar className="w-4 h-4" />

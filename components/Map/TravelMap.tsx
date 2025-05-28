@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { Post, Location } from '@/lib/types';
-import { getPostsByCategoryFromFirestore } from '@/lib/firestore-posts';
+import { getPostsByCategoryFromFirestore, type FirestorePost } from '@/lib/firestore-posts';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 // 动态导入地图组件，避免SSR问题
@@ -28,13 +28,13 @@ const Popup = dynamic(
 );
 
 interface TravelMapProps {
-  onPostSelect?: (post: Post) => void;
+  onPostSelect?: (post: FirestorePost) => void;
   selectedPostId?: string;
   className?: string;
 }
 
 export default function TravelMap({ onPostSelect, selectedPostId, className = "" }: TravelMapProps) {
-  const [travelPosts, setTravelPosts] = useState<Post[]>([]);
+  const [travelPosts, setTravelPosts] = useState<FirestorePost[]>([]);
   const [loading, setLoading] = useState(true);
   const [mapReady, setMapReady] = useState(false);
 
@@ -122,7 +122,7 @@ export default function TravelMap({ onPostSelect, selectedPostId, className = ""
                         {post.location.address}
                       </p>
                       <div className="flex items-center space-x-2 text-xs text-gray-500">
-                        <span>{post.author.displayName}</span>
+                        <span>{post.author.name}</span>
                         <span>•</span>
                         <span>{post.likes} 点赞</span>
                       </div>

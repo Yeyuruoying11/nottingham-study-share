@@ -21,55 +21,17 @@ const Marker = dynamic(
   { ssr: false }
 );
 
-const useMapEvents = dynamic(
-  () => import('react-leaflet').then((mod) => mod.useMapEvents),
-  { ssr: false }
-);
-
 interface LocationPickerProps {
   onLocationSelect: (location: Location | null) => void;
   initialLocation?: Location;
   className?: string;
 }
 
-// 地图点击处理组件
-function MapClickHandler({ onLocationSelect }: { onLocationSelect: (location: Location) => void }) {
-  const map = useMapEvents({
-    click: async (e) => {
-      const { lat, lng } = e.latlng;
-      
-      try {
-        // 使用反向地理编码获取地址信息
-        const response = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&addressdetails=1`
-        );
-        const data = await response.json();
-        
-        const location: Location = {
-          latitude: lat,
-          longitude: lng,
-          address: data.display_name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
-          country: data.address?.country || '',
-          city: data.address?.city || data.address?.town || data.address?.village || '',
-          placeId: data.place_id?.toString()
-        };
-        
-        onLocationSelect(location);
-      } catch (error) {
-        console.error('获取地址信息失败:', error);
-        // 如果获取地址失败，使用坐标
-        const location: Location = {
-          latitude: lat,
-          longitude: lng,
-          address: `${lat.toFixed(4)}, ${lng.toFixed(4)}`
-        };
-        onLocationSelect(location);
-      }
-    },
-  });
-
-  return null;
-}
+// 地图点击处理组件 - 使用动态导入包装
+const MapClickHandler = dynamic(
+  () => import('./MapClickHandler'),
+  { ssr: false }
+);
 
 // 常用旅行目的地
 const popularDestinations = [
