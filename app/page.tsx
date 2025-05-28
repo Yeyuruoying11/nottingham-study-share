@@ -18,6 +18,7 @@ import {
 } from "@/lib/firestore-posts";
 import { isAdminUser } from "@/lib/admin-config";
 import { ThreeDPhotoCarousel } from "@/components/ui/three-d-carousel";
+import { useRouter } from "next/navigation";
 
 // 临时导入迁移函数
 const migrateTestData = async () => {
@@ -73,6 +74,7 @@ export default function HomePage() {
   const [showDebug, setShowDebug] = useState(false);
   
   const { user, logout } = useAuth();
+  const router = useRouter();
 
   // 加载帖子数据
   useEffect(() => {
@@ -746,7 +748,13 @@ export default function HomePage() {
               return (
               <button
                 key={category.name}
-                onClick={() => setSelectedCategory(category.name)}
+                onClick={() => {
+                  if (category.name === "旅行") {
+                    router.push("/travel");
+                  } else {
+                    setSelectedCategory(category.name);
+                  }
+                }}
                 className={`flex items-center space-x-2 px-4 py-2 rounded-full whitespace-nowrap transition-all duration-300 ${
                   selectedCategory === category.name
                     ? "bg-green-500 text-white shadow-lg"

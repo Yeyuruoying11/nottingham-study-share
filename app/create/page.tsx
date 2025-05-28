@@ -10,6 +10,8 @@ import { addPostToFirestore } from "@/lib/firestore-posts";
 import { uploadImageWithProgress, uploadImageSimple, uploadImageSmart, uploadImageTurbo, uploadImageUltimate, getImageInfo } from "@/lib/firebase-storage";
 import { uploadImageSmart as uploadImageSmartCloud } from "@/lib/firebase-storage-cloud";
 import { uploadImageSmart as uploadImageCORSFix } from "@/lib/firebase-storage-cors-fix";
+import { Location } from "@/lib/types";
+import LocationPicker from "@/components/Map/LocationPicker";
 import {
   DndContext,
   closestCenter,
@@ -127,7 +129,8 @@ export default function CreatePostPage() {
     category: "",
     tags: [] as string[],
     image: "",
-    images: [] as string[]
+    images: [] as string[],
+    location: null as Location | null
   });
   
   const [newTag, setNewTag] = useState("");
@@ -139,6 +142,7 @@ export default function CreatePostPage() {
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [firestoreUserName, setFirestoreUserName] = useState<string>('');
   const [imageIds, setImageIds] = useState<string[]>([]);
+  const [location, setLocation] = useState<Location | null>(null);
 
   // 拖拽传感器设置
   const sensors = useSensors(
@@ -233,6 +237,23 @@ export default function CreatePostPage() {
     setFormData(prev => ({
       ...prev,
       category: categoryName
+    }));
+    
+    // 如果不是旅行分类，清除位置信息
+    if (categoryName !== "旅行") {
+      setLocation(null);
+      setFormData(prev => ({
+        ...prev,
+        location: null
+      }));
+    }
+  };
+
+  const handleLocationSelect = (selectedLocation: Location | null) => {
+    setLocation(selectedLocation);
+    setFormData(prev => ({
+      ...prev,
+      location: selectedLocation
     }));
   };
 
@@ -446,6 +467,7 @@ export default function CreatePostPage() {
         tags: formData.tags,
         image: imageUrls.length > 0 ? imageUrls[0] : "",
         images: imageUrls,
+        location: formData.location || undefined,
         author: {
           name: firestoreUserName,
           avatar: user.photoURL || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
@@ -595,6 +617,23 @@ export default function CreatePostPage() {
                     ))}
                   </div>
                 </div>
+
+                {/* 位置选择器 - 仅在旅行分类时显示 */}
+                {formData.category === "旅行" && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      旅行地点
+                    </label>
+                    <LocationPicker
+                      onLocationSelect={handleLocationSelect}
+                      initialLocation={location || undefined}
+                      className="w-full"
+                    />
+                    <p className="text-xs text-gray-500 mt-2">
+                      选择旅行地点，让其他同学在地图上找到你的分享
+                    </p>
+                  </div>
+                )}
 
                 {/* 图片上传 */}
                 <div>

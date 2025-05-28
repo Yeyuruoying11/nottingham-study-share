@@ -16,6 +16,16 @@ export interface User {
   updatedAt: Date;
 }
 
+// 地理位置类型
+export interface Location {
+  latitude: number;
+  longitude: number;
+  address?: string; // 地址描述，如 "西班牙巴塞罗那"
+  country?: string; // 国家
+  city?: string; // 城市
+  placeId?: string; // 地点ID，用于唯一标识
+}
+
 // 文章类型
 export interface Post {
   id: string;
@@ -35,6 +45,8 @@ export interface Post {
   comments: number;
   views: number;
   isPublished: boolean;
+  // 地理位置信息（主要用于旅行帖子）
+  location?: Location;
   createdAt: Date;
   updatedAt: Date;
 }

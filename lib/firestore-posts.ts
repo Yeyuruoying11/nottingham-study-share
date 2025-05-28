@@ -19,6 +19,7 @@ import {
 import { db } from './firebase';
 import { deleteImageFromStorage } from './firebase-storage';
 import { isAdmin } from './admin-config';
+import { Location } from './types';
 
 export interface FirestorePost {
   id?: string;
@@ -40,6 +41,7 @@ export interface FirestorePost {
   tags: string[];
   createdAt: Timestamp | Date | FieldValue;
   category: string;
+  location?: Location; // 新增：地理位置信息
 }
 
 export interface FirestoreComment {
@@ -77,11 +79,13 @@ export async function getAllPostsFromFirestore(): Promise<FirestorePost[]> {
         category: data.category,
         tags: data.tags || [],
         image: data.image || "",
+        images: data.images || [], // 包含多图片
         author: data.author,
         likes: data.likes || 0, // 确保包含点赞数
         likedBy: data.likedBy || [], // 点赞用户列表
         comments: data.comments || 0,
-        createdAt: data.createdAt
+        createdAt: data.createdAt,
+        location: data.location // 包含位置信息
       });
     });
     
@@ -116,11 +120,13 @@ export async function getPostsByCategoryFromFirestore(category: string): Promise
         category: data.category,
         tags: data.tags || [],
         image: data.image || "",
+        images: data.images || [], // 包含多图片
         author: data.author,
         likes: data.likes || 0,
         likedBy: data.likedBy || [],
         comments: data.comments || 0,
-        createdAt: data.createdAt
+        createdAt: data.createdAt,
+        location: data.location // 包含位置信息
       });
     });
     
@@ -196,6 +202,7 @@ export async function addPostToFirestore(postData: {
   tags: string[];
   image?: string;
   images?: string[]; // 新增：多图片支持
+  location?: Location; // 新增：位置信息
   author: {
     name: string;
     avatar: string;
@@ -216,7 +223,8 @@ export async function addPostToFirestore(postData: {
       comments: 0,
       tags: postData.tags,
       createdAt: serverTimestamp(),
-      category: postData.category
+      category: postData.category,
+      location: postData.location // 新增：保存位置信息
     };
     
     const docRef = await addDoc(postsCollection, newPost);
