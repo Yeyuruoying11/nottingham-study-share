@@ -89,4 +89,43 @@ export interface Notification {
   relatedPostId?: string;
   relatedUserId?: string;
   createdAt: Date;
+}
+
+// 聊天会话类型
+export interface Conversation {
+  id?: string;
+  participants: string[]; // 参与者的 UID 数组
+  participantNames: { [uid: string]: string }; // 参与者姓名映射
+  participantAvatars: { [uid: string]: string }; // 参与者头像映射
+  lastMessage?: {
+    content: string;
+    senderId: string;
+    timestamp: Date;
+    type: 'text' | 'image';
+  };
+  unreadCount: { [uid: string]: number }; // 每个用户的未读消息数
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// 聊天消息类型
+export interface ChatMessage {
+  id?: string;
+  conversationId: string;
+  senderId: string;
+  senderName: string;
+  senderAvatar: string;
+  content: string;
+  type: 'text' | 'image';
+  timestamp: Date;
+  readBy: string[]; // 已读用户的 UID 数组
+  editedAt?: Date;
+  isEdited: boolean;
+}
+
+// 在线状态类型
+export interface UserOnlineStatus {
+  uid: string;
+  isOnline: boolean;
+  lastSeen: Date;
 } 

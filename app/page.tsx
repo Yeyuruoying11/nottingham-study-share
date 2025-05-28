@@ -523,14 +523,20 @@ export default function HomePage() {
             </div>
             
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
+              <Link 
+                href={`/user/${post.author.uid}`}
+                className="flex items-center space-x-2 hover:bg-gray-50 rounded-lg p-1 -m-1 transition-colors"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <img
                   src={post.author.avatar}
                   alt={post.author.name}
                   className="w-6 h-6 rounded-full object-cover"
                 />
-                <span className="text-xs text-gray-600 font-medium">{post.author.name}</span>
-              </div>
+                <span className="text-xs text-gray-600 font-medium hover:text-gray-900 transition-colors">
+                  {post.author.name}
+                </span>
+              </Link>
               
               <div className="flex items-center space-x-4 text-gray-500">
                 {/* 点赞按钮 */}
@@ -617,6 +623,15 @@ export default function HomePage() {
                     <button className="notts-green text-white px-4 py-2 rounded-xl font-medium flex items-center space-x-2 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95">
                       <Plus className="w-4 h-4" />
                       <span className="hidden sm:inline">发布</span>
+                    </button>
+                  </Link>
+
+                  {/* 聊天按钮 */}
+                  <Link href="/chat">
+                    <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all duration-200 relative hover:scale-105 active:scale-95">
+                      <MessageCircle className="w-5 h-5" />
+                      {/* 未读消息数量标识 - 这里可以后续添加实时未读计数 */}
+                      {/* <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span> */}
                     </button>
                   </Link>
 
@@ -942,30 +957,40 @@ export default function HomePage() {
             </div>
             <span className="text-xs text-green-600 font-medium">首页</span>
           </button>
+          
+          <Link href="/chat">
+            <button className="flex flex-col items-center space-y-1 p-2">
+              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                <MessageCircle className="w-4 h-4 text-gray-600" />
+              </div>
+              <span className="text-xs text-gray-600">聊天</span>
+            </button>
+          </Link>
+          
+          <Link href="/create">
+            <button className="flex flex-col items-center space-y-1 p-2">
+              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                <Plus className="w-4 h-4 text-gray-600" />
+              </div>
+              <span className="text-xs text-gray-600">发布</span>
+            </button>
+          </Link>
+          
           <button className="flex flex-col items-center space-y-1 p-2">
             <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-              <Search className="w-4 h-4 text-gray-600" />
-            </div>
-            <span className="text-xs text-gray-600">发现</span>
-          </button>
-          <button className="flex flex-col items-center space-y-1 p-2">
-            <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-              <Plus className="w-4 h-4 text-gray-600" />
-            </div>
-            <span className="text-xs text-gray-600">发布</span>
-          </button>
-          <button className="flex flex-col items-center space-y-1 p-2">
-            <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-              <MessageCircle className="w-4 h-4 text-gray-600" />
+              <Bell className="w-4 h-4 text-gray-600" />
             </div>
             <span className="text-xs text-gray-600">消息</span>
           </button>
-          <button className="flex flex-col items-center space-y-1 p-2">
-            <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-              <User className="w-4 h-4 text-gray-600" />
-            </div>
-            <span className="text-xs text-gray-600">我的</span>
-          </button>
+          
+          <Link href="/profile">
+            <button className="flex flex-col items-center space-y-1 p-2">
+              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                <User className="w-4 h-4 text-gray-600" />
+              </div>
+              <span className="text-xs text-gray-600">我的</span>
+            </button>
+          </Link>
         </div>
       </div>
     </div>
