@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Plus, Heart, MessageCircle, Share, Bookmark, User, Bell, Menu, LogOut, Settings, Trash2, MoreVertical, X, Crown } from "lucide-react";
 import { InfiniteMovingCards } from "@/components/ui/infinite-moving-cards";
@@ -232,20 +232,30 @@ export default function HomePage() {
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+    // 只有当菜单打开时才添加监听器，优化性能
+    if (showUserMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [showUserMenu]);
 
   const handleLogout = async () => {
     try {
+      setShowUserMenu(false); // 先关闭菜单
       await logout();
-      setShowUserMenu(false);
     } catch (error) {
       console.error("Logout error:", error);
     }
   };
+
+  // 优化头像点击处理，避免重复状态更新
+  const handleAvatarClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowUserMenu(prev => !prev);
+  }, []);
 
   const PostCard = ({ post, index }: { post: any; index: number }) => {
     const [isDeleting, setIsDeleting] = useState(false);
@@ -604,33 +614,23 @@ export default function HomePage() {
                 <>
                   {/* 发布按钮 */}
                   <Link href="/create">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="notts-green text-white px-4 py-2 rounded-xl font-medium flex items-center space-x-2 shadow-lg hover:shadow-xl transition-all"
-                    >
+                    <button className="notts-green text-white px-4 py-2 rounded-xl font-medium flex items-center space-x-2 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95">
                       <Plus className="w-4 h-4" />
                       <span className="hidden sm:inline">发布</span>
-                    </motion.button>
+                    </button>
                   </Link>
 
                   {/* 通知按钮 */}
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all relative"
-                  >
+                  <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all duration-200 relative hover:scale-105 active:scale-95">
                     <Bell className="w-5 h-5" />
                     <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
-                  </motion.button>
+                  </button>
 
                   {/* 用户头像菜单 */}
                   <div className="relative" ref={userMenuRef}>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setShowUserMenu(!showUserMenu)}
-                      className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-2 border-transparent hover:border-green-500 transition-all"
+                    <button
+                      onClick={handleAvatarClick}
+                      className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-2 border-transparent hover:border-green-500 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                     >
                       {user.photoURL ? (
                         <img 
@@ -641,16 +641,11 @@ export default function HomePage() {
                       ) : (
                         <User className="w-4 h-4 text-gray-600" />
                       )}
-                    </motion.button>
+                    </button>
 
                     {/* 用户下拉菜单 */}
                     {showUserMenu && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 10 }}
-                        className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-50"
-                      >
+                      <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-50 animate-fadeInUp">
                         <div className="px-4 py-3 border-b border-gray-100">
                           <p className="text-sm font-medium text-gray-900 truncate">
                             {firestoreUserName || '用户'}
@@ -699,7 +694,7 @@ export default function HomePage() {
                             <span>退出登录</span>
                           </button>
                         </div>
-                      </motion.div>
+                      </div>
                     )}
                   </div>
                 </>
@@ -722,13 +717,9 @@ export default function HomePage() {
               )}
 
               {/* 移动端菜单按钮 */}
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all md:hidden"
-              >
+              <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all duration-200 md:hidden hover:scale-105 active:scale-95">
                 <Menu className="w-5 h-5" />
-              </motion.button>
+              </button>
             </div>
           </div>
         </div>
