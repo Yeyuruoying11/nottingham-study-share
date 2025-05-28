@@ -169,13 +169,13 @@ export default function ProfilePage() {
                   />
                 ) : (
                   <div className="flex items-center justify-center space-x-2">
-                    <h2 className="text-xl font-semibold text-gray-900">
+                  <h2 className="text-xl font-semibold text-gray-900">
                       {loadingUserName ? (
                         <span className="text-gray-400">加载中...</span>
                       ) : (
                         firestoreUserName
                       )}
-                    </h2>
+                  </h2>
                     <Link 
                       href="/settings/username"
                       className="p-1 hover:bg-gray-100 rounded transition-colors"

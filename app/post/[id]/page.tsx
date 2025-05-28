@@ -329,15 +329,15 @@ export default function PostDetailPage() {
                 className="h-full"
               />
             ) : (
-              <img
-                src={post.image}
-                alt={post.title}
-                className="w-full h-full object-cover"
-              />
+            <img
+              src={post.image}
+              alt={post.title}
+              className="w-full h-full object-cover"
+            />
             )}
             {/* 只在非3D轮播时显示渐变层 */}
             {!(post.images && post.images.length > 1) && (
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
             )}
             {/* 文字层 - 设置pointer-events-none让点击穿透 */}
             <div className="absolute bottom-6 left-6 right-6 pointer-events-none">

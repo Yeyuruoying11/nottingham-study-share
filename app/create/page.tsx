@@ -270,17 +270,17 @@ export default function CreatePostPage() {
       
       // 验证文件类型
       for (const file of fileArray) {
-        if (!file.type.startsWith('image/')) {
-          alert('请选择图片文件');
-          return;
+      if (!file.type.startsWith('image/')) {
+        alert('请选择图片文件');
+        return;
         }
       }
 
       // 验证文件大小
       for (const file of fileArray) {
-        if (file.size > 5 * 1024 * 1024) {
-          alert('图片文件不能超过5MB');
-          return;
+      if (file.size > 5 * 1024 * 1024) {
+        alert('图片文件不能超过5MB');
+        return;
         }
       }
 
@@ -352,50 +352,50 @@ export default function CreatePostPage() {
               
               let imageUrl = "";
               
-              try {
-                imageUrl = await uploadImageCORSFix(
+          try {
+            imageUrl = await uploadImageCORSFix(
                   file,
-                  user.uid,
-                  (progress) => {
+              user.uid,
+              (progress) => {
                     setUploadProgress(prev => {
                       const newProgress = [...prev];
                       newProgress[index] = progress;
                       return newProgress;
                     });
-                  }
-                );
+              }
+            );
                 console.log(`CORS修复上传成功: ${imageUrl}`);
-              } catch (corsError) {
+          } catch (corsError) {
                 console.warn(`CORS修复上传失败，尝试云端智能上传: ${corsError}`);
-                
-                try {
-                  imageUrl = await uploadImageSmartCloud(
+            
+            try {
+              imageUrl = await uploadImageSmartCloud(
                     file,
-                    user.uid,
-                    (progress) => {
+                user.uid,
+                (progress) => {
                       setUploadProgress(prev => {
                         const newProgress = [...prev];
                         newProgress[index] = progress;
                         return newProgress;
                       });
-                    }
-                  );
+                }
+              );
                   console.log(`云端智能上传成功: ${imageUrl}`);
-                } catch (cloudError) {
+            } catch (cloudError) {
                   console.warn(`云端智能上传失败，尝试简化上传: ${cloudError}`);
-                  
-                  // 如果所有优化上传都失败，使用简化上传作为最后备选
-                  imageUrl = await uploadImageSimple(
+              
+              // 如果所有优化上传都失败，使用简化上传作为最后备选
+              imageUrl = await uploadImageSimple(
                     file,
-                    user.uid,
-                    (progress) => {
+                user.uid,
+                (progress) => {
                       setUploadProgress(prev => {
                         const newProgress = [...prev];
                         newProgress[index] = progress;
                         return newProgress;
                       });
-                    }
-                  );
+                }
+              );
                   console.log(`简化上传成功: ${imageUrl}`);
                 }
               }
@@ -476,7 +476,7 @@ export default function CreatePostPage() {
         imagePreviews.forEach(preview => {
           if (preview && preview.startsWith('blob:')) {
             URL.revokeObjectURL(preview);
-          }
+        }
         });
         
         router.push("/");
@@ -639,36 +639,36 @@ export default function CreatePostPage() {
                           </div>
                         </SortableContext>
                       </DndContext>
-                    </div>
-                  )}
-                  
+                          </div>
+                        )}
+                        
                   {/* 上传区域 */}
                   {imagePreviews.length < 9 && (
                     <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-gray-400 transition-colors">
-                      <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                        <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                       <p className="text-sm text-gray-600 mb-2">
                         {imagePreviews.length === 0 ? '点击上传图片或拖拽到此处' : '继续添加图片'}
                       </p>
                       <p className="text-xs text-gray-500 mb-3">
                         支持 JPG、PNG、GIF 格式，最大 5MB，最多9张
                       </p>
-                      <input
-                        type="file"
-                        accept="image/*"
+                        <input
+                          type="file"
+                          accept="image/*"
                         multiple
-                        onChange={handleImageUpload}
-                        className="hidden"
-                        id="image-upload"
+                          onChange={handleImageUpload}
+                          className="hidden"
+                          id="image-upload"
                         disabled={isSubmitting || isUploading}
-                      />
-                      <label
-                        htmlFor="image-upload"
-                        className="inline-block px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer disabled:opacity-50"
-                      >
+                        />
+                        <label
+                          htmlFor="image-upload"
+                          className="inline-block px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer disabled:opacity-50"
+                        >
                         {imagePreviews.length === 0 ? '选择图片' : '添加更多'}
-                      </label>
-                    </div>
-                  )}
+                        </label>
+                      </div>
+                    )}
                   
                   {/* 图片上传提示 */}
                   {selectedFiles.length > 0 && !isUploading && (
@@ -766,12 +766,12 @@ export default function CreatePostPage() {
                 {imagePreviews.length > 0 && (
                   <div className="mb-4">
                     {imagePreviews.length === 1 ? (
-                      <div className="relative h-48">
-                        <img
+                  <div className="relative h-48">
+                    <img
                           src={imagePreviews[0]}
-                          alt="预览"
+                      alt="预览"
                           className="w-full h-full object-cover rounded-lg"
-                        />
+                    />
                       </div>
                     ) : (
                       <div className="grid grid-cols-2 gap-2">

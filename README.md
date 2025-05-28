@@ -197,7 +197,7 @@ npm start
 
 ## 🤝 贡献
 
-欢迎提交 Issues 和 Pull Requests 来改进这个项目！
+欢迎提交 Issues 和 Pull Requests 来改进这个项目！ 
 
 ### 🎯 帖子分类筛选
 - **智能分类系统**：支持学习、生活、美食、旅行、购物、租房等6大分类

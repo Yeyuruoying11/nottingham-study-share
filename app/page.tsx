@@ -465,11 +465,11 @@ export default function HomePage() {
                 className="h-48"
               />
             ) : (
-              <img
-                src={post.image}
-                alt={post.title}
-                className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
-              />
+            <img
+              src={post.image}
+              alt={post.title}
+              className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
+            />
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           </div>
@@ -670,7 +670,7 @@ export default function HomePage() {
                             <span>管理面板</span>
                           </Link>
                         )}
-
+                        
                         <div className="border-t border-gray-100 mt-1 pt-1">
                           <button 
                             onClick={handleLogout}
@@ -744,17 +744,17 @@ export default function HomePage() {
             {categories.map((category) => {
               const count = getCategoryCount(category.name);
               return (
-                <button
-                  key={category.name}
-                  onClick={() => setSelectedCategory(category.name)}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-full whitespace-nowrap transition-all duration-300 ${
-                    selectedCategory === category.name
-                      ? "bg-green-500 text-white shadow-lg"
-                      : `${category.color} hover:shadow-md`
-                  }`}
-                >
-                  <span>{category.icon}</span>
-                  <span className="text-sm font-medium">{category.name}</span>
+              <button
+                key={category.name}
+                onClick={() => setSelectedCategory(category.name)}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-full whitespace-nowrap transition-all duration-300 ${
+                  selectedCategory === category.name
+                    ? "bg-green-500 text-white shadow-lg"
+                    : `${category.color} hover:shadow-md`
+                }`}
+              >
+                <span>{category.icon}</span>
+                <span className="text-sm font-medium">{category.name}</span>
                   <span className={`text-xs px-2 py-1 rounded-full ${
                     selectedCategory === category.name 
                       ? "bg-white/20 text-white" 
@@ -762,7 +762,7 @@ export default function HomePage() {
                   }`}>
                     {count}
                   </span>
-                </button>
+              </button>
               );
             })}
           </div>
