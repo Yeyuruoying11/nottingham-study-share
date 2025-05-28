@@ -9,6 +9,7 @@ import {
   getPostByIdFromFirestore, 
   getCommentsByPostIdFromFirestore, 
   deletePostFromFirestore,
+  addCommentToFirestore,
   formatTimestamp,
   toggleLike,
   getUserLikeStatus,
@@ -16,6 +17,7 @@ import {
   type FirestoreComment
 } from "@/lib/firestore-posts";
 import { useAuth } from "@/contexts/AuthContext";
+import { isAdminUser } from "@/lib/admin-config";
 import { ThreeDPhotoCarousel } from "@/components/ui/three-d-carousel";
 
 export default function PostDetailPage() {
@@ -35,6 +37,7 @@ export default function PostDetailPage() {
   const [showComments, setShowComments] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // 加载帖子和评论数据
@@ -68,6 +71,27 @@ export default function PostDetailPage() {
     }
   }, [postId, user]);
 
+  // 重新加载评论的函数
+  const reloadComments = async () => {
+    try {
+      const updatedComments = await getCommentsByPostIdFromFirestore(postId);
+      setComments(updatedComments);
+    } catch (error) {
+      console.error('重新加载评论失败:', error);
+    }
+  };
+
+  // 定期刷新评论（可选）
+  useEffect(() => {
+    if (!postId) return;
+    
+    const interval = setInterval(() => {
+      reloadComments();
+    }, 30000); // 每30秒刷新一次评论
+    
+    return () => clearInterval(interval);
+  }, [postId]);
+
   // 点击外部关闭菜单
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -82,21 +106,26 @@ export default function PostDetailPage() {
     };
   }, []);
 
-  // 计算是否为作者（在hooks之后）
+  // 计算是否为作者和管理员权限（在hooks之后）
   const isAuthor = user && post?.author.uid && user.uid === post.author.uid;
+  const isAdmin = user && isAdminUser(user);
+  const canDelete = isAdmin || isAuthor; // 管理员或作者都可以删除
 
   // 调试信息（开发环境下显示）- 只在菜单打开时显示
   useEffect(() => {
     if (process.env.NODE_ENV === 'development' && user && showMenu && post) {
-      console.log('详情页 - 用户信息:', {
+      console.log('详情页删除权限调试:', {
         uid: user.uid,
         displayName: user.displayName,
-        email: user.email
+        email: user.email,
+        postAuthorUID: post.author.uid,
+        postAuthorName: post.author.name,
+        isAuthor,
+        isAdmin,
+        canDelete
       });
-      console.log('详情页 - 帖子作者UID:', post.author.uid);
-      console.log('详情页 - 是否为作者:', isAuthor);
     }
-  }, [user, showMenu, post, isAuthor]);
+  }, [user, showMenu, post, isAuthor, isAdmin, canDelete]);
 
   if (loading) {
     return (
@@ -168,16 +197,85 @@ export default function PostDetailPage() {
     setIsBookmarked(!isBookmarked);
   };
 
-  const handleSubmitComment = (e: React.FormEvent) => {
+  const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newComment.trim()) {
-      console.log("New comment:", newComment);
-      setNewComment("");
+    
+    if (!user) {
+      alert('请先登录才能发表评论');
+      return;
+    }
+    
+    if (!newComment.trim()) {
+      alert('评论内容不能为空');
+      return;
+    }
+
+    setIsSubmittingComment(true);
+    
+    try {
+      // 获取用户的Firestore信息
+      const { doc, getDoc } = await import('firebase/firestore');
+      const { db } = await import('@/lib/firebase');
+      
+      let userName = user.displayName || '用户';
+      
+      try {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          userName = userData.displayName || user.displayName || '用户';
+        }
+      } catch (error) {
+        console.warn('获取用户信息失败，使用默认信息:', error);
+      }
+
+      // 添加评论到数据库
+      const commentId = await addCommentToFirestore({
+        postId: postId,
+        content: newComment.trim(),
+        author: {
+          name: userName,
+          avatar: user.photoURL || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
+          uid: user.uid
+        }
+      });
+      
+      if (commentId) {
+        // 评论添加成功，清空输入框
+        setNewComment("");
+        
+        // 重新加载评论列表
+        const updatedComments = await getCommentsByPostIdFromFirestore(postId);
+        setComments(updatedComments);
+        
+        // 更新帖子的评论数量
+        if (post) {
+          setPost({
+            ...post,
+            comments: post.comments + 1
+          });
+        }
+        
+        // 平滑滚动到评论区底部
+        setTimeout(() => {
+          const commentsSection = document.querySelector('#comments-section');
+          if (commentsSection) {
+            commentsSection.scrollIntoView({ behavior: 'smooth', block: 'end' });
+          }
+        }, 100);
+      } else {
+        alert('评论发表失败，请重试');
+      }
+    } catch (error) {
+      console.error('提交评论失败:', error);
+      alert('评论发表失败，请重试');
+    } finally {
+      setIsSubmittingComment(false);
     }
   };
 
   const handleDeletePost = async () => {
-    if (!user || !isAuthor) {
+    if (!user || !canDelete) {
       alert("您没有权限删除此帖子");
       return;
     }
@@ -283,13 +381,14 @@ export default function PostDetailPage() {
                     </button>
 
                     {/* 删除选项 - 只有作者才能看到 */}
-                    {isAuthor && (
+                    {canDelete && (
                       <>
                         <div className="border-t border-gray-100 my-1"></div>
                         <button
                           onClick={handleDeletePost}
                           disabled={isDeleting}
                           className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                          title={isAdmin && !isAuthor ? "管理员删除" : "删除帖子"}
                         >
                           {isDeleting ? (
                             <>
@@ -299,7 +398,7 @@ export default function PostDetailPage() {
                           ) : (
                             <>
                               <Trash2 className="w-4 h-4" />
-                              <span>删除帖子</span>
+                              <span>{isAdmin && !isAuthor ? "管理员删除" : "删除帖子"}</span>
                             </>
                           )}
                         </button>
@@ -415,6 +514,7 @@ export default function PostDetailPage() {
         {/* 评论区 */}
         {showComments && (
           <motion.section
+            id="comments-section"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
@@ -426,77 +526,107 @@ export default function PostDetailPage() {
               </h2>
               
               {/* 发表评论 */}
-              <form onSubmit={handleSubmitComment} className="mb-6">
-                <div className="flex space-x-4">
-                  <img
-                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"
-                    alt="Your avatar"
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                  <div className="flex-1">
-                    <textarea
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
-                      placeholder="写下你的评论..."
-                      className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
-                      rows={3}
+              {user ? (
+                <form onSubmit={handleSubmitComment} className="mb-6">
+                  <div className="flex space-x-4">
+                    <img
+                      src={user.photoURL || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"}
+                      alt="Your avatar"
+                      className="w-10 h-10 rounded-full object-cover"
                     />
-                    <div className="flex justify-end mt-2">
-                      <button
-                        type="submit"
-                        disabled={!newComment.trim()}
-                        className="flex items-center space-x-2 px-4 py-2 bg-green-500 text-white rounded-xl hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                      >
-                        <Send className="w-4 h-4" />
-                        <span>发表</span>
-                      </button>
+                    <div className="flex-1">
+                      <textarea
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        placeholder="写下你的评论..."
+                        className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                        rows={3}
+                        disabled={isSubmittingComment}
+                      />
+                      <div className="flex justify-end mt-2">
+                        <button
+                          type="submit"
+                          disabled={!newComment.trim() || isSubmittingComment}
+                          className="flex items-center space-x-2 px-4 py-2 bg-green-500 text-white rounded-xl hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        >
+                          {isSubmittingComment ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              <span>发表中...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Send className="w-4 h-4" />
+                              <span>发表</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
+                </form>
+              ) : (
+                <div className="mb-6 p-4 bg-gray-50 rounded-xl text-center">
+                  <p className="text-gray-600 mb-3">请登录后发表评论</p>
+                  <Link 
+                    href="/login" 
+                    className="inline-block bg-green-500 text-white px-4 py-2 rounded-xl hover:bg-green-600 transition-colors"
+                  >
+                    去登录
+                  </Link>
                 </div>
-              </form>
+              )}
             </div>
 
             {/* 评论列表 */}
             <div className="divide-y divide-gray-100">
-              {comments.map((comment, index) => (
-                <motion.div
-                  key={comment.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.1 * index }}
-                  className="p-6"
-                >
-                  <div className="flex space-x-4">
-                    <img
-                      src={comment.author.avatar}
-                      alt={comment.author.name}
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <h4 className="font-semibold text-gray-900">
-                          {comment.author.name}
-                        </h4>
-                        <span className="text-sm text-gray-500">
-                          {formatTimestamp(comment.createdAt)}
-                        </span>
-                      </div>
-                      <p className="text-gray-700 mb-3 leading-relaxed">
-                        {comment.content}
-                      </p>
-                      <div className="flex items-center space-x-4">
-                        <button className="flex items-center space-x-1 text-gray-500 hover:text-red-500 transition-colors">
-                          <Heart className="w-4 h-4" />
-                          <span className="text-sm">{comment.likes}</span>
-                        </button>
-                        <button className="text-sm text-gray-500 hover:text-gray-700 transition-colors">
-                          回复
-                        </button>
+              {comments.length === 0 ? (
+                <div className="p-8 text-center text-gray-500">
+                  <MessageCircle className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                  <p className="text-lg font-medium mb-1">还没有评论</p>
+                  <p className="text-sm">成为第一个发表评论的人吧！</p>
+                </div>
+              ) : (
+                comments.map((comment, index) => (
+                  <motion.div
+                    key={comment.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 * index }}
+                    className="p-6"
+                  >
+                    <div className="flex space-x-4">
+                      <img
+                        src={comment.author.avatar}
+                        alt={comment.author.name}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <h4 className="font-semibold text-gray-900">
+                            {comment.author.name}
+                          </h4>
+                          <span className="text-sm text-gray-500">
+                            {formatTimestamp(comment.createdAt)}
+                          </span>
+                        </div>
+                        <p className="text-gray-700 mb-3 leading-relaxed">
+                          {comment.content}
+                        </p>
+                        <div className="flex items-center space-x-4">
+                          <button className="flex items-center space-x-1 text-gray-500 hover:text-red-500 transition-colors">
+                            <Heart className="w-4 h-4" />
+                            <span className="text-sm">{comment.likes}</span>
+                          </button>
+                          <button className="text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                            回复
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                ))
+              )}
             </div>
           </motion.section>
         )}

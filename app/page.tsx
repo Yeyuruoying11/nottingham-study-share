@@ -255,10 +255,10 @@ export default function HomePage() {
     const [localLiked, setLocalLiked] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
     
-    // 改进的作者身份验证逻辑 - 使用UID进行验证，管理员可以删除任何帖子
+    // 改进的作者身份验证逻辑 - 管理员可以删除任何帖子
     const isAuthor = user && post.author.uid && user.uid === post.author.uid;
     const isAdmin = user && isAdminUser(user);
-    const canDelete = isAuthor || isAdmin;
+    const canDelete = isAdmin || isAuthor; // 管理员优先，可以删除任何帖子
 
     // 只在组件挂载时获取一次点赞状态，避免依赖全局状态
     useEffect(() => {
@@ -378,6 +378,23 @@ export default function HomePage() {
       e.stopPropagation();
       setShowMenu(!showMenu);
     };
+
+    // 调试信息（开发环境下显示）
+    useEffect(() => {
+      if (process.env.NODE_ENV === 'development' && user && showMenu) {
+        console.log('删除权限调试:', {
+          postId: post.id,
+          postTitle: post.title,
+          postAuthorName: post.author?.name,
+          postAuthorUID: post.author?.uid,
+          currentUserUID: user.uid,
+          currentUserEmail: user.email,
+          isAuthor,
+          isAdmin,
+          canDelete
+        });
+      }
+    }, [user, showMenu, post, isAuthor, isAdmin, canDelete]);
 
     return (
       <Link href={`/post/${post.id}`}>

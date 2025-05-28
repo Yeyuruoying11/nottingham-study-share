@@ -79,7 +79,7 @@ export default function LocationPicker({ onLocationSelect, initialLocation, clas
     setIsSearching(true);
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1&addressdetails=1&accept-language=zh-CN,zh,en`
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1&addressdetails=1`
       );
       const data = await response.json();
       
@@ -97,11 +97,11 @@ export default function LocationPicker({ onLocationSelect, initialLocation, clas
         handleLocationSelect(location);
         setMapCenter([location.latitude, location.longitude]);
       } else {
-        alert('未找到该地点，请尝试其他搜索词');
+        alert('Location not found, please try other search terms');
       }
     } catch (error) {
-      console.error('搜索地点失败:', error);
-      alert('搜索失败，请稍后重试');
+      console.error('Search location failed:', error);
+      alert('Search failed, please try again later');
     } finally {
       setIsSearching(false);
     }
@@ -200,8 +200,8 @@ export default function LocationPicker({ onLocationSelect, initialLocation, clas
           className="z-0"
         >
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           
           <MapClickHandler onLocationSelect={handleLocationSelect} />
