@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
 import { Post, Location } from '@/lib/types';
 import { getPostsByCategoryFromFirestore, type FirestorePost } from '@/lib/firestore-posts';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
@@ -34,6 +35,7 @@ interface TravelMapProps {
 }
 
 export default function TravelMap({ onPostSelect, selectedPostId, className = "" }: TravelMapProps) {
+  const router = useRouter();
   const [travelPosts, setTravelPosts] = useState<FirestorePost[]>([]);
   const [loading, setLoading] = useState(true);
   const [mapReady, setMapReady] = useState(false);
@@ -61,6 +63,38 @@ export default function TravelMap({ onPostSelect, selectedPostId, className = ""
   useEffect(() => {
     setMapReady(true);
   }, []);
+
+  // 处理查看详情点击
+  const handleViewDetails = (post: FirestorePost, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation(); // 防止事件冒泡
+      e.preventDefault(); // 防止默认行为
+    }
+    
+    console.log('查看详情被点击，帖子ID:', post.id);
+    console.log('准备导航到:', `/post/${post.id}`);
+    
+    // 调用可选的回调函数
+    if (onPostSelect) {
+      onPostSelect(post);
+    }
+    
+    // 导航到帖子详情页面
+    if (post.id) {
+      // 使用 window.location 进行可靠的导航
+      window.location.href = `/post/${post.id}`;
+    } else {
+      console.error('帖子 ID 不存在:', post);
+    }
+  };
+
+  // 处理整个 Popup 点击
+  const handlePopupClick = (post: FirestorePost) => {
+    console.log('Popup 被点击，导航到帖子:', post.id);
+    if (post.id) {
+      window.location.href = `/post/${post.id}`;
+    }
+  };
 
   if (!mapReady) {
     return (
@@ -104,8 +138,12 @@ export default function TravelMap({ onPostSelect, selectedPostId, className = ""
                 },
               }}
             >
-              <Popup>
-                <div className="max-w-xs">
+              <Popup
+                eventHandlers={{
+                  click: () => handlePopupClick(post)
+                }}
+              >
+                <div className="max-w-xs cursor-pointer" onClick={() => handlePopupClick(post)}>
                   <div className="flex items-start space-x-3">
                     {post.images && post.images[0] && (
                       <img
@@ -121,17 +159,14 @@ export default function TravelMap({ onPostSelect, selectedPostId, className = ""
                       <p className="text-xs text-gray-600 mb-2">
                         {post.location.address}
                       </p>
-                      <div className="flex items-center space-x-2 text-xs text-gray-500">
+                      <div className="flex items-center space-x-2 text-xs text-gray-500 mb-2">
                         <span>{post.author.name}</span>
                         <span>•</span>
                         <span>{post.likes} 点赞</span>
                       </div>
-                      <button
-                        onClick={() => onPostSelect?.(post)}
-                        className="mt-2 text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 transition-colors"
-                      >
-                        查看详情
-                      </button>
+                      <div className="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 transition-colors text-center">
+                        点击查看详情
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -9,7 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { addPostToFirestore } from "@/lib/firestore-posts";
 import { uploadImageWithProgress, uploadImageSimple, uploadImageSmart, uploadImageTurbo, uploadImageUltimate, getImageInfo } from "@/lib/firebase-storage";
 import { uploadImageSmart as uploadImageSmartCloud } from "@/lib/firebase-storage-cloud";
-import { uploadImageSmart as uploadImageCORSFix } from "@/lib/firebase-storage-cors-fix";
+import { uploadImageWithCORSFix } from "@/lib/firebase-storage-cors-fix";
 import { Location } from "@/lib/types";
 import LocationPicker from "@/components/Map/LocationPicker";
 import {
@@ -373,50 +373,51 @@ export default function CreatePostPage() {
               
               let imageUrl = "";
               
-          try {
-            imageUrl = await uploadImageCORSFix(
+              // 尝试CORS修复上传
+              try {
+                imageUrl = await uploadImageWithCORSFix(
                   file,
-              user.uid,
-              (progress) => {
+                  user.uid,
+                  (progress) => {
                     setUploadProgress(prev => {
                       const newProgress = [...prev];
                       newProgress[index] = progress;
                       return newProgress;
                     });
-              }
-            );
+                  }
+                );
                 console.log(`CORS修复上传成功: ${imageUrl}`);
-          } catch (corsError) {
+              } catch (corsError) {
                 console.warn(`CORS修复上传失败，尝试云端智能上传: ${corsError}`);
-            
-            try {
-              imageUrl = await uploadImageSmartCloud(
+                
+                try {
+                  imageUrl = await uploadImageSmartCloud(
                     file,
-                user.uid,
-                (progress) => {
+                    user.uid,
+                    (progress) => {
                       setUploadProgress(prev => {
                         const newProgress = [...prev];
                         newProgress[index] = progress;
                         return newProgress;
                       });
-                }
-              );
+                    }
+                  );
                   console.log(`云端智能上传成功: ${imageUrl}`);
-            } catch (cloudError) {
+                } catch (cloudError) {
                   console.warn(`云端智能上传失败，尝试简化上传: ${cloudError}`);
-              
-              // 如果所有优化上传都失败，使用简化上传作为最后备选
-              imageUrl = await uploadImageSimple(
+                  
+                  // 如果所有优化上传都失败，使用简化上传作为最后备选
+                  imageUrl = await uploadImageSimple(
                     file,
-                user.uid,
-                (progress) => {
+                    user.uid,
+                    (progress) => {
                       setUploadProgress(prev => {
                         const newProgress = [...prev];
                         newProgress[index] = progress;
                         return newProgress;
                       });
-                }
-              );
+                    }
+                  );
                   console.log(`简化上传成功: ${imageUrl}`);
                 }
               }
