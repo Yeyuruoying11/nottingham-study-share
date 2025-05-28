@@ -130,23 +130,38 @@ export function subscribeToUserConversations(
     orderBy('updatedAt', 'desc')
   );
   
-  return onSnapshot(q, (querySnapshot) => {
-    const conversations: Conversation[] = [];
-    querySnapshot.forEach((doc) => {
-      const data = doc.data();
-      conversations.push({
-        id: doc.id,
-        ...data,
-        createdAt: data.createdAt?.toDate() || new Date(),
-        updatedAt: data.updatedAt?.toDate() || new Date(),
-        lastMessage: data.lastMessage ? {
-          ...data.lastMessage,
-          timestamp: data.lastMessage.timestamp?.toDate() || new Date()
-        } : undefined
-      } as Conversation);
-    });
-    callback(conversations);
-  });
+  return onSnapshot(
+    q, 
+    (querySnapshot) => {
+      console.log('Firestore 会话查询成功，文档数量:', querySnapshot.size);
+      
+      const conversations: Conversation[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        conversations.push({
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          updatedAt: data.updatedAt?.toDate() || new Date(),
+          lastMessage: data.lastMessage ? {
+            ...data.lastMessage,
+            timestamp: data.lastMessage.timestamp?.toDate() || new Date()
+          } : undefined
+        } as Conversation);
+      });
+      
+      console.log('处理后的会话数据:', conversations);
+      callback(conversations);
+    },
+    (error) => {
+      console.error('监听用户会话失败:', error);
+      console.error('错误代码:', error.code);
+      console.error('错误信息:', error.message);
+      
+      // 即使出错也要调用回调，返回空数组
+      callback([]);
+    }
+  );
 }
 
 // ==================== 消息管理 ====================

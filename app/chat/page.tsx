@@ -32,10 +32,17 @@ export default function ChatPage() {
     const unsubscribe = subscribeToUserConversations(
       user.uid,
       (newConversations) => {
+        console.log('收到会话更新:', newConversations);
         setConversations(newConversations);
-        setLoading(false);
+        setLoading(false); // 确保在任何情况下都停止加载
       }
     );
+
+    // 设置超时，防止永久加载
+    const timeout = setTimeout(() => {
+      console.log('加载超时，停止加载状态');
+      setLoading(false);
+    }, 10000); // 10秒超时
 
     // 页面离开时更新为离线状态
     const handleBeforeUnload = () => {
@@ -46,6 +53,7 @@ export default function ChatPage() {
 
     return () => {
       unsubscribe();
+      clearTimeout(timeout);
       window.removeEventListener('beforeunload', handleBeforeUnload);
       updateUserOnlineStatus(user.uid, false);
     };
