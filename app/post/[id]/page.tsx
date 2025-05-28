@@ -8,8 +8,13 @@ import { useParams, useRouter } from "next/navigation";
 import { 
   getPostByIdFromFirestore, 
   getCommentsByPostIdFromFirestore, 
+  getCommentsWithRepliesFromFirestore,
   deletePostFromFirestore,
+  deleteCommentFromFirestore,
   addCommentToFirestore,
+  addReplyToCommentFirestore,
+  toggleCommentLike,
+  getUserCommentLikeStatus,
   formatTimestamp,
   toggleLike,
   getUserLikeStatus,
@@ -38,6 +43,10 @@ export default function PostDetailPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null); // 正在回复的评论ID
+  const [replyContent, setReplyContent] = useState("");
+  const [isSubmittingReply, setIsSubmittingReply] = useState(false);
+  const [commentLikeStates, setCommentLikeStates] = useState<Record<string, { liked: boolean; likes: number }>>({});
   const menuRef = useRef<HTMLDivElement>(null);
 
   // 加载帖子和评论数据
@@ -47,7 +56,7 @@ export default function PostDetailPage() {
       try {
         const [postData, commentsData] = await Promise.all([
           getPostByIdFromFirestore(postId),
-          getCommentsByPostIdFromFirestore(postId)
+          getCommentsWithRepliesFromFirestore(postId) // 使用新的API获取带回复的评论
         ]);
         
         setPost(postData);
@@ -58,6 +67,33 @@ export default function PostDetailPage() {
         if (user && postData) {
           const likeStatus = await getUserLikeStatus(postId, user.uid);
           setIsLiked(likeStatus);
+          
+          // 初始化评论点赞状态
+          const commentLikePromises = getAllCommentsFromTree(commentsData).map(async (comment) => {
+            if (comment.id) {
+              const liked = await getUserCommentLikeStatus(comment.id, user.uid);
+              return {
+                id: comment.id,
+                liked,
+                likes: comment.likes || 0
+              };
+            }
+            return null;
+          });
+          
+          const commentLikeResults = await Promise.all(commentLikePromises);
+          const commentStates: Record<string, { liked: boolean; likes: number }> = {};
+          
+          commentLikeResults.forEach(result => {
+            if (result) {
+              commentStates[result.id] = {
+                liked: result.liked,
+                likes: result.likes
+              };
+            }
+          });
+          
+          setCommentLikeStates(commentStates);
         }
       } catch (error) {
         console.error('加载数据失败:', error);
@@ -71,11 +107,57 @@ export default function PostDetailPage() {
     }
   }, [postId, user]);
 
+  // 辅助函数：从评论树中获取所有评论（包括回复）
+  const getAllCommentsFromTree = (comments: FirestoreComment[]): FirestoreComment[] => {
+    const allComments: FirestoreComment[] = [];
+    
+    const traverse = (commentList: FirestoreComment[]) => {
+      commentList.forEach(comment => {
+        allComments.push(comment);
+        if (comment.replies && comment.replies.length > 0) {
+          traverse(comment.replies);
+        }
+      });
+    };
+    
+    traverse(comments);
+    return allComments;
+  };
+
   // 重新加载评论的函数
   const reloadComments = async () => {
     try {
-      const updatedComments = await getCommentsByPostIdFromFirestore(postId);
+      const updatedComments = await getCommentsWithRepliesFromFirestore(postId);
       setComments(updatedComments);
+      
+      // 重新加载评论点赞状态
+      if (user) {
+        const commentLikePromises = getAllCommentsFromTree(updatedComments).map(async (comment) => {
+          if (comment.id) {
+            const liked = await getUserCommentLikeStatus(comment.id, user.uid);
+            return {
+              id: comment.id,
+              liked,
+              likes: comment.likes || 0
+            };
+          }
+          return null;
+        });
+        
+        const commentLikeResults = await Promise.all(commentLikePromises);
+        const commentStates: Record<string, { liked: boolean; likes: number }> = {};
+        
+        commentLikeResults.forEach(result => {
+          if (result) {
+            commentStates[result.id] = {
+              liked: result.liked,
+              likes: result.likes
+            };
+          }
+        });
+        
+        setCommentLikeStates(commentStates);
+      }
     } catch (error) {
       console.error('重新加载评论失败:', error);
     }
@@ -245,7 +327,7 @@ export default function PostDetailPage() {
         setNewComment("");
         
         // 重新加载评论列表
-        const updatedComments = await getCommentsByPostIdFromFirestore(postId);
+        const updatedComments = await getCommentsWithRepliesFromFirestore(postId);
         setComments(updatedComments);
         
         // 更新帖子的评论数量
@@ -308,6 +390,146 @@ export default function PostDetailPage() {
 
   const handleMenuClick = () => {
     setShowMenu(!showMenu);
+  };
+
+  // 删除评论
+  const handleDeleteComment = async (commentId: string) => {
+    if (!user) {
+      alert('请先登录');
+      return;
+    }
+
+    const confirmDelete = window.confirm("确定要删除这条评论吗？删除后无法恢复。");
+    if (!confirmDelete) return;
+
+    try {
+      const success = await deleteCommentFromFirestore(commentId, user.uid);
+      
+      if (success) {
+        // 重新加载评论和帖子数据
+        await reloadComments();
+        
+        // 重新加载帖子以更新评论数量
+        const updatedPost = await getPostByIdFromFirestore(postId);
+        if (updatedPost) {
+          setPost(updatedPost);
+        }
+      } else {
+        alert('删除失败，您可能没有权限删除此评论');
+      }
+    } catch (error) {
+      console.error('删除评论失败:', error);
+      alert('删除失败，请重试');
+    }
+  };
+
+  // 点赞评论
+  const handleCommentLike = async (commentId: string) => {
+    if (!user) {
+      alert('请先登录才能点赞');
+      return;
+    }
+
+    try {
+      // 先更新本地状态
+      const currentState = commentLikeStates[commentId] || { liked: false, likes: 0 };
+      const newLiked = !currentState.liked;
+      const newLikes = newLiked ? currentState.likes + 1 : currentState.likes - 1;
+      
+      setCommentLikeStates(prev => ({
+        ...prev,
+        [commentId]: {
+          liked: newLiked,
+          likes: newLikes
+        }
+      }));
+
+      // 调用API
+      const result = await toggleCommentLike(commentId, user.uid);
+      
+      // 更新为服务器返回的准确状态
+      setCommentLikeStates(prev => ({
+        ...prev,
+        [commentId]: {
+          liked: result.liked,
+          likes: result.likesCount
+        }
+      }));
+      
+    } catch (error) {
+      console.error('点赞评论失败:', error);
+      // 恢复原始状态
+      const originalState = commentLikeStates[commentId] || { liked: false, likes: 0 };
+      setCommentLikeStates(prev => ({
+        ...prev,
+        [commentId]: originalState
+      }));
+      alert('点赞失败，请重试');
+    }
+  };
+
+  // 提交回复
+  const handleSubmitReply = async () => {
+    if (!user || !replyingTo || !replyContent.trim()) {
+      alert('请输入回复内容');
+      return;
+    }
+
+    setIsSubmittingReply(true);
+    
+    try {
+      // 获取用户的Firestore信息
+      const { doc, getDoc } = await import('firebase/firestore');
+      const { db } = await import('@/lib/firebase');
+      
+      let userName = user.displayName || '用户';
+      
+      try {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          userName = userData.displayName || user.displayName || '用户';
+        }
+      } catch (error) {
+        console.warn('获取用户信息失败，使用默认信息:', error);
+      }
+
+      // 添加回复
+      const replyId = await addReplyToCommentFirestore({
+        postId: postId,
+        parentId: replyingTo,
+        content: replyContent.trim(),
+        author: {
+          name: userName,
+          avatar: user.photoURL || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
+          uid: user.uid
+        }
+      });
+      
+      if (replyId) {
+        // 清空回复状态
+        setReplyContent("");
+        setReplyingTo(null);
+        
+        // 重新加载评论
+        await reloadComments();
+        
+        // 更新帖子的评论数量
+        if (post) {
+          setPost({
+            ...post,
+            comments: post.comments + 1
+          });
+        }
+      } else {
+        alert('回复发表失败，请重试');
+      }
+    } catch (error) {
+      console.error('提交回复失败:', error);
+      alert('回复发表失败，请重试');
+    } finally {
+      setIsSubmittingReply(false);
+    }
   };
 
   return (
@@ -588,43 +810,22 @@ export default function PostDetailPage() {
                 </div>
               ) : (
                 comments.map((comment, index) => (
-                  <motion.div
+                  <CommentItem
                     key={comment.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 * index }}
-                    className="p-6"
-                  >
-                    <div className="flex space-x-4">
-                      <img
-                        src={comment.author.avatar}
-                        alt={comment.author.name}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-2">
-                          <h4 className="font-semibold text-gray-900">
-                            {comment.author.name}
-                          </h4>
-                          <span className="text-sm text-gray-500">
-                            {formatTimestamp(comment.createdAt)}
-                          </span>
-                        </div>
-                        <p className="text-gray-700 mb-3 leading-relaxed">
-                          {comment.content}
-                        </p>
-                        <div className="flex items-center space-x-4">
-                          <button className="flex items-center space-x-1 text-gray-500 hover:text-red-500 transition-colors">
-                            <Heart className="w-4 h-4" />
-                            <span className="text-sm">{comment.likes}</span>
-                          </button>
-                          <button className="text-sm text-gray-500 hover:text-gray-700 transition-colors">
-                            回复
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
+                    comment={comment}
+                    index={index}
+                    currentUser={user}
+                    isAdmin={isAdmin || false}
+                    commentLikeStates={commentLikeStates}
+                    handleCommentLike={handleCommentLike}
+                    handleDeleteComment={handleDeleteComment}
+                    replyingTo={replyingTo}
+                    setReplyingTo={setReplyingTo}
+                    replyContent={replyContent}
+                    setReplyContent={setReplyContent}
+                    handleSubmitReply={handleSubmitReply}
+                    isSubmittingReply={isSubmittingReply}
+                  />
                 ))
               )}
             </div>
@@ -632,5 +833,168 @@ export default function PostDetailPage() {
         )}
       </main>
     </div>
+  );
+}
+
+// CommentItem 组件
+function CommentItem({ 
+  comment, 
+  index, 
+  currentUser, 
+  isAdmin, 
+  commentLikeStates,
+  handleCommentLike,
+  handleDeleteComment,
+  replyingTo,
+  setReplyingTo,
+  replyContent,
+  setReplyContent,
+  handleSubmitReply,
+  isSubmittingReply
+}: {
+  comment: FirestoreComment;
+  index: number;
+  currentUser: any;
+  isAdmin: boolean;
+  commentLikeStates: Record<string, { liked: boolean; likes: number }>;
+  handleCommentLike: (commentId: string) => void;
+  handleDeleteComment: (commentId: string) => void;
+  replyingTo: string | null;
+  setReplyingTo: (commentId: string | null) => void;
+  replyContent: string;
+  setReplyContent: (content: string) => void;
+  handleSubmitReply: () => void;
+  isSubmittingReply: boolean;
+}) {
+  const isCommentAuthor = currentUser && comment.author.uid && currentUser.uid === comment.author.uid;
+  const canDeleteComment = isAdmin || isCommentAuthor;
+  const commentLikeState = commentLikeStates[comment.id!] || { liked: false, likes: comment.likes };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: 0.1 * index }}
+      className="p-6"
+    >
+      <div className="flex space-x-4">
+        <img
+          src={comment.author.avatar}
+          alt={comment.author.name}
+          className="w-10 h-10 rounded-full object-cover"
+        />
+        <div className="flex-1">
+          <div className="flex items-center space-x-2 mb-2">
+            <h4 className="font-semibold text-gray-900">
+              {comment.author.name}
+            </h4>
+            <span className="text-sm text-gray-500">
+              {formatTimestamp(comment.createdAt)}
+            </span>
+          </div>
+          <p className="text-gray-700 mb-3 leading-relaxed">
+            {comment.content}
+          </p>
+          <div className="flex items-center space-x-4">
+            <button 
+              onClick={() => handleCommentLike(comment.id!)}
+              className={`flex items-center space-x-1 transition-colors ${
+                commentLikeState.liked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'
+              }`}
+            >
+              <Heart className={`w-4 h-4 ${commentLikeState.liked ? 'fill-current' : ''}`} />
+              <span className="text-sm">{commentLikeState.likes}</span>
+            </button>
+            <button 
+              onClick={() => setReplyingTo(comment.id!)}
+              className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              回复
+            </button>
+            {canDeleteComment && (
+              <button 
+                onClick={() => handleDeleteComment(comment.id!)}
+                className="text-sm text-red-500 hover:text-red-700 transition-colors"
+              >
+                删除
+              </button>
+            )}
+          </div>
+
+          {/* 回复表单 */}
+          {replyingTo === comment.id && currentUser && (
+            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+              <div className="flex space-x-3">
+                <img
+                  src={currentUser.photoURL || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"}
+                  alt="Your avatar"
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+                <div className="flex-1">
+                  <textarea
+                    value={replyContent}
+                    onChange={(e) => setReplyContent(e.target.value)}
+                    placeholder={`回复 ${comment.author.name}...`}
+                    className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none text-sm"
+                    rows={2}
+                    disabled={isSubmittingReply}
+                  />
+                  <div className="flex justify-end space-x-2 mt-2">
+                    <button
+                      onClick={() => {
+                        setReplyingTo(null);
+                        setReplyContent("");
+                      }}
+                      disabled={isSubmittingReply}
+                      className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 disabled:opacity-50"
+                    >
+                      取消
+                    </button>
+                    <button
+                      onClick={handleSubmitReply}
+                      disabled={!replyContent.trim() || isSubmittingReply}
+                      className="flex items-center space-x-1 px-3 py-1 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    >
+                      {isSubmittingReply ? (
+                        <>
+                          <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          <span>回复中...</span>
+                        </>
+                      ) : (
+                        <span>回复</span>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 回复列表 */}
+          {comment.replies && comment.replies.length > 0 && (
+            <div className="mt-4 pl-4 border-l-2 border-gray-100">
+              {comment.replies.map((reply, replyIndex) => (
+                <CommentItem
+                  key={reply.id}
+                  comment={reply}
+                  index={replyIndex}
+                  currentUser={currentUser}
+                  isAdmin={isAdmin}
+                  commentLikeStates={commentLikeStates}
+                  handleCommentLike={handleCommentLike}
+                  handleDeleteComment={handleDeleteComment}
+                  replyingTo={replyingTo}
+                  setReplyingTo={setReplyingTo}
+                  replyContent={replyContent}
+                  setReplyContent={setReplyContent}
+                  handleSubmitReply={handleSubmitReply}
+                  isSubmittingReply={isSubmittingReply}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </motion.div>
   );
 } 

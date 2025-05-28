@@ -320,7 +320,7 @@ export default function UsernameSettingsPage() {
                   <ul className="space-y-1 list-disc list-inside">
                     <li>长度为 2-20 个字符</li>
                     <li>只能包含字母、数字、下划线和中文字符</li>
-                    <li>不能与历史用户名重复</li>
+                    <li>可以重新使用之前用过的用户名</li>
                     <li>每个账户最多可修改 3 次</li>
                     <li>用完 3 次后需等待 30 天才能再次修改</li>
                   </ul>
@@ -389,13 +389,21 @@ export default function UsernameSettingsPage() {
               <div className="flex items-center space-x-3 mb-4">
                 <History className="w-5 h-5 text-gray-500" />
                 <h2 className="text-lg font-semibold text-gray-900">修改历史</h2>
+                <span className="text-sm text-gray-500">点击可快速选择</span>
               </div>
               
               <div className="space-y-3">
                 {history.history.map((username, index) => (
-                  <div key={index} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                  <div 
+                    key={index} 
+                    className="flex items-center justify-between py-2 px-3 bg-gray-50 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors"
+                    onClick={() => handleUsernameChange(username)}
+                  >
                     <span className="text-gray-700">{username}</span>
-                    <span className="text-xs text-gray-500">历史用户名</span>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs text-gray-500">历史用户名</span>
+                      <span className="text-xs text-blue-600 hover:text-blue-800">点击选择</span>
+                    </div>
                   </div>
                 ))}
               </div>

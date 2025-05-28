@@ -55,6 +55,9 @@ export interface FirestoreComment {
   content: string;
   createdAt: Timestamp | Date | FieldValue;
   likes: number;
+  likedBy?: string[]; // 点赞用户的UID列表
+  parentId?: string; // 父评论ID，用于回复功能
+  replies?: FirestoreComment[]; // 回复列表（客户端计算）
 }
 
 // 帖子相关操作
@@ -477,5 +480,216 @@ export function formatTimestamp(timestamp: Timestamp | Date | FieldValue): strin
   } else {
     // 如果是FieldValue（如serverTimestamp），返回当前时间
     return new Date().toLocaleDateString('zh-CN');
+  }
+}
+
+// 删除评论
+export async function deleteCommentFromFirestore(commentId: string, currentUserUid: string): Promise<boolean> {
+  try {
+    // 首先获取评论信息验证权限
+    const commentRef = doc(db, 'comments', commentId);
+    const commentDoc = await getDoc(commentRef);
+    
+    if (!commentDoc.exists()) {
+      console.error('评论不存在');
+      return false;
+    }
+    
+    const commentData = commentDoc.data() as FirestoreComment;
+    
+    // 获取当前用户信息以检查管理员权限
+    const userDoc = await getDoc(doc(db, 'users', currentUserUid));
+    const userData = userDoc.exists() ? userDoc.data() : null;
+    const isAdminUser = userData && userData.email && isAdmin(userData.email);
+    
+    // 验证是否是评论作者或管理员
+    if (commentData.author.uid !== currentUserUid && !isAdminUser) {
+      console.error('无权限删除此评论');
+      return false;
+    }
+    
+    console.log(isAdminUser ? '管理员删除评论' : '作者删除评论', commentId);
+    
+    // 删除评论
+    await deleteDoc(commentRef);
+    
+    // 更新帖子的评论数量（减1）
+    const postRef = doc(db, 'posts', commentData.postId);
+    await updateDoc(postRef, {
+      comments: increment(-1)
+    });
+    
+    // 如果有回复，也要删除所有回复
+    const repliesQuery = query(commentsCollection, where('parentId', '==', commentId));
+    const repliesSnapshot = await getDocs(repliesQuery);
+    
+    const deleteRepliesPromises: Promise<void>[] = [];
+    repliesSnapshot.forEach((replyDoc) => {
+      deleteRepliesPromises.push(deleteDoc(doc(db, 'comments', replyDoc.id)));
+    });
+    
+    await Promise.all(deleteRepliesPromises);
+    
+    // 更新帖子评论数（减去回复数）
+    if (repliesSnapshot.size > 0) {
+      await updateDoc(postRef, {
+        comments: increment(-repliesSnapshot.size)
+      });
+    }
+    
+    console.log('评论及其回复已删除');
+    return true;
+  } catch (error) {
+    console.error('删除评论失败:', error);
+    return false;
+  }
+}
+
+// 点赞评论
+export async function toggleCommentLike(commentId: string, userId: string): Promise<{ liked: boolean; likesCount: number }> {
+  try {
+    const commentRef = doc(db, 'comments', commentId);
+    const commentDoc = await getDoc(commentRef);
+    
+    if (!commentDoc.exists()) {
+      throw new Error('评论不存在');
+    }
+    
+    const commentData = commentDoc.data();
+    const likedBy = commentData.likedBy || [];
+    const isLiked = likedBy.includes(userId);
+    
+    if (isLiked) {
+      // 取消点赞
+      await updateDoc(commentRef, {
+        likes: increment(-1),
+        likedBy: arrayRemove(userId)
+      });
+      
+      return {
+        liked: false,
+        likesCount: (commentData.likes || 0) - 1
+      };
+    } else {
+      // 添加点赞
+      await updateDoc(commentRef, {
+        likes: increment(1),
+        likedBy: arrayUnion(userId)
+      });
+      
+      return {
+        liked: true,
+        likesCount: (commentData.likes || 0) + 1
+      };
+    }
+  } catch (error) {
+    console.error('评论点赞操作失败:', error);
+    throw error;
+  }
+}
+
+// 获取用户对评论的点赞状态
+export async function getUserCommentLikeStatus(commentId: string, userId: string): Promise<boolean> {
+  try {
+    const commentRef = doc(db, 'comments', commentId);
+    const commentDoc = await getDoc(commentRef);
+    
+    if (!commentDoc.exists()) {
+      return false;
+    }
+    
+    const commentData = commentDoc.data();
+    const likedBy = commentData.likedBy || [];
+    return likedBy.includes(userId);
+  } catch (error) {
+    console.error('获取评论点赞状态失败:', error);
+    return false;
+  }
+}
+
+// 添加回复评论
+export async function addReplyToCommentFirestore(replyData: {
+  postId: string;
+  parentId: string;
+  content: string;
+  author: {
+    name: string;
+    avatar: string;
+    uid?: string;
+  };
+}): Promise<string | null> {
+  try {
+    const newReply: Omit<FirestoreComment, 'id'> = {
+      postId: replyData.postId,
+      parentId: replyData.parentId,
+      content: replyData.content,
+      author: replyData.author,
+      createdAt: serverTimestamp(),
+      likes: 0,
+      likedBy: []
+    };
+    
+    const docRef = await addDoc(commentsCollection, newReply);
+    
+    // 更新帖子的评论数量
+    const postRef = doc(db, 'posts', replyData.postId);
+    await updateDoc(postRef, {
+      comments: increment(1)
+    });
+    
+    console.log('回复已添加到Firestore，ID:', docRef.id);
+    return docRef.id;
+  } catch (error) {
+    console.error('添加回复到Firestore失败:', error);
+    return null;
+  }
+}
+
+// 获取帖子的评论（包括回复，组织成树形结构）
+export async function getCommentsWithRepliesFromFirestore(postId: string): Promise<FirestoreComment[]> {
+  try {
+    const q = query(commentsCollection, orderBy('createdAt', 'asc'));
+    const querySnapshot = await getDocs(q);
+    
+    const allComments: FirestoreComment[] = [];
+    querySnapshot.forEach((doc) => {
+      const data = doc.data() as Omit<FirestoreComment, 'id'>;
+      if (data.postId === postId) {
+        allComments.push({
+          id: doc.id,
+          ...data
+        });
+      }
+    });
+    
+    // 组织成树形结构：将回复放到父评论的replies数组中
+    const commentsMap = new Map<string, FirestoreComment>();
+    const rootComments: FirestoreComment[] = [];
+    
+    // 先处理所有评论
+    allComments.forEach(comment => {
+      comment.replies = [];
+      commentsMap.set(comment.id!, comment);
+      
+      if (!comment.parentId) {
+        // 这是顶级评论
+        rootComments.push(comment);
+      }
+    });
+    
+    // 然后处理回复关系
+    allComments.forEach(comment => {
+      if (comment.parentId) {
+        const parent = commentsMap.get(comment.parentId);
+        if (parent) {
+          parent.replies!.push(comment);
+        }
+      }
+    });
+    
+    return rootComments;
+  } catch (error) {
+    console.error('获取评论失败:', error);
+    return [];
   }
 } 

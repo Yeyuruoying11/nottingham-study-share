@@ -195,27 +195,28 @@ export async function changeUsername(
       };
     }
 
-    // 5. 检查是否与历史用户名重复
-    if (currentHistory.includes(newUsername.trim())) {
-      return {
-        success: false,
-        message: '不能使用之前用过的用户名'
-      };
-    }
+    // 5. 允许使用历史用户名（已移除限制）
+    // 用户现在可以重新使用之前用过的用户名
 
     // 6. 更新用户数据
     const updateData: any = {
       displayName: newUsername.trim(),
       usernameChangeCount: currentCount + 1,
       lastUsernameChange: serverTimestamp(),
-      usernameHistory: [...currentHistory, currentUsername],
       updatedAt: serverTimestamp()
     };
 
-    // 如果是重置后的第一次修改，清空历史记录
+    // 更新历史记录 - 只有当前用户名不在历史记录中时才添加
+    const newHistory = [...currentHistory];
+    if (currentUsername && !newHistory.includes(currentUsername)) {
+      newHistory.push(currentUsername);
+    }
+    updateData.usernameHistory = newHistory;
+
+    // 如果是重置后的第一次修改，重新开始计数但保留历史记录
     if (currentCount >= MAX_USERNAME_CHANGES) {
       updateData.usernameChangeCount = 1;
-      updateData.usernameHistory = [currentUsername];
+      // 保留现有历史记录，重置只影响计数
     }
 
     await updateDoc(doc(db, 'users', userId), updateData);
