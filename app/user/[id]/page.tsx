@@ -114,6 +114,18 @@ export default function UserProfilePage() {
     setIsStartingChat(true);
     
     try {
+      console.log('🚀 开始发起聊天...');
+      console.log('当前用户:', {
+        uid: currentUser.uid,
+        displayName: currentUser.displayName,
+        photoURL: currentUser.photoURL
+      });
+      console.log('目标用户:', {
+        uid: userProfile.uid,
+        displayName: userProfile.displayName,
+        photoURL: userProfile.photoURL
+      });
+
       const conversationId = await getOrCreateConversation(
         currentUser.uid,
         userProfile.uid,
@@ -123,11 +135,31 @@ export default function UserProfilePage() {
         userProfile.photoURL || ''
       );
       
-      console.log('聊天会话创建成功:', conversationId);
+      console.log('✅ 聊天会话创建/获取成功:', conversationId);
+      
+      // 显示成功提示
+      alert('聊天会话已创建！正在跳转到聊天页面...');
+      
+      // 跳转到聊天页面
       router.push('/chat');
     } catch (error) {
-      console.error('发起聊天失败:', error);
-      alert('发起聊天失败，请重试');
+      console.error('❌ 发起聊天失败:', error);
+      
+      // 提供更详细的错误信息
+      let errorMessage = '发起聊天失败，请重试';
+      if (error instanceof Error) {
+        if (error.message.includes('permissions') || error.message.includes('permission-denied')) {
+          errorMessage = '权限不足，请确保已登录并重试';
+        } else if (error.message.includes('network') || error.message.includes('offline')) {
+          errorMessage = '网络连接问题，请检查网络后重试';
+        } else if (error.message.includes('quota') || error.message.includes('exceeded')) {
+          errorMessage = '服务暂时不可用，请稍后重试';
+        } else {
+          errorMessage = `发起聊天失败: ${error.message}`;
+        }
+      }
+      
+      alert(errorMessage);
     } finally {
       setIsStartingChat(false);
     }
@@ -298,7 +330,8 @@ export default function UserProfilePage() {
 
               {/* 联系信息 */}
               <div className="space-y-4">
-                {userProfile.email && (
+                {/* 只有查看自己的资料时才显示邮箱 */}
+                {isOwnProfile && userProfile.email && (
                   <div className="flex items-center space-x-3 text-gray-600">
                     <Mail className="w-4 h-4" />
                     <span className="text-sm">{userProfile.email}</span>

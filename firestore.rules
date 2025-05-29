@@ -1,0 +1,73 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 用户文档规则
+    match /users/{userId} {
+      allow read: if true; // 所有人都可以读取用户资料
+      allow write: if request.auth != null && request.auth.uid == userId; // 只能修改自己的资料
+    }
+    
+    // 帖子规则
+    match /posts/{postId} {
+      allow read: if true; // 所有人都可以读取帖子
+      allow create: if request.auth != null; // 已登录用户可以创建帖子
+      allow update, delete: if request.auth != null && 
+        (request.auth.uid == resource.data.author.uid || 
+         isAdmin(request.auth.token.email)); // 作者或管理员可以修改/删除
+    }
+    
+    // 评论规则
+    match /comments/{commentId} {
+      allow read: if true; // 所有人都可以读取评论
+      allow create: if request.auth != null; // 已登录用户可以创建评论
+      allow update, delete: if request.auth != null && 
+        (request.auth.uid == resource.data.author.uid || 
+         isAdmin(request.auth.token.email)); // 作者或管理员可以修改/删除
+    }
+    
+    // 聊天会话规则
+    match /conversations/{conversationId} {
+      allow read: if request.auth != null && 
+        request.auth.uid in resource.data.participants; // 参与者可以读取会话
+      allow create: if request.auth != null && 
+        request.auth.uid in request.resource.data.participants; // 参与者可以创建会话
+      allow update: if request.auth != null && 
+        request.auth.uid in resource.data.participants; // 参与者可以更新会话
+      allow delete: if false; // 不允许删除会话
+    }
+    
+    // 聊天消息规则
+    match /messages/{messageId} {
+      allow read: if request.auth != null; // 需要通过会话权限控制，这里暂时允许
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.senderId; // 只能发送自己的消息
+      allow update: if request.auth != null && 
+        request.auth.uid == resource.data.senderId; // 只能修改自己的消息
+      allow delete: if request.auth != null && 
+        request.auth.uid == resource.data.senderId; // 只能删除自己的消息
+    }
+    
+    // 在线状态规则
+    match /onlineStatus/{userId} {
+      allow read: if true; // 所有人都可以查看在线状态
+      allow write: if request.auth != null && request.auth.uid == userId; // 只能修改自己的在线状态
+    }
+    
+    // 通知规则
+    match /notifications/{notificationId} {
+      allow read: if request.auth != null && 
+        request.auth.uid == resource.data.recipientId; // 只能读取发给自己的通知
+      allow create: if request.auth != null; // 已登录用户可以创建通知
+      allow update, delete: if request.auth != null && 
+        request.auth.uid == resource.data.recipientId; // 只能修改发给自己的通知
+    }
+    
+    // 管理员检查函数
+    function isAdmin(email) {
+      return email in [
+        'taoyihaoyy@gmail.com',
+        'admin@nottingham-study-share.com'
+      ];
+    }
+  }
+} 

@@ -81,20 +81,38 @@ export async function getOrCreateConversation(
   targetUserAvatar: string
 ): Promise<string> {
   try {
+    console.log('🔍 查找现有会话...');
+    console.log('参数:', {
+      currentUserId,
+      targetUserId,
+      currentUserName,
+      targetUserName
+    });
+
     // 查找现有会话（两人之间的会话）
     const q = query(
       conversationsCollection,
       where('participants', 'array-contains', currentUserId)
     );
     
+    console.log('📋 执行 Firestore 查询...');
     const querySnapshot = await getDocs(q);
+    console.log(`📊 查询到 ${querySnapshot.size} 个包含当前用户的会话`);
     
     for (const docSnapshot of querySnapshot.docs) {
       const conversation = docSnapshot.data() as Conversation;
+      console.log('🔎 检查会话:', {
+        id: docSnapshot.id,
+        participants: conversation.participants
+      });
+      
       if (conversation.participants.includes(targetUserId) && conversation.participants.length === 2) {
+        console.log('✅ 找到现有会话:', docSnapshot.id);
         return docSnapshot.id;
       }
     }
+    
+    console.log('🆕 没有找到现有会话，创建新会话...');
     
     // 如果没有找到现有会话，创建新会话
     const newConversation: Omit<Conversation, 'id'> = {
@@ -115,17 +133,36 @@ export async function getOrCreateConversation(
       updatedAt: new Date()
     };
     
+    console.log('📝 准备创建的会话数据:', JSON.stringify(newConversation, null, 2));
+    
     const docRef = await addDoc(conversationsCollection, {
       ...newConversation,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
     
-    console.log('创建新会话:', docRef.id);
+    console.log('🎉 创建新会话成功:', docRef.id);
     return docRef.id;
     
   } catch (error) {
-    console.error('获取或创建会话失败:', error);
+    console.error('💥 获取或创建会话失败:', error);
+    
+    // 记录详细的错误信息
+    if (error instanceof Error) {
+      console.error('错误类型:', error.name);
+      console.error('错误消息:', error.message);
+      console.error('错误堆栈:', error.stack);
+    }
+    
+    // 检查常见错误类型
+    if (error instanceof Error && error.message.includes('permission-denied')) {
+      throw new Error('权限不足：无法创建聊天会话。请确保已登录并拥有相应权限。');
+    } else if (error instanceof Error && error.message.includes('unavailable')) {
+      throw new Error('服务暂时不可用：请检查网络连接并重试。');
+    } else if (error instanceof Error && error.message.includes('quota-exceeded')) {
+      throw new Error('服务使用量超限：请稍后重试。');
+    }
+    
     throw error;
   }
 }
