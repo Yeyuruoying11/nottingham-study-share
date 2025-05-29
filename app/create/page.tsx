@@ -500,17 +500,13 @@ export default function CreatePostPage() {
       }
 
       // 添加新帖子到Firestore数据库
-      const postId = await addPostToFirestore({
+      const postData: any = {
         title: formData.title.trim(),
         content: formData.content.trim(),
         category: formData.category,
         tags: formData.tags,
         image: imageUrls.length > 0 ? imageUrls[0] : "",
         images: imageUrls,
-        ...(formData.location && { location: formData.location }),
-        ...(formData.school && { school: formData.school }),
-        ...(formData.department && { department: formData.department }),
-        ...(formData.course && { course: formData.course }),
         author: {
           name: firestoreUserName,
           avatar: firestoreUserAvatar,
@@ -518,7 +514,25 @@ export default function CreatePostPage() {
           year: "学生",
           uid: user.uid
         }
-      });
+      };
+
+      // 只添加有值的可选字段，确保不传递 undefined
+      if (formData.location && formData.location !== undefined) {
+        postData.location = formData.location;
+      }
+      if (formData.school && formData.school !== undefined && formData.school !== '' && formData.school.trim() !== '') {
+        postData.school = formData.school;
+      }
+      if (formData.department && formData.department !== undefined && formData.department !== '' && formData.department.trim() !== '') {
+        postData.department = formData.department;
+      }
+      if (formData.course && formData.course !== undefined && formData.course !== '' && formData.course.trim() !== '') {
+        postData.course = formData.course;
+      }
+
+      console.log('🚀 发送到 Firestore 的数据:', JSON.stringify(postData, null, 2));
+
+      const postId = await addPostToFirestore(postData);
       
       if (postId) {
         console.log("新帖子已添加到Firestore，ID:", postId);
