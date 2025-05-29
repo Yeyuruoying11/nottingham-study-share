@@ -4,15 +4,12 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { User, Settings, Mail, Calendar, MapPin, BookOpen, ArrowLeft, Edit3 } from 'lucide-react';
+import { User, Settings, Mail, Calendar, MapPin, BookOpen, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ProfilePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const [isEditing, setIsEditing] = useState(false);
-  const [displayName, setDisplayName] = useState('');
-  const [bio, setBio] = useState('');
   const [mounted, setMounted] = useState(false);
   const [firestoreUserName, setFirestoreUserName] = useState<string>('');
   const [loadingUserName, setLoadingUserName] = useState(true);
@@ -57,7 +54,6 @@ export default function ProfilePage() {
   useEffect(() => {
     if (user) {
       fetchUserName();
-      setDisplayName(user.displayName || '');
     }
   }, [user]);
 
@@ -125,13 +121,13 @@ export default function ProfilePage() {
               <span>返回首页</span>
             </Link>
             <h1 className="text-xl font-semibold text-gray-900">个人资料</h1>
-            <button
-              onClick={() => setIsEditing(!isEditing)}
+            <Link
+              href="/settings"
               className="flex items-center space-x-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
             >
               <Settings className="w-4 h-4" />
-              <span>{isEditing ? '保存' : '编辑'}</span>
-            </button>
+              <span>设置</span>
+            </Link>
           </div>
         </div>
       </div>
@@ -159,32 +155,13 @@ export default function ProfilePage() {
                     <User className="w-12 h-12 text-green-600" />
                   )}
                 </div>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    className="text-xl font-semibold text-center w-full border-b border-gray-300 focus:border-green-500 outline-none"
-                    placeholder="输入姓名"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center space-x-2">
-                  <h2 className="text-xl font-semibold text-gray-900">
-                      {loadingUserName ? (
-                        <span className="text-gray-400">加载中...</span>
-                      ) : (
-                        firestoreUserName
-                      )}
-                  </h2>
-                    <Link 
-                      href="/settings/username"
-                      className="p-1 hover:bg-gray-100 rounded transition-colors"
-                      title="修改用户名"
-                    >
-                      <Edit3 className="w-4 h-4 text-gray-400 hover:text-gray-600" />
-                    </Link>
-                  </div>
-                )}
+                <h2 className="text-xl font-semibold text-gray-900">
+                  {loadingUserName ? (
+                    <span className="text-gray-400">加载中...</span>
+                  ) : (
+                    firestoreUserName
+                  )}
+                </h2>
                 <p className="text-gray-500 text-sm mt-1">诺丁汉大学学生</p>
               </div>
 
@@ -212,22 +189,6 @@ export default function ProfilePage() {
                   <span className="text-sm">留学生</span>
                 </div>
               </div>
-
-              {/* 用户名设置快捷入口 */}
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <Link 
-                  href="/settings/username"
-                  className="flex items-center justify-between w-full p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors group"
-                >
-                  <div className="flex items-center space-x-3">
-                    <Edit3 className="w-4 h-4 text-gray-500 group-hover:text-gray-700" />
-                    <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
-                      用户名设置
-                    </span>
-                  </div>
-                  <ArrowLeft className="w-4 h-4 text-gray-400 group-hover:text-gray-600 rotate-180" />
-                </Link>
-              </div>
             </motion.div>
           </div>
 
@@ -240,18 +201,9 @@ export default function ProfilePage() {
               className="bg-white rounded-xl shadow-sm border p-6"
             >
               <h3 className="text-lg font-semibold text-gray-900 mb-4">个人简介</h3>
-              {isEditing ? (
-                <textarea
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                  className="w-full h-32 p-3 border border-gray-300 rounded-lg focus:border-green-500 outline-none resize-none"
-                  placeholder="介绍一下自己吧..."
-                />
-              ) : (
-                <p className="text-gray-600 leading-relaxed">
-                  {bio || '这个人很懒，什么都没有留下...'}
-                </p>
-              )}
+              <p className="text-gray-600 leading-relaxed">
+                这个人很懒，什么都没有留下...
+              </p>
             </motion.div>
 
             {/* 统计信息 */}
