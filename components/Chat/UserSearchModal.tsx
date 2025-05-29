@@ -29,8 +29,8 @@ export default function UserSearchModal({ isOpen, onClose, onChatCreated }: User
   const [isCreatingChat, setIsCreatingChat] = useState<string | null>(null);
 
   // 搜索用户
-  const searchUsers = async (query: string) => {
-    if (!query.trim() || !user) {
+  const searchUsers = async (searchTerm: string) => {
+    if (!searchTerm.trim() || !user) {
       setSearchResults([]);
       return;
     }
@@ -40,8 +40,8 @@ export default function UserSearchModal({ isOpen, onClose, onChatCreated }: User
       // 按用户名搜索
       const usersQuery = query(
         collection(db, 'users'),
-        where('displayName', '>=', query),
-        where('displayName', '<=', query + '\uf8ff'),
+        where('displayName', '>=', searchTerm),
+        where('displayName', '<=', searchTerm + '\uf8ff'),
         limit(20)
       );
 
@@ -62,11 +62,11 @@ export default function UserSearchModal({ isOpen, onClose, onChatCreated }: User
       });
 
       // 如果按用户名没找到足够结果，再按邮箱搜索
-      if (results.length < 10 && query.includes('@')) {
+      if (results.length < 10 && searchTerm.includes('@')) {
         const emailQuery = query(
           collection(db, 'users'),
-          where('email', '>=', query),
-          where('email', '<=', query + '\uf8ff'),
+          where('email', '>=', searchTerm),
+          where('email', '<=', searchTerm + '\uf8ff'),
           limit(10)
         );
 
