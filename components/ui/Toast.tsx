@@ -26,14 +26,14 @@ export default function Toast({ message, isVisible, onClose, duration = 3000 }: 
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          initial={{ opacity: 0, y: -100, scale: 0.9 }}
+          initial={{ opacity: 0, y: -50, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -100, scale: 0.9 }}
-          className="fixed top-4 left-1/2 transform -translate-x-1/2 z-[9999] max-w-md w-full mx-4"
+          exit={{ opacity: 0, y: -50, scale: 0.95 }}
+          className="fixed top-20 left-1/2 transform -translate-x-1/2 z-[9999] max-w-sm w-full mx-4"
         >
-          <div className="bg-white border border-green-200 rounded-xl shadow-lg p-4 flex items-center space-x-3">
+          <div className="bg-white border border-green-200 rounded-xl shadow-xl p-4 flex items-center space-x-3 backdrop-blur-sm bg-white/95">
             <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shadow-sm">
                 <MapPin className="w-4 h-4 text-white" />
               </div>
             </div>
