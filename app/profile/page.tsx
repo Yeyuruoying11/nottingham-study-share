@@ -66,34 +66,34 @@ export default function ProfilePage() {
           const profile = event.detail.profile;
           setFirestoreUserName(profile.displayName);
           setFirestoreUserAvatar(profile.photoURL);
-        }
-      };
-      
+      }
+    };
+
       // 监听头像更新事件
       const handleAvatarUpdate = (event: CustomEvent) => {
         if (event.detail.uid === user.uid) {
           console.log('个人资料页面收到头像更新事件:', event.detail.newAvatarUrl);
           setFirestoreUserAvatar(event.detail.newAvatarUrl);
         }
-      };
-      
+    };
+
       // 监听用户名更新事件（保持兼容性）
       const handleUsernameUpdate = (event: CustomEvent) => {
         if (event.detail.uid === user.uid) {
           console.log('个人资料页面收到用户名更新事件:', event.detail.newUsername);
           setFirestoreUserName(event.detail.newUsername);
-        }
-      };
+      }
+    };
 
       window.addEventListener('userProfileUpdated', handleProfileUpdate as EventListener);
       window.addEventListener('userAvatarUpdated', handleAvatarUpdate as EventListener);
-      window.addEventListener('usernameUpdated', handleUsernameUpdate as EventListener);
-      
-      return () => {
+    window.addEventListener('usernameUpdated', handleUsernameUpdate as EventListener);
+    
+    return () => {
         window.removeEventListener('userProfileUpdated', handleProfileUpdate as EventListener);
         window.removeEventListener('userAvatarUpdated', handleAvatarUpdate as EventListener);
-        window.removeEventListener('usernameUpdated', handleUsernameUpdate as EventListener);
-      };
+      window.removeEventListener('usernameUpdated', handleUsernameUpdate as EventListener);
+    };
     }
   }, [user]);
 
@@ -163,13 +163,13 @@ export default function ProfilePage() {
                     <User className="w-12 h-12 text-green-600" />
                   )}
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900">
-                  {loadingUserName ? (
-                    <span className="text-gray-400">加载中...</span>
-                  ) : (
-                    firestoreUserName
-                  )}
-                </h2>
+                  <h2 className="text-xl font-semibold text-gray-900">
+                      {loadingUserName ? (
+                        <span className="text-gray-400">加载中...</span>
+                      ) : (
+                        firestoreUserName
+                      )}
+                  </h2>
                 <p className="text-gray-500 text-sm mt-1">诺丁汉大学学生</p>
               </div>
 
@@ -209,9 +209,9 @@ export default function ProfilePage() {
               className="bg-white rounded-xl shadow-sm border p-6"
             >
               <h3 className="text-lg font-semibold text-gray-900 mb-4">个人简介</h3>
-              <p className="text-gray-600 leading-relaxed">
+                <p className="text-gray-600 leading-relaxed">
                 这个人很懒，什么都没有留下...
-              </p>
+                </p>
             </motion.div>
 
             {/* 统计信息 */}

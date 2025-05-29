@@ -17,13 +17,57 @@ import {
   increment,
   Timestamp
 } from 'firebase/firestore';
-import { db } from './firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from './firebase';
 import { Conversation, ChatMessage, UserOnlineStatus } from './types';
 
 // 集合引用
 export const conversationsCollection = collection(db, 'conversations');
 export const messagesCollection = collection(db, 'messages');
 export const onlineStatusCollection = collection(db, 'onlineStatus');
+
+// ==================== 图片上传功能 ====================
+
+// 上传聊天图片
+export async function uploadChatImage(
+  file: File,
+  userId: string,
+  conversationId: string
+): Promise<string> {
+  try {
+    // 验证文件类型
+    if (!file.type.startsWith('image/')) {
+      throw new Error('请选择图片文件');
+    }
+
+    // 验证文件大小（限制为5MB）
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error('图片文件不能超过5MB');
+    }
+
+    // 生成唯一文件名
+    const timestamp = Date.now();
+    const randomString = Math.random().toString(36).substring(2);
+    const fileExtension = file.name.split('.').pop() || 'jpg';
+    const fileName = `chat-images/${conversationId}/${userId}_${timestamp}_${randomString}.${fileExtension}`;
+
+    // 创建存储引用
+    const storageRef = ref(storage, fileName);
+
+    // 上传文件
+    console.log('开始上传聊天图片:', fileName);
+    const snapshot = await uploadBytes(storageRef, file);
+    
+    // 获取下载URL
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    console.log('聊天图片上传成功:', downloadURL);
+    
+    return downloadURL;
+  } catch (error) {
+    console.error('聊天图片上传失败:', error);
+    throw error;
+  }
+}
 
 // ==================== 会话管理 ====================
 

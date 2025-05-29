@@ -200,8 +200,8 @@ export default function HomePage() {
     // 监听用户名更新事件（保持兼容性）
     const handleUsernameUpdate = (event: CustomEvent) => {
       if (event.detail.uid === user?.uid) {
-        console.log('收到用户名更新事件:', event.detail.newUsername);
-        setFirestoreUserName(event.detail.newUsername);
+      console.log('收到用户名更新事件:', event.detail.newUsername);
+      setFirestoreUserName(event.detail.newUsername);
       }
     };
     
@@ -291,10 +291,10 @@ export default function HomePage() {
 
     // 只有当菜单打开时才添加监听器，优化性能
     if (showUserMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
     }
   }, [showUserMenu]);
 
@@ -469,165 +469,165 @@ export default function HomePage() {
     }, [user, showMenu, post, isAuthor, isAdmin, canDelete]);
 
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: index * 0.1 }}
-        className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 group cursor-pointer relative"
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: index * 0.1 }}
+          className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 group cursor-pointer relative"
         onClick={handleCardClick}
-      >
-        {/* 三个点菜单按钮 */}
-        <div className="absolute top-2 right-2 z-10" ref={menuRef}>
-          <button
-            onClick={handleMenuClick}
-            className="p-2 bg-white/80 backdrop-blur-sm text-gray-600 rounded-full hover:bg-white hover:text-gray-900 transition-all opacity-0 group-hover:opacity-100 shadow-lg"
-            title="更多选项"
-          >
-            <MoreVertical className="w-4 h-4" />
-          </button>
-
-          {/* 下拉菜单 */}
-          {showMenu && (
-            <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              className="absolute right-0 top-full mt-1 w-32 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
+        >
+          {/* 三个点菜单按钮 */}
+          <div className="absolute top-2 right-2 z-10" ref={menuRef}>
+            <button
+              onClick={handleMenuClick}
+              className="p-2 bg-white/80 backdrop-blur-sm text-gray-600 rounded-full hover:bg-white hover:text-gray-900 transition-all opacity-0 group-hover:opacity-100 shadow-lg"
+              title="更多选项"
             >
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setShowMenu(false);
-                  // 这里可以添加收藏功能
-                }}
-                className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
-              >
-                <Bookmark className="w-4 h-4" />
-                <span>收藏</span>
-              </button>
-              
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setShowMenu(false);
-                  // 这里可以添加分享功能
-                }}
-                className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
-              >
-                <Share className="w-4 h-4" />
-                <span>分享</span>
-              </button>
+              <MoreVertical className="w-4 h-4" />
+            </button>
 
-              {/* 删除选项 - 只有作者才能看到 */}
-              {canDelete && (
-                <>
-                  <div className="border-t border-gray-100 my-1"></div>
-                  <button
-                    onClick={handleDeletePost}
-                    disabled={isDeleting}
-                    className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                    title={isAdmin ? "管理员删除" : "删除帖子"}
-                  >
-                    {isDeleting ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
-                        <span>删除中...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Trash2 className="w-4 h-4" />
-                        <span>{isAdmin && !isAuthor ? "管理员删除" : "删除"}</span>
-                      </>
-                    )}
-                  </button>
-                </>
-              )}
-            </motion.div>
-          )}
-        </div>
-        
-        <div className="relative overflow-hidden">
-          {/* 使用3D轮播展示多张图片，如果只有一张或没有images数组则使用传统显示 */}
-          {post.images && post.images.length > 1 ? (
-            <ThreeDPhotoCarousel 
-              images={post.images} 
-              className="h-48"
-            />
-          ) : (
-          <img
-            src={post.image}
-            alt={post.title}
-            className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
-          />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        </div>
-        
-        <div className="p-4">
-          <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 text-sm leading-tight">
-            {post.title}
-          </h3>
-          <p className="text-gray-600 text-xs line-clamp-3 mb-3 leading-relaxed">
-            {post.content}
-          </p>
-          
-          <div className="flex flex-wrap gap-1 mb-3">
-            {post.tags.map((tag: string, tagIndex: number) => (
-              <span
-                key={tagIndex}
-                className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
+            {/* 下拉菜单 */}
+            {showMenu && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                className="absolute right-0 top-full mt-1 w-32 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
               >
-                #{tag}
-              </span>
-            ))}
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowMenu(false);
+                    // 这里可以添加收藏功能
+                  }}
+                  className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
+                >
+                  <Bookmark className="w-4 h-4" />
+                  <span>收藏</span>
+                </button>
+                
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowMenu(false);
+                    // 这里可以添加分享功能
+                  }}
+                  className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
+                >
+                  <Share className="w-4 h-4" />
+                  <span>分享</span>
+                </button>
+
+                {/* 删除选项 - 只有作者才能看到 */}
+                {canDelete && (
+                  <>
+                    <div className="border-t border-gray-100 my-1"></div>
+                    <button
+                      onClick={handleDeletePost}
+                      disabled={isDeleting}
+                      className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      title={isAdmin ? "管理员删除" : "删除帖子"}
+                    >
+                      {isDeleting ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                          <span>删除中...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 className="w-4 h-4" />
+                          <span>{isAdmin && !isAuthor ? "管理员删除" : "删除"}</span>
+                        </>
+                      )}
+                    </button>
+                  </>
+                )}
+              </motion.div>
+            )}
           </div>
           
-          <div className="flex items-center justify-between">
+          <div className="relative overflow-hidden">
+            {/* 使用3D轮播展示多张图片，如果只有一张或没有images数组则使用传统显示 */}
+            {post.images && post.images.length > 1 ? (
+              <ThreeDPhotoCarousel 
+                images={post.images} 
+                className="h-48"
+              />
+            ) : (
+            <img
+              src={post.image}
+              alt={post.title}
+              className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
+            />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          </div>
+          
+          <div className="p-4">
+            <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 text-sm leading-tight">
+              {post.title}
+            </h3>
+            <p className="text-gray-600 text-xs line-clamp-3 mb-3 leading-relaxed">
+              {post.content}
+            </p>
+            
+            <div className="flex flex-wrap gap-1 mb-3">
+              {post.tags.map((tag: string, tagIndex: number) => (
+                <span
+                  key={tagIndex}
+                  className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
+                >
+                  #{tag}
+                </span>
+              ))}
+            </div>
+            
+            <div className="flex items-center justify-between">
             <Link 
               href={`/user/${post.author.uid}`}
               className="flex items-center space-x-2 hover:bg-gray-50 rounded-lg p-1 -m-1 transition-colors z-10 relative"
               onClick={(e) => e.stopPropagation()}
             >
-              <img
-                src={post.author.avatar}
-                alt={post.author.name}
-                className="w-6 h-6 rounded-full object-cover"
-              />
+                <img
+                  src={post.author.avatar}
+                  alt={post.author.name}
+                  className="w-6 h-6 rounded-full object-cover"
+                />
               <span className="text-xs text-gray-600 font-medium hover:text-gray-900 transition-colors">
                 {post.author.name}
               </span>
             </Link>
-            
-            <div className="flex items-center space-x-4 text-gray-500">
-              {/* 点赞按钮 */}
-              <button
-                onClick={handleLike}
-                disabled={isLiking}
-                className={`flex items-center space-x-1 transition-colors duration-150 z-10 relative ${
-                  localLiked 
-                    ? 'text-red-500' 
-                    : 'text-gray-500 hover:text-red-500'
-                } ${isLiking ? 'opacity-75' : ''}`}
-                title={localLiked ? '取消点赞' : '点赞'}
-              >
-                <Heart 
-                  className={`w-4 h-4 transition-all duration-150 ${
-                    localLiked ? 'fill-current scale-110' : ''
-                  }`} 
-                />
-                <span className="text-xs font-medium">{localLikes}</span>
-              </button>
               
-              <div className="flex items-center space-x-1">
-                <MessageCircle className="w-4 h-4" />
-                <span className="text-xs">{post.comments}</span>
+              <div className="flex items-center space-x-4 text-gray-500">
+                {/* 点赞按钮 */}
+                <button
+                  onClick={handleLike}
+                  disabled={isLiking}
+                className={`flex items-center space-x-1 transition-colors duration-150 z-10 relative ${
+                    localLiked 
+                      ? 'text-red-500' 
+                      : 'text-gray-500 hover:text-red-500'
+                  } ${isLiking ? 'opacity-75' : ''}`}
+                  title={localLiked ? '取消点赞' : '点赞'}
+                >
+                  <Heart 
+                    className={`w-4 h-4 transition-all duration-150 ${
+                      localLiked ? 'fill-current scale-110' : ''
+                    }`} 
+                  />
+                  <span className="text-xs font-medium">{localLikes}</span>
+                </button>
+                
+                <div className="flex items-center space-x-1">
+                  <MessageCircle className="w-4 h-4" />
+                  <span className="text-xs">{post.comments}</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
     );
   };
 
@@ -699,7 +699,7 @@ export default function HomePage() {
                   {/* 通知按钮 */}
                   <Link href="/notifications">
                     <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all duration-200 relative hover:scale-105 active:scale-95">
-                      <Bell className="w-5 h-5" />
+                    <Bell className="w-5 h-5" />
                       {unreadNotificationCount > 0 && (
                         <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
                           {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
@@ -1048,30 +1048,30 @@ export default function HomePage() {
           </button>
           
           <Link href="/chat">
-            <button className="flex flex-col items-center space-y-1 p-2">
-              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+          <button className="flex flex-col items-center space-y-1 p-2">
+            <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
                 <MessageCircle className="w-4 h-4 text-gray-600" />
-              </div>
+            </div>
               <span className="text-xs text-gray-600">聊天</span>
-            </button>
+          </button>
           </Link>
           
           <Link href="/create">
-            <button className="flex flex-col items-center space-y-1 p-2">
-              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                <Plus className="w-4 h-4 text-gray-600" />
-              </div>
-              <span className="text-xs text-gray-600">发布</span>
-            </button>
+          <button className="flex flex-col items-center space-y-1 p-2">
+            <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+              <Plus className="w-4 h-4 text-gray-600" />
+            </div>
+            <span className="text-xs text-gray-600">发布</span>
+          </button>
           </Link>
           
           <Link href="/profile">
-            <button className="flex flex-col items-center space-y-1 p-2">
-              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+          <button className="flex flex-col items-center space-y-1 p-2">
+            <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
                 <User className="w-4 h-4 text-gray-600" />
-              </div>
+            </div>
               <span className="text-xs text-gray-600">我的</span>
-            </button>
+          </button>
           </Link>
           
           <button className="flex flex-col items-center space-y-1 p-2">

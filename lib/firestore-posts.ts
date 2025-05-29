@@ -238,12 +238,22 @@ export async function addPostToFirestore(postData: {
       comments: 0,
       tags: postData.tags,
       createdAt: serverTimestamp(),
-      category: postData.category,
-      ...(postData.location && { location: postData.location }),
-      school: postData.school,
-      department: postData.department,
-      course: postData.course
+      category: postData.category
     };
+    
+    // 只有当这些字段有值时才添加到对象中
+    if (postData.location) {
+      newPost.location = postData.location;
+    }
+    if (postData.school) {
+      newPost.school = postData.school;
+    }
+    if (postData.department) {
+      newPost.department = postData.department;
+    }
+    if (postData.course) {
+      newPost.course = postData.course;
+    }
     
     const docRef = await addDoc(postsCollection, newPost);
     console.log('帖子已添加到Firestore，ID:', docRef.id);

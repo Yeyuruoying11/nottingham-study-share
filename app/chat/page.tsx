@@ -9,10 +9,12 @@ import {
   subscribeToUserConversations, 
   getOtherParticipant, 
   formatMessageTime,
-  updateUserOnlineStatus
+  updateUserOnlineStatus,
+  getUserConversations
 } from '@/lib/chat-service';
 import { Conversation } from '@/lib/types';
 import ChatInterface from '@/components/Chat/ChatInterface';
+import UserSearchModal from '@/components/Chat/UserSearchModal';
 
 export default function ChatPage() {
   const { user } = useAuth();
@@ -58,6 +60,25 @@ export default function ChatPage() {
       updateUserOnlineStatus(user.uid, false);
     };
   }, [user]);
+
+  // 处理聊天创建完成
+  const handleChatCreated = async (conversationId: string) => {
+    try {
+      // 重新获取会话列表以找到新创建的会话
+      if (user) {
+        const updatedConversations = await getUserConversations(user.uid);
+        setConversations(updatedConversations);
+        
+        // 自动选择新创建的会话
+        const newConversation = updatedConversations.find(c => c.id === conversationId);
+        if (newConversation) {
+          setSelectedConversation(newConversation);
+        }
+      }
+    } catch (error) {
+      console.error('获取更新后的会话列表失败:', error);
+    }
+  };
 
   // 如果未登录，显示登录提示
   if (!user) {
@@ -121,7 +142,7 @@ export default function ChatPage() {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         onClick={() => setSelectedConversation(conversation)}
-        className="flex items-center p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 transition-colors"
+        className="flex items-center p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 transition-colors group"
       >
         {/* 头像 */}
         <div className="relative mr-3">
@@ -280,35 +301,12 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {/* 用户搜索模态框 - 这里可以后续添加搜索用户并发起聊天的功能 */}
-      {showUserSearch && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-white rounded-2xl p-6 w-full max-w-md"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">发起新聊天</h3>
-              <button
-                onClick={() => setShowUserSearch(false)}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
-              </button>
-            </div>
-            
-            <div className="text-center py-8">
-              <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 mb-4">此功能即将上线</p>
-              <p className="text-sm text-gray-400">
-                您可以通过用户资料页面发起聊天
-              </p>
-            </div>
-          </motion.div>
-        </div>
-      )}
+      {/* 用户搜索模态框 */}
+      <UserSearchModal
+        isOpen={showUserSearch}
+        onClose={() => setShowUserSearch(false)}
+        onChatCreated={handleChatCreated}
+      />
     </div>
   );
 } 

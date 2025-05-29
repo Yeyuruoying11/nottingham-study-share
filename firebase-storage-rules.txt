@@ -10,6 +10,14 @@ service firebase.storage {
                    && request.resource.contentType.matches('image/.*');
     }
     
+    // 通用图片上传路径 - 用于帖子图片等
+    match /images/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null 
+                   && request.resource.size < 5 * 1024 * 1024  // 最大5MB
+                   && request.resource.contentType.matches('image/.*');
+    }
+    
     // 帖子图片 - 已登录用户可以上传，限制文件大小和类型
     match /posts/{userId}/{allPaths=**} {
       allow read: if true;

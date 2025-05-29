@@ -508,9 +508,9 @@ export default function CreatePostPage() {
         image: imageUrls.length > 0 ? imageUrls[0] : "",
         images: imageUrls,
         ...(formData.location && { location: formData.location }),
-        school: formData.school || undefined,
-        department: formData.department || undefined,
-        course: formData.course || undefined,
+        ...(formData.school && { school: formData.school }),
+        ...(formData.department && { department: formData.department }),
+        ...(formData.course && { course: formData.course }),
         author: {
           name: firestoreUserName,
           avatar: firestoreUserAvatar,
