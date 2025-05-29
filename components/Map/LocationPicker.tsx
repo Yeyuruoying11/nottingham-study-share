@@ -3,7 +3,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { Location } from '@/lib/types';
-import { MapPin, Search, X } from 'lucide-react';
+import { MapPin, Search, X, Maximize2 } from 'lucide-react';
+import FullscreenLocationPicker from './FullscreenLocationPicker';
 
 // 动态导入地图组件
 const MapContainer = dynamic(
@@ -51,6 +52,7 @@ export default function LocationPicker({ onLocationSelect, initialLocation, clas
   const [isSearching, setIsSearching] = useState(false);
   const [mapReady, setMapReady] = useState(false);
   const [mapCenter, setMapCenter] = useState<[number, number]>([54.9783, -1.9540]); // 诺丁汉
+  const [showFullscreenPicker, setShowFullscreenPicker] = useState(false); // 新增：控制全屏地图显示
 
   useEffect(() => {
     setMapReady(true);
@@ -66,6 +68,15 @@ export default function LocationPicker({ onLocationSelect, initialLocation, clas
   const handleLocationSelect = useCallback((location: Location) => {
     setSelectedLocation(location);
     onLocationSelect(location);
+  }, [onLocationSelect]);
+
+  // 新增：处理全屏地图选择
+  const handleFullscreenLocationSelect = useCallback((location: Location | null) => {
+    if (location) {
+      setSelectedLocation(location);
+      setMapCenter([location.latitude, location.longitude]);
+      onLocationSelect(location);
+    }
   }, [onLocationSelect]);
 
   const clearLocation = () => {
@@ -134,87 +145,106 @@ export default function LocationPicker({ onLocationSelect, initialLocation, clas
   }
 
   return (
-    <div className={`bg-white rounded-xl border border-gray-200 overflow-hidden ${className}`}>
-      {/* 搜索栏 */}
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center space-x-2 mb-3">
-          <div className="flex-1 relative">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && searchLocation()}
-              placeholder="搜索地点，如：巴黎、东京..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            />
-          </div>
-          <button
-            onClick={searchLocation}
-            disabled={isSearching || !searchQuery.trim()}
-            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
-          >
-            <Search className="w-4 h-4" />
-            <span>{isSearching ? '搜索中...' : '搜索'}</span>
-          </button>
-        </div>
-
-        {/* 当前选中的位置 */}
-        {selectedLocation && (
-          <div className="flex items-center justify-between bg-green-50 p-3 rounded-lg">
-            <div className="flex items-center space-x-2">
-              <MapPin className="w-4 h-4 text-green-600" />
-              <span className="text-sm text-green-800">{selectedLocation.address}</span>
+    <>
+      <div className={`bg-white rounded-xl border border-gray-200 overflow-hidden ${className}`}>
+        {/* 搜索栏和扩大按钮 */}
+        <div className="p-4 border-b border-gray-200">
+          <div className="flex items-center space-x-2 mb-3">
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && searchLocation()}
+                placeholder="搜索地点，如：巴黎、东京..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
             </div>
             <button
-              onClick={clearLocation}
-              className="text-green-600 hover:text-green-800 transition-colors"
+              onClick={searchLocation}
+              disabled={isSearching || !searchQuery.trim()}
+              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
             >
-              <X className="w-4 h-4" />
+              <Search className="w-4 h-4" />
+              <span>{isSearching ? '搜索中...' : '搜索'}</span>
+            </button>
+            {/* 新增：扩大地图按钮 */}
+            <button
+              onClick={() => setShowFullscreenPicker(true)}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center space-x-2"
+              title="在大地图中选择位置"
+            >
+              <Maximize2 className="w-4 h-4" />
+              <span className="hidden sm:inline">扩大地图</span>
             </button>
           </div>
-        )}
-      </div>
 
-      {/* 热门目的地 */}
-      <div className="p-4 border-b border-gray-200">
-        <h3 className="text-sm font-medium text-gray-700 mb-2">热门目的地</h3>
-        <div className="flex flex-wrap gap-2">
-          {popularDestinations.map((destination, index) => (
-            <button
-              key={index}
-              onClick={() => selectPopularDestination(destination)}
-              className="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors"
-            >
-              {destination.name}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* 地图 */}
-      <div className="h-64 relative">
-        <MapContainer
-          center={mapCenter}
-          zoom={selectedLocation ? 10 : 6}
-          style={{ height: '100%', width: '100%' }}
-          className="z-0"
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          
-          <MapClickHandler onLocationSelect={handleLocationSelect} />
-          
+          {/* 当前选中的位置 */}
           {selectedLocation && (
-            <Marker position={[selectedLocation.latitude, selectedLocation.longitude]} />
+            <div className="flex items-center justify-between bg-green-50 p-3 rounded-lg">
+              <div className="flex items-center space-x-2">
+                <MapPin className="w-4 h-4 text-green-600" />
+                <span className="text-sm text-green-800">{selectedLocation.address}</span>
+              </div>
+              <button
+                onClick={clearLocation}
+                className="text-green-600 hover:text-green-800 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           )}
-        </MapContainer>
-        
-        <div className="absolute top-2 left-2 bg-white p-2 rounded-lg shadow-sm text-xs text-gray-600 z-10">
-          💡 点击地图选择位置
+        </div>
+
+        {/* 热门目的地 */}
+        <div className="p-4 border-b border-gray-200">
+          <h3 className="text-sm font-medium text-gray-700 mb-2">热门目的地</h3>
+          <div className="flex flex-wrap gap-2">
+            {popularDestinations.map((destination, index) => (
+              <button
+                key={index}
+                onClick={() => selectPopularDestination(destination)}
+                className="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors"
+              >
+                {destination.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 地图 */}
+        <div className="h-64 relative">
+          <MapContainer
+            center={mapCenter}
+            zoom={selectedLocation ? 10 : 6}
+            style={{ height: '100%', width: '100%' }}
+            className="z-0"
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            
+            <MapClickHandler onLocationSelect={handleLocationSelect} />
+            
+            {selectedLocation && (
+              <Marker position={[selectedLocation.latitude, selectedLocation.longitude]} />
+            )}
+          </MapContainer>
+          
+          <div className="absolute top-2 left-2 bg-white p-2 rounded-lg shadow-sm text-xs text-gray-600 z-10">
+            💡 点击地图选择位置，或使用右上角"扩大地图"按钮
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* 全屏地图选择器 */}
+      <FullscreenLocationPicker
+        isOpen={showFullscreenPicker}
+        onClose={() => setShowFullscreenPicker(false)}
+        onLocationSelect={handleFullscreenLocationSelect}
+        initialLocation={selectedLocation || undefined}
+      />
+    </>
   );
 } 
