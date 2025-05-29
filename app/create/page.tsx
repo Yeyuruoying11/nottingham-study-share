@@ -141,6 +141,7 @@ export default function CreatePostPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [firestoreUserName, setFirestoreUserName] = useState<string>('');
+  const [firestoreUserAvatar, setFirestoreUserAvatar] = useState<string>('');
   const [imageIds, setImageIds] = useState<string[]>([]);
   const [location, setLocation] = useState<Location | null>(null);
 
@@ -179,11 +180,12 @@ export default function CreatePostPage() {
     }
   };
 
-  // 获取Firestore中的用户名
+  // 获取Firestore中的用户名和头像
   useEffect(() => {
-    const fetchUserName = async () => {
+    const fetchUserProfile = async () => {
       if (!user) {
         setFirestoreUserName('');
+        setFirestoreUserAvatar('');
         return;
       }
       
@@ -195,16 +197,19 @@ export default function CreatePostPage() {
         if (userDoc.exists()) {
           const userData = userDoc.data();
           setFirestoreUserName(userData.displayName || user.displayName || '用户');
+          setFirestoreUserAvatar(userData.photoURL || user.photoURL || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face");
         } else {
           setFirestoreUserName(user.displayName || '用户');
+          setFirestoreUserAvatar(user.photoURL || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face");
         }
       } catch (error) {
-        console.error('获取用户名失败:', error);
+        console.error('获取用户资料失败:', error);
         setFirestoreUserName(user.displayName || '用户');
+        setFirestoreUserAvatar(user.photoURL || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face");
       }
     };
 
-    fetchUserName();
+    fetchUserProfile();
   }, [user]);
 
   // 如果用户未登录，重定向到登录页面
@@ -471,7 +476,7 @@ export default function CreatePostPage() {
         ...(formData.location && { location: formData.location }),
         author: {
           name: firestoreUserName,
-          avatar: user.photoURL || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
+          avatar: firestoreUserAvatar,
           university: "诺丁汉大学",
           year: "学生",
           uid: user.uid
@@ -869,8 +874,8 @@ export default function CreatePostPage() {
                   <div className="flex items-center justify-between pt-4 border-t">
                     <div className="flex items-center space-x-2">
                       <img
-                        src={user.photoURL || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"}
-                        alt={user.displayName || "用户"}
+                        src={firestoreUserAvatar}
+                        alt={firestoreUserName}
                         className="w-8 h-8 rounded-full object-cover"
                       />
                       <span className="text-sm text-gray-600 font-medium">

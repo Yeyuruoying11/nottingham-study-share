@@ -94,13 +94,37 @@ export default function SettingsPage() {
     try {
       if (user) {
         await updateDoc(doc(db, 'users', user.uid), {
-          photoURL: avatarUrl
+          photoURL: avatarUrl,
+          updatedAt: new Date()
         });
         console.log('头像更新成功');
+        
+        // 触发全局头像更新事件
+        window.dispatchEvent(new CustomEvent('userAvatarUpdated', {
+          detail: { 
+            uid: user.uid,
+            newAvatarUrl: avatarUrl 
+          }
+        }));
+        
+        // 也触发storage事件作为备用方案
+        if (typeof window !== 'undefined') {
+          const event = new StorageEvent('storage', {
+            key: 'userAvatarUpdate',
+            newValue: JSON.stringify({ uid: user.uid, photoURL: avatarUrl }),
+            oldValue: null
+          });
+          window.dispatchEvent(event);
+        }
       }
     } catch (error) {
       console.error('更新头像失败:', error);
       alert('更新头像失败，请重试');
+      // 如果保存失败，恢复原来的头像
+      setProfile(prev => ({
+        ...prev,
+        photoURL: prev.photoURL
+      }));
     }
   };
 
@@ -122,6 +146,50 @@ export default function SettingsPage() {
 
       setIsEditing(false);
       alert('资料更新成功！');
+      
+      // 触发全局用户资料更新事件
+      window.dispatchEvent(new CustomEvent('userProfileUpdated', {
+        detail: { 
+          uid: user.uid,
+          profile: {
+            displayName: profile.displayName,
+            photoURL: profile.photoURL,
+            university: profile.university,
+            year: profile.year,
+            bio: profile.bio
+          }
+        }
+      }));
+      
+      // 特别触发用户名更新事件（兼容现有代码）
+      window.dispatchEvent(new CustomEvent('usernameUpdated', {
+        detail: { 
+          uid: user.uid,
+          newUsername: profile.displayName 
+        }
+      }));
+      
+      // 也触发storage事件作为备用方案
+      if (typeof window !== 'undefined') {
+        const profileEvent = new StorageEvent('storage', {
+          key: 'userProfileUpdate',
+          newValue: JSON.stringify({ 
+            uid: user.uid, 
+            displayName: profile.displayName,
+            photoURL: profile.photoURL 
+          }),
+          oldValue: null
+        });
+        window.dispatchEvent(profileEvent);
+        
+        const usernameEvent = new StorageEvent('storage', {
+          key: 'usernameUpdate',
+          newValue: profile.displayName,
+          oldValue: null
+        });
+        window.dispatchEvent(usernameEvent);
+      }
+      
     } catch (error) {
       console.error('保存失败:', error);
       alert('保存失败，请重试');

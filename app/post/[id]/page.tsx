@@ -47,6 +47,7 @@ export default function PostDetailPage() {
   const [replyContent, setReplyContent] = useState("");
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
   const [commentLikeStates, setCommentLikeStates] = useState<Record<string, { liked: boolean; likes: number }>>({});
+  const [firestoreUserAvatar, setFirestoreUserAvatar] = useState<string>(''); // 新增：用户头像状态
   const menuRef = useRef<HTMLDivElement>(null);
 
   // 加载帖子和评论数据
@@ -209,6 +210,58 @@ export default function PostDetailPage() {
     }
   }, [user, showMenu, post, isAuthor, isAdmin, canDelete]);
 
+  // 获取当前用户的头像
+  useEffect(() => {
+    const fetchUserAvatar = async () => {
+      if (!user) {
+        setFirestoreUserAvatar('');
+        return;
+      }
+      
+      try {
+        const { doc, getDoc } = await import('firebase/firestore');
+        const { db } = await import('@/lib/firebase');
+        
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setFirestoreUserAvatar(userData.photoURL || user.photoURL || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face");
+        } else {
+          setFirestoreUserAvatar(user.photoURL || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face");
+        }
+      } catch (error) {
+        console.error('获取用户头像失败:', error);
+        setFirestoreUserAvatar(user.photoURL || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face");
+      }
+    };
+
+    fetchUserAvatar();
+    
+    // 监听头像更新事件
+    const handleAvatarUpdate = (event: CustomEvent) => {
+      if (user && event.detail.uid === user.uid) {
+        console.log('帖子详情页面收到头像更新事件:', event.detail.newAvatarUrl);
+        setFirestoreUserAvatar(event.detail.newAvatarUrl);
+      }
+    };
+    
+    // 监听用户资料更新事件
+    const handleProfileUpdate = (event: CustomEvent) => {
+      if (user && event.detail.uid === user.uid) {
+        console.log('帖子详情页面收到用户资料更新事件:', event.detail.profile);
+        setFirestoreUserAvatar(event.detail.profile.photoURL);
+      }
+    };
+
+    window.addEventListener('userAvatarUpdated', handleAvatarUpdate as EventListener);
+    window.addEventListener('userProfileUpdated', handleProfileUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('userAvatarUpdated', handleAvatarUpdate as EventListener);
+      window.removeEventListener('userProfileUpdated', handleProfileUpdate as EventListener);
+    };
+  }, [user]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -300,12 +353,14 @@ export default function PostDetailPage() {
       const { db } = await import('@/lib/firebase');
       
       let userName = user.displayName || '用户';
+      let userAvatar = firestoreUserAvatar || user.photoURL || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face";
       
       try {
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         if (userDoc.exists()) {
           const userData = userDoc.data();
           userName = userData.displayName || user.displayName || '用户';
+          userAvatar = userData.photoURL || user.photoURL || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face";
         }
       } catch (error) {
         console.warn('获取用户信息失败，使用默认信息:', error);
@@ -317,7 +372,7 @@ export default function PostDetailPage() {
         content: newComment.trim(),
         author: {
           name: userName,
-          avatar: user.photoURL || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
+          avatar: userAvatar,
           uid: user.uid
         }
       });
@@ -752,7 +807,7 @@ export default function PostDetailPage() {
                 <form onSubmit={handleSubmitComment} className="mb-6">
                   <div className="flex space-x-4">
                     <img
-                      src={user.photoURL || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"}
+                      src={firestoreUserAvatar}
                       alt="Your avatar"
                       className="w-10 h-10 rounded-full object-cover"
                     />
@@ -815,6 +870,7 @@ export default function PostDetailPage() {
                     comment={comment}
                     index={index}
                     currentUser={user}
+                    currentUserAvatar={firestoreUserAvatar}
                     isAdmin={isAdmin || false}
                     commentLikeStates={commentLikeStates}
                     handleCommentLike={handleCommentLike}
@@ -841,6 +897,7 @@ function CommentItem({
   comment, 
   index, 
   currentUser, 
+  currentUserAvatar,
   isAdmin, 
   commentLikeStates,
   handleCommentLike,
@@ -855,6 +912,7 @@ function CommentItem({
   comment: FirestoreComment;
   index: number;
   currentUser: any;
+  currentUserAvatar: string;
   isAdmin: boolean;
   commentLikeStates: Record<string, { liked: boolean; likes: number }>;
   handleCommentLike: (commentId: string) => void;
@@ -926,7 +984,7 @@ function CommentItem({
             <div className="mt-4 p-4 bg-gray-50 rounded-lg">
               <div className="flex space-x-3">
                 <img
-                  src={currentUser.photoURL || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"}
+                  src={currentUserAvatar}
                   alt="Your avatar"
                   className="w-8 h-8 rounded-full object-cover"
                 />
@@ -979,7 +1037,8 @@ function CommentItem({
                   comment={reply}
                   index={replyIndex}
                   currentUser={currentUser}
-                  isAdmin={isAdmin}
+                  currentUserAvatar={currentUserAvatar}
+                  isAdmin={isAdmin || false}
                   commentLikeStates={commentLikeStates}
                   handleCommentLike={handleCommentLike}
                   handleDeleteComment={handleDeleteComment}

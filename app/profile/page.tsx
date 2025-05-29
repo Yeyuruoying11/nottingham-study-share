@@ -12,6 +12,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [firestoreUserName, setFirestoreUserName] = useState<string>('');
+  const [firestoreUserAvatar, setFirestoreUserAvatar] = useState<string>('');
   const [loadingUserName, setLoadingUserName] = useState(true);
 
   // 确保组件已挂载
@@ -27,8 +28,8 @@ export default function ProfilePage() {
     }
   }, [mounted, user, loading, router]);
 
-  // 从Firestore获取用户名
-  const fetchUserName = async () => {
+  // 从Firestore获取用户名和头像
+  const fetchUserProfile = async () => {
     if (!user) return;
     
     try {
@@ -40,12 +41,15 @@ export default function ProfilePage() {
       if (userDoc.exists()) {
         const userData = userDoc.data();
         setFirestoreUserName(userData.displayName || '未设置姓名');
+        setFirestoreUserAvatar(userData.photoURL || user.photoURL || '');
       } else {
         setFirestoreUserName('未设置姓名');
+        setFirestoreUserAvatar(user.photoURL || '');
       }
     } catch (error) {
-      console.error('获取用户名失败:', error);
+      console.error('获取用户资料失败:', error);
       setFirestoreUserName(user.displayName || '未设置姓名');
+      setFirestoreUserAvatar(user.photoURL || '');
     } finally {
       setLoadingUserName(false);
     }
@@ -53,40 +57,44 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (user) {
-      fetchUserName();
+      fetchUserProfile();
+      
+      // 监听用户资料更新事件
+      const handleProfileUpdate = (event: CustomEvent) => {
+        if (event.detail.uid === user.uid) {
+          console.log('个人资料页面收到用户资料更新事件:', event.detail.profile);
+          const profile = event.detail.profile;
+          setFirestoreUserName(profile.displayName);
+          setFirestoreUserAvatar(profile.photoURL);
+        }
+      };
+      
+      // 监听头像更新事件
+      const handleAvatarUpdate = (event: CustomEvent) => {
+        if (event.detail.uid === user.uid) {
+          console.log('个人资料页面收到头像更新事件:', event.detail.newAvatarUrl);
+          setFirestoreUserAvatar(event.detail.newAvatarUrl);
+        }
+      };
+      
+      // 监听用户名更新事件（保持兼容性）
+      const handleUsernameUpdate = (event: CustomEvent) => {
+        if (event.detail.uid === user.uid) {
+          console.log('个人资料页面收到用户名更新事件:', event.detail.newUsername);
+          setFirestoreUserName(event.detail.newUsername);
+        }
+      };
+
+      window.addEventListener('userProfileUpdated', handleProfileUpdate as EventListener);
+      window.addEventListener('userAvatarUpdated', handleAvatarUpdate as EventListener);
+      window.addEventListener('usernameUpdated', handleUsernameUpdate as EventListener);
+      
+      return () => {
+        window.removeEventListener('userProfileUpdated', handleProfileUpdate as EventListener);
+        window.removeEventListener('userAvatarUpdated', handleAvatarUpdate as EventListener);
+        window.removeEventListener('usernameUpdated', handleUsernameUpdate as EventListener);
+      };
     }
-  }, [user]);
-
-  // 当页面获得焦点时刷新用户名（从用户名设置页面返回时）
-  useEffect(() => {
-    const handleFocus = () => {
-      if (user) {
-        fetchUserName();
-      }
-    };
-
-    const handleUsernameUpdate = (event: CustomEvent) => {
-      console.log('个人资料页面 - 用户名已更新:', event.detail.newUsername);
-      setFirestoreUserName(event.detail.newUsername);
-    };
-
-    // 监听storage事件作为备用方案
-    const handleStorageUpdate = (event: StorageEvent) => {
-      if (event.key === 'usernameUpdate' && event.newValue) {
-        console.log('个人资料页面 - 收到storage用户名更新:', event.newValue);
-        setFirestoreUserName(event.newValue);
-      }
-    };
-
-    window.addEventListener('focus', handleFocus);
-    window.addEventListener('usernameUpdated', handleUsernameUpdate as EventListener);
-    window.addEventListener('storage', handleStorageUpdate);
-    
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('usernameUpdated', handleUsernameUpdate as EventListener);
-      window.removeEventListener('storage', handleStorageUpdate);
-    };
   }, [user]);
 
   // 如果组件未挂载或正在加载，显示加载状态
@@ -145,9 +153,9 @@ export default function ProfilePage() {
               {/* 头像 */}
               <div className="text-center mb-6">
                 <div className="w-24 h-24 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
-                  {user.photoURL ? (
+                  {firestoreUserAvatar ? (
                     <img 
-                      src={user.photoURL} 
+                      src={firestoreUserAvatar} 
                       alt={user.displayName || user.email || "用户"} 
                       className="w-full h-full object-cover rounded-full"
                     />

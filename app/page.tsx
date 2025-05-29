@@ -69,6 +69,7 @@ export default function HomePage() {
   const [posts, setPosts] = useState<FirestorePost[]>([]);
   const [loading, setLoading] = useState(true);
   const [firestoreUserName, setFirestoreUserName] = useState<string>('');
+  const [firestoreUserAvatar, setFirestoreUserAvatar] = useState<string>('');
   const [categoryStats, setCategoryStats] = useState<Record<string, number>>({});
   const userMenuRef = useRef<HTMLDivElement>(null);
   const [showDebug, setShowDebug] = useState(false);
@@ -158,11 +159,12 @@ export default function HomePage() {
     return categoryStats[categoryName] || 0;
   };
 
-  // 获取Firestore中的用户名
+  // 获取Firestore中的用户名和头像
   useEffect(() => {
-    const fetchUserName = async () => {
+    const fetchUserProfile = async () => {
       if (!user) {
         setFirestoreUserName('');
+        setFirestoreUserAvatar('');
         return;
       }
       
@@ -174,21 +176,44 @@ export default function HomePage() {
         if (userDoc.exists()) {
           const userData = userDoc.data();
           setFirestoreUserName(userData.displayName || user.displayName || '用户');
+          setFirestoreUserAvatar(userData.photoURL || user.photoURL || '');
         } else {
           setFirestoreUserName(user.displayName || '用户');
+          setFirestoreUserAvatar(user.photoURL || '');
         }
       } catch (error) {
-        console.error('获取用户名失败:', error);
+        console.error('获取用户资料失败:', error);
         setFirestoreUserName(user.displayName || '用户');
+        setFirestoreUserAvatar(user.photoURL || '');
       }
     };
 
-    fetchUserName();
+    fetchUserProfile();
     
-    // 监听用户名更新事件
+    // 监听用户名更新事件（保持兼容性）
     const handleUsernameUpdate = (event: CustomEvent) => {
-      console.log('收到用户名更新事件:', event.detail.newUsername);
-      setFirestoreUserName(event.detail.newUsername);
+      if (event.detail.uid === user?.uid) {
+        console.log('收到用户名更新事件:', event.detail.newUsername);
+        setFirestoreUserName(event.detail.newUsername);
+      }
+    };
+    
+    // 监听用户头像更新事件
+    const handleAvatarUpdate = (event: CustomEvent) => {
+      if (event.detail.uid === user?.uid) {
+        console.log('收到头像更新事件:', event.detail.newAvatarUrl);
+        setFirestoreUserAvatar(event.detail.newAvatarUrl);
+      }
+    };
+    
+    // 监听完整用户资料更新事件
+    const handleProfileUpdate = (event: CustomEvent) => {
+      if (event.detail.uid === user?.uid) {
+        console.log('收到用户资料更新事件:', event.detail.profile);
+        const profile = event.detail.profile;
+        setFirestoreUserName(profile.displayName);
+        setFirestoreUserAvatar(profile.photoURL);
+      }
     };
 
     // 监听storage事件作为备用方案
@@ -196,14 +221,39 @@ export default function HomePage() {
       if (event.key === 'usernameUpdate' && event.newValue) {
         console.log('收到storage用户名更新事件:', event.newValue);
         setFirestoreUserName(event.newValue);
+      } else if (event.key === 'userAvatarUpdate' && event.newValue) {
+        try {
+          const data = JSON.parse(event.newValue);
+          if (data.uid === user?.uid) {
+            console.log('收到storage头像更新事件:', data.photoURL);
+            setFirestoreUserAvatar(data.photoURL);
+          }
+        } catch (error) {
+          console.error('解析头像更新事件失败:', error);
+        }
+      } else if (event.key === 'userProfileUpdate' && event.newValue) {
+        try {
+          const data = JSON.parse(event.newValue);
+          if (data.uid === user?.uid) {
+            console.log('收到storage用户资料更新事件:', data);
+            setFirestoreUserName(data.displayName);
+            setFirestoreUserAvatar(data.photoURL);
+          }
+        } catch (error) {
+          console.error('解析用户资料更新事件失败:', error);
+        }
       }
     };
 
     window.addEventListener('usernameUpdated', handleUsernameUpdate as EventListener);
+    window.addEventListener('userAvatarUpdated', handleAvatarUpdate as EventListener);
+    window.addEventListener('userProfileUpdated', handleProfileUpdate as EventListener);
     window.addEventListener('storage', handleStorageUpdate);
     
     return () => {
       window.removeEventListener('usernameUpdated', handleUsernameUpdate as EventListener);
+      window.removeEventListener('userAvatarUpdated', handleAvatarUpdate as EventListener);
+      window.removeEventListener('userProfileUpdated', handleProfileUpdate as EventListener);
       window.removeEventListener('storage', handleStorageUpdate);
     };
   }, [user]);
@@ -651,10 +701,10 @@ export default function HomePage() {
                       onClick={handleAvatarClick}
                       className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-2 border-transparent hover:border-green-500 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                     >
-                      {user.photoURL ? (
+                      {firestoreUserAvatar ? (
                         <img 
-                          src={user.photoURL} 
-                          alt={user.displayName || user.email || "用户"} 
+                          src={firestoreUserAvatar} 
+                          alt={firestoreUserName || user.email || "用户"} 
                           className="w-full h-full object-cover"
                         />
                       ) : (
