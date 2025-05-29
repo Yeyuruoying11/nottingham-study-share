@@ -2,34 +2,57 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { GraduationCap, Users, BookOpen, ChevronRight, ArrowLeft } from 'lucide-react';
+import { GraduationCap, Users, BookOpen, ChevronRight, ArrowLeft, MapPin } from 'lucide-react';
 import Link from 'next/link';
-import { schools, departments, getDepartmentsBySchool, getCoursesByDepartment } from '@/lib/academic-data';
-import { School, Department, Course } from '@/lib/types';
+import { 
+  universities, 
+  schools, 
+  departments, 
+  getSchoolsByUniversity,
+  getDepartmentsBySchool, 
+  getCoursesByDepartment 
+} from '@/lib/academic-data';
+import { University, School, Department, Course } from '@/lib/types';
 
 export default function AcademicPage() {
+  const [selectedUniversity, setSelectedUniversity] = useState<University | null>(null);
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
   const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
 
   const schoolColors = {
-    'arts': 'bg-purple-100 text-purple-800 border-purple-200',
-    'engineering': 'bg-orange-100 text-orange-800 border-orange-200',
-    'medicine': 'bg-red-100 text-red-800 border-red-200',
-    'science': 'bg-blue-100 text-blue-800 border-blue-200',
-    'social-sciences': 'bg-green-100 text-green-800 border-green-200',
-    'business': 'bg-yellow-100 text-yellow-800 border-yellow-200'
+    // 诺丁汉大学学院颜色
+    'uon-arts': 'bg-purple-100 text-purple-800 border-purple-200',
+    'uon-engineering': 'bg-orange-100 text-orange-800 border-orange-200',
+    'uon-medicine': 'bg-red-100 text-red-800 border-red-200',
+    'uon-science': 'bg-blue-100 text-blue-800 border-blue-200',
+    'uon-social-sciences': 'bg-green-100 text-green-800 border-green-200',
+    'uon-business': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    
+    // 诺丁汉特伦特大学学院颜色
+    'ntu-art-design': 'bg-pink-100 text-pink-800 border-pink-200',
+    'ntu-business': 'bg-emerald-100 text-emerald-800 border-emerald-200',
+    'ntu-science-technology': 'bg-cyan-100 text-cyan-800 border-cyan-200',
+    'ntu-social-sciences': 'bg-indigo-100 text-indigo-800 border-indigo-200',
+    'ntu-education': 'bg-amber-100 text-amber-800 border-amber-200',
+    'ntu-law': 'bg-slate-100 text-slate-800 border-slate-200'
   };
 
   const getSchoolIcon = (schoolId: string) => {
-    switch (schoolId) {
-      case 'arts': return '🎨';
-      case 'engineering': return '⚙️';
-      case 'medicine': return '🏥';
-      case 'science': return '🔬';
-      case 'social-sciences': return '👥';
-      case 'business': return '💼';
-      default: return '📚';
-    }
+    if (schoolId.includes('arts') || schoolId.includes('art-design')) return '🎨';
+    if (schoolId.includes('engineering')) return '⚙️';
+    if (schoolId.includes('medicine')) return '🏥';
+    if (schoolId.includes('science')) return '🔬';
+    if (schoolId.includes('social-sciences')) return '👥';
+    if (schoolId.includes('business')) return '💼';
+    if (schoolId.includes('education')) return '📚';
+    if (schoolId.includes('law')) return '⚖️';
+    return '📚';
+  };
+
+  const handleUniversitySelect = (university: University) => {
+    setSelectedUniversity(university);
+    setSelectedSchool(null);
+    setSelectedDepartment(null);
   };
 
   const handleSchoolSelect = (school: School) => {
@@ -41,6 +64,12 @@ export default function AcademicPage() {
     setSelectedDepartment(department);
   };
 
+  const handleBackToUniversities = () => {
+    setSelectedUniversity(null);
+    setSelectedSchool(null);
+    setSelectedDepartment(null);
+  };
+
   const handleBackToSchools = () => {
     setSelectedSchool(null);
     setSelectedDepartment(null);
@@ -50,6 +79,20 @@ export default function AcademicPage() {
     setSelectedDepartment(null);
   };
 
+  const getBreadcrumbText = () => {
+    if (selectedDepartment) return selectedDepartment.name;
+    if (selectedSchool) return selectedSchool.name;
+    if (selectedUniversity) return selectedUniversity.name;
+    return '学习';
+  };
+
+  const getBackAction = () => {
+    if (selectedDepartment) return handleBackToDepartments;
+    if (selectedSchool) return handleBackToSchools;
+    if (selectedUniversity) return handleBackToUniversities;
+    return null;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 顶部导航 */}
@@ -57,9 +100,9 @@ export default function AcademicPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
-              {selectedSchool ? (
+              {getBackAction() ? (
                 <button
-                  onClick={selectedDepartment ? handleBackToDepartments : handleBackToSchools}
+                  onClick={getBackAction()!}
                   className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
                 >
                   <ArrowLeft className="w-5 h-5" />
@@ -79,9 +122,7 @@ export default function AcademicPage() {
             <div className="flex items-center space-x-2">
               <GraduationCap className="w-6 h-6 text-green-600" />
               <h1 className="text-xl font-bold text-gray-900">
-                {selectedDepartment ? selectedDepartment.name : 
-                 selectedSchool ? selectedSchool.name : 
-                 '学院专业'}
+                {getBreadcrumbText()}
               </h1>
             </div>
 
@@ -91,18 +132,81 @@ export default function AcademicPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {!selectedSchool ? (
-          // 学院列表视图
+        {!selectedUniversity ? (
+          // 大学选择视图
           <div>
             <div className="mb-8 text-center">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">诺丁汉大学学院</h2>
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">选择院校</h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                选择你的学院，探索相关专业和课程的学习资源与讨论
+                选择你的院校，探索相关学院、专业和课程的学习资源与讨论
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              {universities.map((university, index) => (
+                <motion.div
+                  key={university.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.2 }}
+                  className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group"
+                  onClick={() => handleUniversitySelect(university)}
+                >
+                  <div className="p-8">
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="text-6xl">{university.logo}</div>
+                      <div className="px-4 py-2 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                        {getSchoolsByUniversity(university.id).length} 个学院
+                      </div>
+                    </div>
+
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-green-600 transition-colors">
+                      {university.name}
+                    </h3>
+                    <p className="text-gray-500 mb-4 font-medium">{university.nameEn}</p>
+                    <p className="text-gray-600 leading-relaxed mb-6">
+                      {university.description}
+                    </p>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4 text-sm text-gray-500">
+                        <div className="flex items-center space-x-1">
+                          <Users className="w-4 h-4" />
+                          <span>{getSchoolsByUniversity(university.id).length} 学院</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <MapPin className="w-4 h-4" />
+                          <span>英国诺丁汉</span>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-6 h-6 text-gray-400 group-hover:text-green-600 transition-colors" />
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        ) : !selectedSchool ? (
+          // 学院列表视图
+          <div>
+            <div className="mb-8">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="text-5xl">{selectedUniversity.logo}</div>
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-900">{selectedUniversity.name}</h2>
+                  <p className="text-lg text-gray-600">{selectedUniversity.nameEn}</p>
+                </div>
+              </div>
+              <p className="text-gray-600 max-w-3xl mb-4">
+                {selectedUniversity.description}
+              </p>
+              <p className="text-sm text-gray-500">
+                选择学院以查看相关专业和课程
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {schools.map((school, index) => (
+              {getSchoolsByUniversity(selectedUniversity.id).map((school, index) => (
                 <motion.div
                   key={school.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -152,8 +256,11 @@ export default function AcademicPage() {
                   <p className="text-lg text-gray-600">{selectedSchool.nameEn}</p>
                 </div>
               </div>
-              <p className="text-gray-600 max-w-3xl">
+              <p className="text-gray-600 max-w-3xl mb-4">
                 {selectedSchool.description}
+              </p>
+              <p className="text-sm text-gray-500">
+                选择专业以查看相关课程
               </p>
             </div>
 

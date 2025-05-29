@@ -155,10 +155,21 @@ export interface Course {
   description?: string;
 }
 
+// 新增：大学类型
+export interface University {
+  id: string;
+  name: string;
+  nameEn: string;
+  description?: string;
+  logo?: string;
+  website?: string;
+}
+
 // 新增：学院类型
 export interface School {
   id: string;
   name: string;
   nameEn: string;
   description?: string;
+  universityId: string; // 所属大学
 } 
