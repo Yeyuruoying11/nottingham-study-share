@@ -181,8 +181,27 @@ export default function CoursePage() {
       
       // 按创建时间降序排序
       coursePosts.sort((a, b) => {
-        const timeA = a.createdAt?.toDate?.() || a.createdAt || new Date(0);
-        const timeB = b.createdAt?.toDate?.() || b.createdAt || new Date(0);
+        let timeA: Date;
+        let timeB: Date;
+        
+        // 处理a.createdAt
+        if (a.createdAt instanceof Date) {
+          timeA = a.createdAt;
+        } else if (a.createdAt && typeof a.createdAt === 'object' && 'toDate' in a.createdAt) {
+          timeA = (a.createdAt as any).toDate();
+        } else {
+          timeA = new Date(0);
+        }
+        
+        // 处理b.createdAt
+        if (b.createdAt instanceof Date) {
+          timeB = b.createdAt;
+        } else if (b.createdAt && typeof b.createdAt === 'object' && 'toDate' in b.createdAt) {
+          timeB = (b.createdAt as any).toDate();
+        } else {
+          timeB = new Date(0);
+        }
+        
         return timeB.getTime() - timeA.getTime();
       });
       
