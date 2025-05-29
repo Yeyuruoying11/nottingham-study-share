@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Plus, Heart, MessageCircle, Share, Bookmark, User, Bell, Menu, LogOut, Settings, Trash2, MoreVertical, X, Crown } from "lucide-react";
+import { Search, Plus, Heart, MessageCircle, Share, Bookmark, User, Bell, Menu, LogOut, Trash2, MoreVertical, X, Crown } from "lucide-react";
 import { InfiniteMovingCards } from "@/components/ui/infinite-moving-cards";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
@@ -971,12 +971,12 @@ export default function HomePage() {
             </button>
           </Link>
           
-          <Link href="/settings">
+          <Link href="/profile">
             <button className="flex flex-col items-center space-y-1 p-2">
               <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                <Settings className="w-4 h-4 text-gray-600" />
+                <User className="w-4 h-4 text-gray-600" />
               </div>
-              <span className="text-xs text-gray-600">设置</span>
+              <span className="text-xs text-gray-600">我的</span>
             </button>
           </Link>
           
