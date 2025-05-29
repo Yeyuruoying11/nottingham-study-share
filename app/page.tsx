@@ -682,15 +682,6 @@ export default function HomePage() {
                           <User className="w-4 h-4" />
                           <span>个人资料</span>
                         </Link>
-                        
-                        <Link 
-                          href="/settings"
-                          className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
-                          onClick={() => setShowUserMenu(false)}
-                        >
-                          <Settings className="w-4 h-4" />
-                          <span>设置</span>
-                        </Link>
 
                         {/* 管理员面板入口 */}
                         {isAdminUser(user) && (
