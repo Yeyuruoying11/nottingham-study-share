@@ -42,6 +42,9 @@ export interface FirestorePost {
   createdAt: Timestamp | Date | FieldValue;
   category: string;
   location?: Location; // 新增：地理位置信息
+  school?: string; // 学院ID
+  department?: string; // 专业ID
+  course?: string; // 课程ID
 }
 
 export interface FirestoreComment {
@@ -88,7 +91,10 @@ export async function getAllPostsFromFirestore(): Promise<FirestorePost[]> {
         likedBy: data.likedBy || [], // 点赞用户列表
         comments: data.comments || 0,
         createdAt: data.createdAt,
-        location: data.location // 包含位置信息
+        location: data.location, // 包含位置信息
+        school: data.school,
+        department: data.department,
+        course: data.course
       });
     });
     
@@ -129,7 +135,10 @@ export async function getPostsByCategoryFromFirestore(category: string): Promise
         likedBy: data.likedBy || [],
         comments: data.comments || 0,
         createdAt: data.createdAt,
-        location: data.location // 包含位置信息
+        location: data.location, // 包含位置信息
+        school: data.school,
+        department: data.department,
+        course: data.course
       });
     });
     
@@ -206,6 +215,9 @@ export async function addPostToFirestore(postData: {
   image?: string;
   images?: string[]; // 新增：多图片支持
   location?: Location; // 新增：位置信息
+  school?: string; // 新增：学院ID
+  department?: string; // 新增：专业ID
+  course?: string; // 新增：课程ID
   author: {
     name: string;
     avatar: string;
@@ -227,7 +239,10 @@ export async function addPostToFirestore(postData: {
       tags: postData.tags,
       createdAt: serverTimestamp(),
       category: postData.category,
-      ...(postData.location && { location: postData.location })
+      ...(postData.location && { location: postData.location }),
+      school: postData.school,
+      department: postData.department,
+      course: postData.course
     };
     
     const docRef = await addDoc(postsCollection, newPost);

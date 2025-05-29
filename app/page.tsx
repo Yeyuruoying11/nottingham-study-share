@@ -811,6 +811,19 @@ export default function HomePage() {
                 {getCategoryCount("全部")}
               </span>
             </button>
+
+            {/* 学院按钮 */}
+            <button
+              onClick={() => router.push("/academic")}
+              className="flex items-center space-x-2 px-4 py-2 rounded-full whitespace-nowrap transition-all duration-300 bg-gradient-to-r from-green-100 to-blue-100 text-green-700 hover:shadow-md border border-green-200"
+            >
+              <span>🎓</span>
+              <span className="text-sm font-medium">学院专业</span>
+              <span className="text-xs px-2 py-1 rounded-full bg-white/50 text-gray-600">
+                分科学习
+              </span>
+            </button>
+
             {categories.map((category) => {
               const count = getCategoryCount(category.name);
               return (

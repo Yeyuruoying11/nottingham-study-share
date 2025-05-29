@@ -32,6 +32,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { schools, departments, courses, getDepartmentsBySchool, getCoursesByDepartment } from "@/lib/academic-data";
 
 // 可拖拽的图片项组件
 function SortableImageItem({ 
@@ -130,7 +131,10 @@ export default function CreatePostPage() {
     tags: [] as string[],
     image: "",
     images: [] as string[],
-    location: null as Location | null
+    location: null as Location | null,
+    school: "",
+    department: "",
+    course: ""
   });
   
   const [newTag, setNewTag] = useState("");
@@ -241,7 +245,13 @@ export default function CreatePostPage() {
   const handleCategorySelect = (categoryName: string) => {
     setFormData(prev => ({
       ...prev,
-      category: categoryName
+      category: categoryName,
+      // 如果不是学习分类，清除学术信息
+      ...(categoryName !== "学习" && { 
+        school: "",
+        department: "",
+        course: ""
+      })
     }));
     
     // 如果不是旅行分类，清除位置信息
@@ -259,6 +269,30 @@ export default function CreatePostPage() {
     setFormData(prev => ({
       ...prev,
       location: selectedLocation
+    }));
+  };
+
+  const handleSchoolSelect = (schoolId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      school: schoolId,
+      department: "", // 重置专业选择
+      course: "" // 重置课程选择
+    }));
+  };
+
+  const handleDepartmentSelect = (departmentId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      department: departmentId,
+      course: "" // 重置课程选择
+    }));
+  };
+
+  const handleCourseSelect = (courseId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      course: courseId
     }));
   };
 
@@ -474,6 +508,9 @@ export default function CreatePostPage() {
         image: imageUrls.length > 0 ? imageUrls[0] : "",
         images: imageUrls,
         ...(formData.location && { location: formData.location }),
+        school: formData.school || undefined,
+        department: formData.department || undefined,
+        course: formData.course || undefined,
         author: {
           name: firestoreUserName,
           avatar: firestoreUserAvatar,
@@ -637,6 +674,73 @@ export default function CreatePostPage() {
                     />
                     <p className="text-xs text-gray-500 mt-2">
                       选择旅行地点，让其他同学在地图上找到你的分享
+                    </p>
+                  </div>
+                )}
+
+                {/* 学术分类选择器 - 仅在学习分类时显示 */}
+                {formData.category === "学习" && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        学院 (可选)
+                      </label>
+                      <select
+                        value={formData.school}
+                        onChange={(e) => handleSchoolSelect(e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      >
+                        <option value="">选择学院...</option>
+                        {schools.map((school) => (
+                          <option key={school.id} value={school.id}>
+                            {school.name} - {school.nameEn}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {formData.school && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          专业 (可选)
+                        </label>
+                        <select
+                          value={formData.department}
+                          onChange={(e) => handleDepartmentSelect(e.target.value)}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        >
+                          <option value="">选择专业...</option>
+                          {getDepartmentsBySchool(formData.school).map((department) => (
+                            <option key={department.id} value={department.id}>
+                              {department.name} - {department.nameEn}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    {formData.department && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          课程 (可选)
+                        </label>
+                        <select
+                          value={formData.course}
+                          onChange={(e) => handleCourseSelect(e.target.value)}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        >
+                          <option value="">选择课程...</option>
+                          {getCoursesByDepartment(formData.department).map((course) => (
+                            <option key={course.id} value={course.id}>
+                              {course.code} - {course.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    <p className="text-xs text-gray-500">
+                      💡 选择相关的学院、专业和课程，让同专业的同学更容易找到你的分享
                     </p>
                   </div>
                 )}

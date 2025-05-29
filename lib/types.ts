@@ -39,6 +39,9 @@ export interface Post {
     avatar?: string;
   };
   category: PostCategory;
+  // 新增：学术分类
+  department?: Department;
+  course?: Course;
   tags: string[];
   likes: number;
   likedBy: string[];
@@ -128,4 +131,34 @@ export interface UserOnlineStatus {
   uid: string;
   isOnline: boolean;
   lastSeen: Date;
+}
+
+// 新增：专业/学院类型
+export interface Department {
+  id: string;
+  name: string;
+  nameEn: string;
+  school: string; // 所属学院
+  description?: string;
+}
+
+// 新增：课程类型
+export interface Course {
+  id: string;
+  name: string;
+  nameEn: string;
+  code: string; // 课程代码，如 COMP1001
+  departmentId: string;
+  level: 'undergraduate' | 'postgraduate' | 'phd';
+  year?: number; // 年级，如 1, 2, 3
+  credits?: number;
+  description?: string;
+}
+
+// 新增：学院类型
+export interface School {
+  id: string;
+  name: string;
+  nameEn: string;
+  description?: string;
 } 
