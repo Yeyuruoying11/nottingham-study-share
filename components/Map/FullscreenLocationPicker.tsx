@@ -130,8 +130,16 @@ export default function FullscreenLocationPicker({
       city: destination.name
     };
     
+    // 先设置位置
     handleLocationSelect(location);
+    
+    // 设置地图中心，使用适合城市查看的缩放级别
     setMapCenter([destination.lat, destination.lng]);
+    
+    // 添加提示信息
+    setTimeout(() => {
+      alert(`📍 图标已移动到${destination.name}，${destination.country}`);
+    }, 300); // 延迟300ms让地图先移动
   };
 
   const handleClose = () => {
@@ -245,6 +253,7 @@ export default function FullscreenLocationPicker({
           <div className="flex-1 relative">
             {mapReady ? (
               <MapContainer
+                key={mapCenter.join(',')}
                 center={mapCenter}
                 zoom={selectedLocation ? 12 : 6}
                 style={{ height: '100%', width: '100%' }}
