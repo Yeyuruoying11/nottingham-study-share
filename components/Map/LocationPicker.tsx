@@ -183,6 +183,7 @@ export default function LocationPicker({ onLocationSelect, initialLocation, clas
               />
             </div>
             <button
+              type="button"
               onClick={searchLocation}
               disabled={isSearching || !searchQuery.trim()}
               className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
@@ -192,6 +193,7 @@ export default function LocationPicker({ onLocationSelect, initialLocation, clas
             </button>
             {/* 新增：扩大地图按钮 */}
             <button
+              type="button"
               onClick={() => setShowFullscreenPicker(true)}
               className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center space-x-2"
               title="在大地图中选择位置"
@@ -209,6 +211,7 @@ export default function LocationPicker({ onLocationSelect, initialLocation, clas
                 <span className="text-sm text-green-800">{selectedLocation.address}</span>
               </div>
               <button
+                type="button"
                 onClick={clearLocation}
                 className="text-green-600 hover:text-green-800 transition-colors"
               >
@@ -225,6 +228,7 @@ export default function LocationPicker({ onLocationSelect, initialLocation, clas
             {popularDestinations.map((destination, index) => (
               <button
                 key={index}
+                type="button"
                 onClick={() => selectPopularDestination(destination)}
                 className="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors"
               >
