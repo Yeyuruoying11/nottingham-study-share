@@ -40,6 +40,56 @@ query(
 )
 ```
 
+### 3. notifications 集合索引
+
+#### 3.1 用户未读通知查询
+- **集合ID**: `notifications`
+- **字段**:
+  - `userId` - 升序 (Ascending)
+  - `read` - 升序 (Ascending)
+- **查询范围**: 集合
+
+支持查询：
+```javascript
+query(
+  notificationsCollection,
+  where('userId', '==', userId),
+  where('read', '==', false)
+)
+```
+
+#### 3.2 用户通知列表查询
+- **集合ID**: `notifications`
+- **字段**:
+  - `userId` - 升序 (Ascending)
+  - `createdAt` - 降序 (Descending)
+- **查询范围**: 集合
+
+支持查询：
+```javascript
+query(
+  notificationsCollection,
+  where('userId', '==', userId),
+  orderBy('createdAt', 'desc')
+)
+```
+
+#### 3.3 管理员系统通知查询
+- **集合ID**: `notifications`
+- **字段**:
+  - `adminId` - 升序 (Ascending)
+  - `type` - 升序 (Ascending)
+- **查询范围**: 集合
+
+支持查询：
+```javascript
+query(
+  notificationsCollection,
+  where('adminId', '==', adminId),
+  where('type', '==', 'system')
+)
+```
+
 ## 如何创建索引
 
 ### 方法一：通过错误链接（推荐）
@@ -56,9 +106,28 @@ query(
 5. 点击"创建索引"
 6. 按照上述配置填写字段
 
+### 方法三：自动部署
+使用项目中的脚本：
+```bash
+npm run deploy-indexes
+```
+
+## 索引状态检查
+
+检查当前索引状态：
+```bash
+firebase firestore:indexes
+```
+
 ## 注意事项
 
 - 索引创建需要几分钟时间
 - 创建过程中查询可能会失败
 - 索引创建完成后，查询会自动恢复正常
-- 索引是免费的，不会产生额外费用 
+- 索引是免费的，不会产生额外费用
+- 每个查询都需要对应的索引才能正常工作
+
+## 🎯 更新日志
+
+- **2024-01-XX**: 初始创建聊天功能索引
+- **2024-01-XX**: 新增通知系统索引配置，解决 notifications 集合查询问题 
