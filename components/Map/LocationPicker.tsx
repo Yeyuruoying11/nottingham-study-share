@@ -259,8 +259,11 @@ export default function LocationPicker({ onLocationSelect, initialLocation, clas
             )}
           </MapContainer>
           
-          <div className="absolute top-2 left-2 bg-white p-2 rounded-lg shadow-sm text-xs text-gray-600 z-10">
-            💡 点击地图选择位置，或使用右上角"扩大地图"按钮
+          <div className="absolute top-2 left-2 bg-white p-2 rounded-lg shadow-md text-xs text-gray-600 z-[1000] border border-gray-200 backdrop-blur-sm bg-white/95">
+            <div className="flex items-center space-x-1">
+              <span>💡</span>
+              <span>点击地图选择位置，或使用右上角"扩大地图"按钮</span>
+            </div>
           </div>
         </div>
       </div>
