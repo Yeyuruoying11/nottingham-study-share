@@ -138,16 +138,57 @@ export default function CoursePage() {
     setLoading(true);
     try {
       const allPosts = await getAllPostsFromFirestore();
-      // 这里可以根据课程ID筛选相关帖子
-      // 目前先显示所有学习相关的帖子作为示例
-      const coursePosts = allPosts.filter(post => 
-        post.category === '学习' || 
-        (post.tags && post.tags.some(tag => 
-          tag.includes(course?.name || '') || 
-          tag.includes(course?.code || '')
-        ))
-      );
+      
+      // 根据课程ID筛选相关帖子
+      const coursePosts = allPosts.filter(post => {
+        // 1. 直接匹配course字段（用户在发布帖子时选择的课程ID）
+        if (post.course === courseId) {
+          return true;
+        }
+        
+        // 2. 匹配课程代码（从课程数据中获取）
+        if (course && post.course === course.code) {
+          return true;
+        }
+        
+        // 3. 标签匹配：检查标签中是否包含课程相关信息
+        if (post.tags && course) {
+          const hasMatchingTag = post.tags.some(tag => 
+            tag.toLowerCase().includes(course.name.toLowerCase()) ||
+            tag.toLowerCase().includes(course.nameEn.toLowerCase()) ||
+            tag.toLowerCase().includes(course.code.toLowerCase()) ||
+            tag.toLowerCase().includes(courseId.toLowerCase())
+          );
+          if (hasMatchingTag) {
+            return true;
+          }
+        }
+        
+        // 4. 标题或内容匹配（较宽松的匹配）
+        if (course && post.category === '学习') {
+          const titleMatch = post.title.toLowerCase().includes(course.name.toLowerCase()) ||
+                            post.title.toLowerCase().includes(course.code.toLowerCase());
+          const contentMatch = post.content.toLowerCase().includes(course.name.toLowerCase()) ||
+                              post.content.toLowerCase().includes(course.code.toLowerCase());
+          
+          if (titleMatch || contentMatch) {
+            return true;
+          }
+        }
+        
+        return false;
+      });
+      
+      // 按创建时间降序排序
+      coursePosts.sort((a, b) => {
+        const timeA = a.createdAt?.toDate?.() || a.createdAt || new Date(0);
+        const timeB = b.createdAt?.toDate?.() || b.createdAt || new Date(0);
+        return timeB.getTime() - timeA.getTime();
+      });
+      
       setPosts(coursePosts);
+      console.log(`为课程 ${courseId} 找到 ${coursePosts.length} 篇相关帖子`);
+      
     } catch (error) {
       console.error('获取帖子失败:', error);
       setPosts([]);
@@ -289,7 +330,7 @@ export default function CoursePage() {
                 <option value="生活">生活</option>
                 <option value="美食">美食</option>
                 <option value="旅行">旅行</option>
-                <option value="购物">购物</option>
+                <option value="资源">资源</option>
                 <option value="租房">租房</option>
               </select>
             </div>

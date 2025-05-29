@@ -46,7 +46,7 @@ export default function AdminPage() {
       setAllPosts(posts);
       
       // 测试各个分类的帖子
-      const categories = ['生活', '美食', '学习', '旅行', '购物', '租房'];
+      const categories = ['生活', '美食', '学习', '旅行', '资源', '租房'];
       const categoryData: Record<string, any[]> = {};
       
       for (const category of categories) {
@@ -384,7 +384,7 @@ export default function AdminPage() {
                                 post.category === '学习' ? 'bg-blue-100 text-blue-800' :
                                 post.category === '生活' ? 'bg-green-100 text-green-800' :
                                 post.category === '旅行' ? 'bg-purple-100 text-purple-800' :
-                                post.category === '购物' ? 'bg-pink-100 text-pink-800' :
+                                post.category === '资源' ? 'bg-pink-100 text-pink-800' :
                                 post.category === '租房' ? 'bg-yellow-100 text-yellow-800' :
                                 'bg-gray-100 text-gray-800'
                               }`}>

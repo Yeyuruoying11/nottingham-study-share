@@ -74,13 +74,12 @@ export interface Comment {
 
 // 文章分类
 export type PostCategory = 
-  | "学习"
   | "生活" 
-  | "美食"
-  | "旅行"
-  | "购物"
-  | "租房"
-  | "其他";
+  | "美食" 
+  | "学习" 
+  | "旅行" 
+  | "资源"
+  | "租房";
 
 // 通知类型
 export interface Notification {

@@ -116,7 +116,7 @@ const categories = [
   { name: "生活", icon: "🏠", color: "bg-green-100 text-green-800" },
   { name: "美食", icon: "🍕", color: "bg-red-100 text-red-800" },
   { name: "旅行", icon: "✈️", color: "bg-purple-100 text-purple-800" },
-  { name: "购物", icon: "🛍️", color: "bg-pink-100 text-pink-800" },
+  { name: "资源", icon: "📦", color: "bg-pink-100 text-pink-800" },
   { name: "租房", icon: "🏡", color: "bg-yellow-100 text-yellow-800" },
 ];
 
@@ -134,7 +134,8 @@ export default function CreatePostPage() {
     location: null as Location | null,
     school: "",
     department: "",
-    course: ""
+    course: "",
+    customCourseId: ""
   });
   
   const [newTag, setNewTag] = useState("");
@@ -250,7 +251,8 @@ export default function CreatePostPage() {
       ...(categoryName !== "学习" && { 
         school: "",
         department: "",
-        course: ""
+        course: "",
+        customCourseId: ""
       })
     }));
     
@@ -277,7 +279,8 @@ export default function CreatePostPage() {
       ...prev,
       school: schoolId,
       department: "", // 重置专业选择
-      course: "" // 重置课程选择
+      course: "", // 重置课程选择
+      customCourseId: "" // 重置自定义课程ID
     }));
   };
 
@@ -285,14 +288,23 @@ export default function CreatePostPage() {
     setFormData(prev => ({
       ...prev,
       department: departmentId,
-      course: "" // 重置课程选择
+      course: "", // 重置课程选择
+      customCourseId: "" // 重置自定义课程ID
     }));
   };
 
   const handleCourseSelect = (courseId: string) => {
     setFormData(prev => ({
       ...prev,
-      course: courseId
+      course: courseId,
+      customCourseId: courseId === "custom" ? prev.customCourseId : ""
+    }));
+  };
+
+  const handleCustomCourseIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      customCourseId: e.target.value
     }));
   };
 
@@ -499,6 +511,9 @@ export default function CreatePostPage() {
         }
       }
 
+      // 处理课程ID：如果选择了自定义课程，使用customCourseId，否则使用course
+      const finalCourseId = formData.course === "custom" ? formData.customCourseId.trim() : formData.course;
+
       // 添加新帖子到Firestore数据库
       const postData: any = {
         title: formData.title.trim(),
@@ -526,8 +541,8 @@ export default function CreatePostPage() {
       if (formData.department && formData.department !== undefined && formData.department !== '' && formData.department.trim() !== '') {
         postData.department = formData.department;
       }
-      if (formData.course && formData.course !== undefined && formData.course !== '' && formData.course.trim() !== '') {
-        postData.course = formData.course;
+      if (formData.course && formData.course !== undefined && finalCourseId !== '' && finalCourseId.trim() !== '') {
+        postData.course = finalCourseId;
       }
 
       console.log('🚀 发送到 Firestore 的数据:', JSON.stringify(postData, null, 2));
@@ -734,22 +749,45 @@ export default function CreatePostPage() {
                     )}
 
                     {formData.department && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          课程 (可选)
-                        </label>
-                        <select
-                          value={formData.course}
-                          onChange={(e) => handleCourseSelect(e.target.value)}
-                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        >
-                          <option value="">选择课程...</option>
-                          {getCoursesByDepartment(formData.department).map((course) => (
-                            <option key={course.id} value={course.id}>
-                              {course.code} - {course.name}
-                            </option>
-                          ))}
-                        </select>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            课程 (可选)
+                          </label>
+                          <select
+                            value={formData.course}
+                            onChange={(e) => handleCourseSelect(e.target.value)}
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          >
+                            <option value="">选择课程...</option>
+                            {getCoursesByDepartment(formData.department).map((course) => (
+                              <option key={course.id} value={course.id}>
+                                {course.code} - {course.name}
+                              </option>
+                            ))}
+                            <option value="custom">🎯 其他课程（手动输入课程ID）</option>
+                          </select>
+                        </div>
+
+                        {/* 自定义课程ID输入框 */}
+                        {formData.course === "custom" && (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              课程ID
+                            </label>
+                            <input
+                              type="text"
+                              value={formData.customCourseId}
+                              onChange={handleCustomCourseIdChange}
+                              placeholder="例如：COMP1001, MATH2001, BUS3001..."
+                              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              maxLength={20}
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                              💡 输入你的课程代码，如 COMP1001、MATH2001 等
+                            </p>
+                          </div>
+                        )}
                       </div>
                     )}
 

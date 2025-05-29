@@ -21,7 +21,7 @@ async function fixCategories() {
     const snapshot = await getDocs(postsRef);
     
     let fixedCount = 0;
-    const validCategories = ['生活', '美食', '学习', '旅行', '购物', '租房'];
+    const validCategories = ['生活', '美食', '学习', '旅行', '资源', '租房'];
     
     for (const docSnap of snapshot.docs) {
       const data = docSnap.data();
