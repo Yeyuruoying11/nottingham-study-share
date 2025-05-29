@@ -23,6 +23,12 @@ const Marker = dynamic(
   { ssr: false }
 );
 
+// 动态导入MapCenterController
+const MapCenterController = dynamic(
+  () => import('./MapCenterController'),
+  { ssr: false }
+);
+
 interface LocationPickerProps {
   onLocationSelect: (location: Location | null) => void;
   initialLocation?: Location;
@@ -117,7 +123,8 @@ export default function LocationPicker({ onLocationSelect, initialLocation, clas
         };
         
         handleLocationSelect(location);
-        // 移除自动居中，避免地图闪烁
+        // 搜索时也移动地图中心
+        setMapCenter([location.latitude, location.longitude]);
       } else {
         showToast('未找到位置，请尝试其他搜索词');
       }
@@ -142,8 +149,9 @@ export default function LocationPicker({ onLocationSelect, initialLocation, clas
       city: destination.name
     };
     
-    // 设置位置，但不移动地图中心
+    // 设置位置并移动地图中心
     handleLocationSelect(location);
+    setMapCenter([destination.lat, destination.lng]);
     
     // 添加提示信息
     setTimeout(() => {
@@ -249,6 +257,9 @@ export default function LocationPicker({ onLocationSelect, initialLocation, clas
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
+            
+            {/* 添加地图中心控制器 */}
+            <MapCenterController center={mapCenter} zoom={selectedLocation ? 12 : 10} />
             
             <MapClickHandler onLocationSelect={handleLocationSelect} />
             
