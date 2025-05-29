@@ -57,6 +57,7 @@ export default function LocationPicker({ onLocationSelect, initialLocation, clas
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [isSelecting, setIsSelecting] = useState(false); // 防重复触发
+  const [showMapHint, setShowMapHint] = useState(true); // 控制地图提示显示
 
   useEffect(() => {
     setMapReady(true);
@@ -77,6 +78,7 @@ export default function LocationPicker({ onLocationSelect, initialLocation, clas
   const handleLocationSelect = useCallback((location: Location) => {
     setSelectedLocation(location);
     onLocationSelect(location);
+    setShowMapHint(false); // 用户点击地图后隐藏提示
   }, [onLocationSelect]);
 
   // 新增：处理全屏地图选择
@@ -259,12 +261,14 @@ export default function LocationPicker({ onLocationSelect, initialLocation, clas
             )}
           </MapContainer>
           
-          <div className="absolute top-2 left-2 bg-white p-2 rounded-lg shadow-md text-xs text-gray-600 z-[1000] border border-gray-200 backdrop-blur-sm bg-white/95">
-            <div className="flex items-center space-x-1">
-              <span>💡</span>
-              <span>点击地图选择位置，或使用右上角"扩大地图"按钮</span>
+          {showMapHint && (
+            <div className="absolute top-2 left-2 bg-white p-2 rounded-lg shadow-md text-xs text-gray-600 z-[1000] border border-gray-200 backdrop-blur-sm bg-white/95">
+              <div className="flex items-center space-x-1">
+                <span>💡</span>
+                <span>点击地图选择位置，或使用右上角"扩大地图"按钮</span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
