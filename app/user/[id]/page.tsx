@@ -137,11 +137,8 @@ export default function UserProfilePage() {
       
       console.log('✅ 聊天会话创建/获取成功:', conversationId);
       
-      // 显示成功提示
-      alert('聊天会话已创建！正在跳转到聊天页面...');
-      
-      // 跳转到聊天页面
-      router.push('/chat');
+      // 移除成功提示，直接跳转到聊天页面并传递会话ID
+      router.push(`/chat?conversationId=${conversationId}`);
     } catch (error) {
       console.error('❌ 发起聊天失败:', error);
       

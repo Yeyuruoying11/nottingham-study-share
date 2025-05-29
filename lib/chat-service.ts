@@ -257,6 +257,18 @@ export async function sendMessage(
   type: 'text' | 'image' = 'text'
 ): Promise<string> {
   try {
+    console.log('🚀 开始发送消息:', {
+      conversationId,
+      senderId,
+      senderName,
+      content: content.substring(0, 50) + '...'
+    });
+
+    // 验证参数
+    if (!conversationId || !senderId || !content || !senderName) {
+      throw new Error('发送消息缺少必要参数');
+    }
+
     // 创建消息
     const newMessage: Omit<ChatMessage, 'id'> = {
       conversationId,
@@ -270,10 +282,14 @@ export async function sendMessage(
       isEdited: false
     };
     
+    console.log('📝 准备添加消息到 Firestore...');
+    
     const messageRef = await addDoc(messagesCollection, {
       ...newMessage,
       timestamp: serverTimestamp()
     });
+    
+    console.log('✅ 消息已成功添加到 Firestore，ID:', messageRef.id);
     
     // 更新会话的最后消息和未读计数
     const conversationRef = doc(conversationsCollection, conversationId);
@@ -290,6 +306,8 @@ export async function sendMessage(
         }
       });
       
+      console.log('📊 更新会话信息...');
+      
       await updateDoc(conversationRef, {
         lastMessage: {
           content: content,
@@ -300,13 +318,31 @@ export async function sendMessage(
         unreadCount: updatedUnreadCount,
         updatedAt: serverTimestamp()
       });
+      
+      console.log('✅ 会话信息更新成功');
+    } else {
+      console.warn('⚠️ 会话不存在:', conversationId);
     }
     
-    console.log('消息发送成功:', messageRef.id);
+    console.log('🎉 消息发送完全成功:', messageRef.id);
     return messageRef.id;
     
   } catch (error) {
-    console.error('发送消息失败:', error);
+    console.error('❌ 发送消息失败:', error);
+    
+    // 更详细的错误信息
+    if (error instanceof Error) {
+      console.error('错误类型:', error.name);
+      console.error('错误消息:', error.message);
+      
+      // 检查是否是权限错误
+      if (error.message.includes('permission-denied') || error.message.includes('PERMISSION_DENIED')) {
+        console.error('📛 权限错误 - 请检查 Firestore 规则');
+        console.error('当前发送者 ID:', senderId);
+        console.error('会话 ID:', conversationId);
+      }
+    }
+    
     throw error;
   }
 }

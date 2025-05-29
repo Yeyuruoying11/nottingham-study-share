@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Plus, MessageCircle, ArrowLeft, Users, MoreVertical } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { 
   subscribeToUserConversations, 
   getOtherParticipant, 
@@ -18,6 +19,9 @@ import UserSearchModal from '@/components/Chat/UserSearchModal';
 
 export default function ChatPage() {
   const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const conversationIdFromUrl = searchParams.get('conversationId');
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -37,6 +41,14 @@ export default function ChatPage() {
         console.log('收到会话更新:', newConversations);
         setConversations(newConversations);
         setLoading(false); // 确保在任何情况下都停止加载
+        
+        // 如果 URL 中有会话 ID，自动选择该会话
+        if (conversationIdFromUrl && !selectedConversation) {
+          const targetConversation = newConversations.find(c => c.id === conversationIdFromUrl);
+          if (targetConversation) {
+            setSelectedConversation(targetConversation);
+          }
+        }
       }
     );
 
@@ -59,7 +71,7 @@ export default function ChatPage() {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       updateUserOnlineStatus(user.uid, false);
     };
-  }, [user]);
+  }, [user, conversationIdFromUrl, selectedConversation]);
 
   // 处理聊天创建完成
   const handleChatCreated = async (conversationId: string) => {
@@ -120,7 +132,11 @@ export default function ChatPage() {
         <ChatInterface
           conversation={selectedConversation}
           otherUser={otherUser}
-          onBack={() => setSelectedConversation(null)}
+          onBack={() => {
+            setSelectedConversation(null);
+            // 清除 URL 参数
+            router.push('/chat');
+          }}
         />
       </div>
     );
