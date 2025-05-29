@@ -27,6 +27,7 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(true);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [showUserSearch, setShowUserSearch] = useState(false);
+  const [indexBuilding, setIndexBuilding] = useState(false);
 
   // 监听用户会话
   useEffect(() => {
@@ -40,13 +41,16 @@ export default function ChatPage() {
       (newConversations) => {
         console.log('收到会话更新:', newConversations);
         setConversations(newConversations);
-        setLoading(false); // 确保在任何情况下都停止加载
+        setLoading(false);
+        setIndexBuilding(false); // 如果成功获取数据，说明索引可用
         
         // 如果 URL 中有会话 ID，自动选择该会话
-        if (conversationIdFromUrl && !selectedConversation) {
+        if (conversationIdFromUrl) {
           const targetConversation = newConversations.find(c => c.id === conversationIdFromUrl);
           if (targetConversation) {
             setSelectedConversation(targetConversation);
+            // 更新 URL 以保持会话选择状态
+            router.replace(`/chat?conversationId=${conversationIdFromUrl}`, { scroll: false });
           }
         }
       }
@@ -56,6 +60,12 @@ export default function ChatPage() {
     const timeout = setTimeout(() => {
       console.log('加载超时，停止加载状态');
       setLoading(false);
+      
+      // 如果超时后还是没有数据，可能是索引构建问题
+      if (conversations.length === 0) {
+        console.log('检测到可能的索引构建问题');
+        setIndexBuilding(true);
+      }
     }, 10000); // 10秒超时
 
     // 页面离开时更新为离线状态
@@ -71,7 +81,7 @@ export default function ChatPage() {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       updateUserOnlineStatus(user.uid, false);
     };
-  }, [user, conversationIdFromUrl, selectedConversation]);
+  }, [user, conversationIdFromUrl]); // 移除 selectedConversation 依赖
 
   // 处理聊天创建完成
   const handleChatCreated = async (conversationId: string) => {
@@ -267,6 +277,21 @@ export default function ChatPage() {
 
         {/* 聊天列表 */}
         <div className="bg-white">
+          {/* 索引构建状态提示 */}
+          {indexBuilding && (
+            <div className="p-4 bg-yellow-50 border border-yellow-200 mx-4 mt-4 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <div className="w-5 h-5 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
+                <div>
+                  <h4 className="text-sm font-medium text-yellow-800">数据库索引构建中</h4>
+                  <p className="text-xs text-yellow-600 mt-1">
+                    聊天功能正在初始化，这通常需要几分钟时间。请稍后再试。
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
@@ -276,7 +301,21 @@ export default function ChatPage() {
             </div>
           ) : filteredConversations.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 px-4">
-              {searchQuery ? (
+              {indexBuilding ? (
+                <>
+                  <div className="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <h3 className="text-lg font-medium text-yellow-800 mb-2">系统准备中</h3>
+                  <p className="text-yellow-600 text-center mb-6">
+                    聊天功能正在初始化数据库索引，请稍等几分钟后刷新页面重试
+                  </p>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="bg-yellow-500 text-white px-6 py-3 rounded-xl hover:bg-yellow-600 transition-colors"
+                  >
+                    刷新页面
+                  </button>
+                </>
+              ) : searchQuery ? (
                 <>
                   <Search className="w-16 h-16 text-gray-300 mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">没有找到相关聊天</h3>
