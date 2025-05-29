@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { Location } from '@/lib/types';
 import { MapPin, Search, X, Maximize2 } from 'lucide-react';
 import FullscreenLocationPicker from './FullscreenLocationPicker';
+import Toast from '@/components/ui/Toast';
 
 // 动态导入地图组件
 const MapContainer = dynamic(
@@ -53,6 +54,9 @@ export default function LocationPicker({ onLocationSelect, initialLocation, clas
   const [mapReady, setMapReady] = useState(false);
   const [mapCenter, setMapCenter] = useState<[number, number]>([54.9783, -1.9540]); // 诺丁汉
   const [showFullscreenPicker, setShowFullscreenPicker] = useState(false); // 新增：控制全屏地图显示
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [isSelecting, setIsSelecting] = useState(false); // 防重复触发
 
   useEffect(() => {
     setMapReady(true);
@@ -64,6 +68,11 @@ export default function LocationPicker({ onLocationSelect, initialLocation, clas
       setMapCenter([initialLocation.latitude, initialLocation.longitude]);
     }
   }, [initialLocation]);
+
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    setToastVisible(true);
+  };
 
   const handleLocationSelect = useCallback((location: Location) => {
     setSelectedLocation(location);
@@ -108,17 +117,21 @@ export default function LocationPicker({ onLocationSelect, initialLocation, clas
         handleLocationSelect(location);
         setMapCenter([location.latitude, location.longitude]);
       } else {
-        alert('Location not found, please try other search terms');
+        showToast('未找到位置，请尝试其他搜索词');
       }
     } catch (error) {
-      console.error('Search location failed:', error);
-      alert('Search failed, please try again later');
+      console.error('搜索位置失败:', error);
+      showToast('搜索失败，请稍后重试');
     } finally {
       setIsSearching(false);
     }
   };
 
   const selectPopularDestination = (destination: any) => {
+    // 防止重复触发
+    if (isSelecting) return;
+    setIsSelecting(true);
+
     const location: Location = {
       latitude: destination.lat,
       longitude: destination.lng,
@@ -135,7 +148,8 @@ export default function LocationPicker({ onLocationSelect, initialLocation, clas
     
     // 添加提示信息
     setTimeout(() => {
-      alert(`📍 图标已移动到${destination.name}，${destination.country}`);
+      showToast(`📍 图标已移动到${destination.name}，${destination.country}`);
+      setIsSelecting(false); // 重置防重复标识
     }, 300); // 延迟300ms让地图先移动
   };
 
@@ -253,6 +267,14 @@ export default function LocationPicker({ onLocationSelect, initialLocation, clas
         onClose={() => setShowFullscreenPicker(false)}
         onLocationSelect={handleFullscreenLocationSelect}
         initialLocation={selectedLocation || undefined}
+      />
+      
+      {/* Toast 提示 */}
+      <Toast
+        message={toastMessage}
+        isVisible={toastVisible}
+        onClose={() => setToastVisible(false)}
+        duration={2500}
       />
     </>
   );
