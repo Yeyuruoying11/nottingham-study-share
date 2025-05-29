@@ -684,7 +684,7 @@ export default function HomePage() {
                         </Link>
                         
                         <Link 
-                          href="/settings/username"
+                          href="/settings"
                           className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
                           onClick={() => setShowUserMenu(false)}
                         >
@@ -980,21 +980,21 @@ export default function HomePage() {
             </button>
           </Link>
           
+          <Link href="/settings">
+            <button className="flex flex-col items-center space-y-1 p-2">
+              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                <Settings className="w-4 h-4 text-gray-600" />
+              </div>
+              <span className="text-xs text-gray-600">设置</span>
+            </button>
+          </Link>
+          
           <button className="flex flex-col items-center space-y-1 p-2">
             <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
               <Bell className="w-4 h-4 text-gray-600" />
             </div>
             <span className="text-xs text-gray-600">消息</span>
           </button>
-          
-          <Link href="/profile">
-            <button className="flex flex-col items-center space-y-1 p-2">
-              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                <User className="w-4 h-4 text-gray-600" />
-              </div>
-              <span className="text-xs text-gray-600">我的</span>
-            </button>
-          </Link>
         </div>
       </div>
     </div>

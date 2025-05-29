@@ -468,7 +468,7 @@ export default function CreatePostPage() {
         tags: formData.tags,
         image: imageUrls.length > 0 ? imageUrls[0] : "",
         images: imageUrls,
-        location: formData.location || undefined,
+        ...(formData.location && { location: formData.location }),
         author: {
           name: firestoreUserName,
           avatar: user.photoURL || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",

@@ -227,7 +227,7 @@ export async function addPostToFirestore(postData: {
       tags: postData.tags,
       createdAt: serverTimestamp(),
       category: postData.category,
-      location: postData.location // 新增：保存位置信息
+      ...(postData.location && { location: postData.location })
     };
     
     const docRef = await addDoc(postsCollection, newPost);
