@@ -85,13 +85,18 @@ export type PostCategory =
 // 通知类型
 export interface Notification {
   id: string;
-  userId: string;
-  type: "like" | "comment" | "follow" | "mention";
+  userId?: string; // 如果为空表示系统通知（所有用户）
+  type: "like" | "comment" | "follow" | "mention" | "system" | "admin";
+  title: string;
   message: string;
   read: boolean;
   relatedPostId?: string;
   relatedUserId?: string;
   createdAt: Date;
+  updatedAt?: Date;
+  // 系统通知特有字段
+  isSystemNotification?: boolean;
+  adminId?: string; // 发送通知的管理员ID
 }
 
 // 聊天会话类型

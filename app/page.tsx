@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Plus, Heart, MessageCircle, Share, Bookmark, User, Bell, Menu, LogOut, Trash2, MoreVertical, X, Crown } from "lucide-react";
+import { Search, Plus, Heart, MessageCircle, Share, Bookmark, User, Bell, Menu, LogOut, Trash2, MoreVertical, X, Crown, ChevronDown, Eye, MapPin } from "lucide-react";
 import { InfiniteMovingCards } from "@/components/ui/infinite-moving-cards";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
@@ -19,6 +19,7 @@ import {
 import { isAdminUser } from "@/lib/admin-config";
 import { ThreeDPhotoCarousel } from "@/components/ui/three-d-carousel";
 import { useRouter } from "next/navigation";
+import { useUnreadNotificationCount } from "@/hooks/useNotifications";
 
 // 临时导入迁移函数
 const migrateTestData = async () => {
@@ -72,6 +73,7 @@ export default function HomePage() {
   const [categoryStats, setCategoryStats] = useState<Record<string, number>>({});
   const userMenuRef = useRef<HTMLDivElement>(null);
   const [showDebug, setShowDebug] = useState(false);
+  const unreadNotificationCount = useUnreadNotificationCount();
   
   const { user, logout } = useAuth();
   const router = useRouter();
@@ -689,10 +691,16 @@ export default function HomePage() {
                   </Link>
 
                   {/* 通知按钮 */}
-                  <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all duration-200 relative hover:scale-105 active:scale-95">
-                    <Bell className="w-5 h-5" />
-                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
-                  </button>
+                  <Link href="/notifications">
+                    <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all duration-200 relative hover:scale-105 active:scale-95">
+                      <Bell className="w-5 h-5" />
+                      {unreadNotificationCount > 0 && (
+                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
+                          {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                        </span>
+                      )}
+                    </button>
+                  </Link>
 
                   {/* 用户头像菜单 */}
                   <div className="relative" ref={userMenuRef}>

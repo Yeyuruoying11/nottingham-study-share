@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Users, FileText, Settings, ArrowLeft, Crown, Database, Tag } from 'lucide-react';
+import { Shield, Users, FileText, Settings, ArrowLeft, Crown, Database, Tag, MessageSquare, BarChart3, Bell } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -86,6 +86,57 @@ export default function AdminPage() {
     );
   }
 
+  const adminFeatures = [
+    {
+      title: '用户管理',
+      description: '管理用户账户和权限',
+      icon: Users,
+      href: '/admin/users',
+      color: 'bg-blue-500',
+      available: false
+    },
+    {
+      title: '内容审核',
+      description: '审核和管理用户发布的内容',
+      icon: MessageSquare,
+      href: '/admin/content',
+      color: 'bg-green-500',
+      available: false
+    },
+    {
+      title: '帖子管理',
+      description: '管理和监控平台帖子',
+      icon: FileText,
+      href: '/admin/posts',
+      color: 'bg-purple-500',
+      available: false
+    },
+    {
+      title: '通知管理',
+      description: '发送系统通知给用户',
+      icon: Bell,
+      href: '/admin/notifications',
+      color: 'bg-orange-500',
+      available: true
+    },
+    {
+      title: '数据统计',
+      description: '查看平台使用统计数据',
+      icon: BarChart3,
+      href: '/admin/analytics',
+      color: 'bg-indigo-500',
+      available: false
+    },
+    {
+      title: '系统设置',
+      description: '配置平台系统设置',
+      icon: Settings,
+      href: '/admin/settings',
+      color: 'bg-gray-500',
+      available: false
+    }
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 头部导航 */}
@@ -114,170 +165,164 @@ export default function AdminPage() {
 
       {/* 主要内容 */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          
-          {/* 帖子调试 */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white rounded-xl shadow-sm border p-6 hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
-                <Database className="w-6 h-6 text-red-600" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">帖子调试</h3>
-                <p className="text-sm text-gray-600">查看帖子分类问题</p>
-              </div>
-            </div>
-            <button
-              onClick={() => {
-                setShowDebug(!showDebug);
-                if (!showDebug && allPosts.length === 0) {
-                  loadPostsData();
-                }
-              }}
-              className="w-full bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition-colors mb-2"
-            >
-              {showDebug ? '隐藏调试信息' : '显示调试信息'}
-            </button>
-            
-            {/* 快速修复按钮 */}
-            <button
-              onClick={async () => {
-                if (confirm('确定要修复所有帖子的分类吗？这将检查并修复分类字段。')) {
-                  try {
-                    const { doc, updateDoc, getDocs, collection } = await import('firebase/firestore');
-                    const { db } = await import('@/lib/firebase');
-                    
-                    const postsRef = collection(db, 'posts');
-                    const snapshot = await getDocs(postsRef);
-                    
-                    let fixed = 0;
-                    for (const docSnap of snapshot.docs) {
-                      const data = docSnap.data();
-                      const currentCategory = data.category;
-                      
-                      // 检查分类是否需要修复
-                      if (!currentCategory || currentCategory.trim() === '') {
-                        await updateDoc(doc(db, 'posts', docSnap.id), {
-                          category: '生活' // 默认分类
-                        });
-                        fixed++;
-                      }
-                    }
-                    
-                    alert(`修复完成！共修复了 ${fixed} 个帖子的分类。`);
-                    if (showDebug) {
-                      loadPostsData(); // 重新加载数据
-                    }
-                  } catch (error) {
-                    console.error('修复失败:', error);
-                    alert('修复失败: ' + (error instanceof Error ? error.message : String(error)));
-                  }
-                }
-              }}
-              className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors text-sm"
-            >
-              快速修复分类
-            </button>
-          </motion.div>
-
-          {/* 用户管理 */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-xl shadow-sm border p-6 hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-center space-x-3 mb-4">
-              <Users className="w-8 h-8 text-blue-500" />
-              <h2 className="text-lg font-semibold text-gray-900">用户管理</h2>
-            </div>
-            <p className="text-gray-600 mb-4">管理用户账户、权限和活动</p>
-            <Link 
-              href="/admin/users"
-              className="inline-block bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
-            >
-              管理用户
-            </Link>
-          </motion.div>
-
-          {/* 内容管理 */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white rounded-xl shadow-sm border p-6 hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-center space-x-3 mb-4">
-              <FileText className="w-8 h-8 text-green-500" />
-              <h2 className="text-lg font-semibold text-gray-900">内容管理</h2>
-            </div>
-            <p className="text-gray-600 mb-4">管理帖子、评论和举报内容</p>
-            <Link 
-              href="/admin/content"
-              className="inline-block bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
-            >
-              管理内容
-            </Link>
-          </motion.div>
-
-          {/* 系统设置 */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white rounded-xl shadow-sm border p-6 hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-center space-x-3 mb-4">
-              <Settings className="w-8 h-8 text-purple-500" />
-              <h2 className="text-lg font-semibold text-gray-900">系统设置</h2>
-            </div>
-            <p className="text-gray-600 mb-4">配置系统参数和管理员设置</p>
-            <Link 
-              href="/admin/settings"
-              className="inline-block bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors"
-            >
-              系统设置
-            </Link>
-          </motion.div>
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">管理功能</h2>
+          <p className="text-gray-600">选择要管理的功能模块</p>
         </div>
 
-        {/* 管理员特权说明 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {adminFeatures.map((feature, index) => {
+            const Icon = feature.icon;
+            
+            if (feature.available) {
+              return (
+                <Link key={index} href={feature.href}>
+                  <div className="bg-white rounded-xl shadow-sm border hover:shadow-md transition-all duration-200 p-6 cursor-pointer group">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <div className={`p-2 ${feature.color} rounded-lg`}>
+                        <Icon className="w-5 h-5 text-white" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 group-hover:text-green-600 transition-colors">
+                        {feature.title}
+                      </h3>
+                    </div>
+                    <p className="text-gray-600 text-sm">
+                      {feature.description}
+                    </p>
+                  </div>
+                </Link>
+              );
+            } else {
+              return (
+                <div key={index} className="bg-white rounded-xl shadow-sm border p-6 opacity-50 cursor-not-allowed">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className={`p-2 ${feature.color} rounded-lg`}>
+                      <Icon className="w-5 h-5 text-white" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {feature.title}
+                    </h3>
+                  </div>
+                  <p className="text-gray-600 text-sm mb-2">
+                    {feature.description}
+                  </p>
+                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                    即将推出
+                  </span>
+                </div>
+              );
+            }
+          })}
+        </div>
+
+        {/* 快速统计 */}
+        <div className="mt-12">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">快速概览</h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-white rounded-xl shadow-sm border p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">总用户数</p>
+                  <p className="text-2xl font-semibold text-gray-900">--</p>
+                </div>
+                <Users className="w-8 h-8 text-blue-500" />
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-xl shadow-sm border p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">总帖子数</p>
+                  <p className="text-2xl font-semibold text-gray-900">--</p>
+                </div>
+                <FileText className="w-8 h-8 text-green-500" />
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-xl shadow-sm border p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">今日活跃</p>
+                  <p className="text-2xl font-semibold text-gray-900">--</p>
+                </div>
+                <BarChart3 className="w-8 h-8 text-purple-500" />
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-xl shadow-sm border p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">待审核</p>
+                  <p className="text-2xl font-semibold text-gray-900">--</p>
+                </div>
+                <MessageSquare className="w-8 h-8 text-orange-500" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 帖子调试 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: 0.1 }}
           className="mt-8 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl p-6"
         >
           <div className="flex items-center space-x-3 mb-4">
             <Crown className="w-6 h-6 text-yellow-500" />
-            <h3 className="text-lg font-semibold text-gray-900">管理员特权</h3>
+            <h3 className="text-lg font-semibold text-gray-900">帖子调试</h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div className="space-y-2">
-              <p className="flex items-center space-x-2">
-                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                <span>无限次修改用户名</span>
-              </p>
-              <p className="flex items-center space-x-2">
-                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                <span>删除任何用户的帖子</span>
-              </p>
-            </div>
-            <div className="space-y-2">
-              <p className="flex items-center space-x-2">
-                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                <span>删除任何用户的评论</span>
-              </p>
-              <p className="flex items-center space-x-2">
-                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                <span>查看用户详细数据</span>
-              </p>
-            </div>
-          </div>
+          <button
+            onClick={() => {
+              setShowDebug(!showDebug);
+              if (!showDebug && allPosts.length === 0) {
+                loadPostsData();
+              }
+            }}
+            className="w-full bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition-colors mb-2"
+          >
+            {showDebug ? '隐藏调试信息' : '显示调试信息'}
+          </button>
+          
+          {/* 快速修复按钮 */}
+          <button
+            onClick={async () => {
+              if (confirm('确定要修复所有帖子的分类吗？这将检查并修复分类字段。')) {
+                try {
+                  const { doc, updateDoc, getDocs, collection } = await import('firebase/firestore');
+                  const { db } = await import('@/lib/firebase');
+                  
+                  const postsRef = collection(db, 'posts');
+                  const snapshot = await getDocs(postsRef);
+                  
+                  let fixed = 0;
+                  for (const docSnap of snapshot.docs) {
+                    const data = docSnap.data();
+                    const currentCategory = data.category;
+                    
+                    // 检查分类是否需要修复
+                    if (!currentCategory || currentCategory.trim() === '') {
+                      await updateDoc(doc(db, 'posts', docSnap.id), {
+                        category: '生活' // 默认分类
+                      });
+                      fixed++;
+                    }
+                  }
+                  
+                  alert(`修复完成！共修复了 ${fixed} 个帖子的分类。`);
+                  if (showDebug) {
+                    loadPostsData(); // 重新加载数据
+                  }
+                } catch (error) {
+                  console.error('修复失败:', error);
+                  alert('修复失败: ' + (error instanceof Error ? error.message : String(error)));
+                }
+              }
+            }}
+            className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors text-sm"
+          >
+            快速修复分类
+          </button>
         </motion.div>
 
         {/* 调试信息显示 */}
