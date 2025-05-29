@@ -50,6 +50,17 @@ export default function PostDetailPage() {
   const [firestoreUserAvatar, setFirestoreUserAvatar] = useState<string>(''); // 新增：用户头像状态
   const menuRef = useRef<HTMLDivElement>(null);
 
+  // 添加返回上一页的处理函数
+  const handleGoBack = () => {
+    // 检查是否有历史记录可以返回
+    if (window.history.length > 1) {
+      router.back();
+    } else {
+      // 如果没有历史记录，默认返回首页
+      router.push('/');
+    }
+  };
+
   // 加载帖子和评论数据
   useEffect(() => {
     const loadData = async () => {
@@ -593,13 +604,13 @@ export default function PostDetailPage() {
       <header className="bg-white shadow-sm border-b sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link 
-              href="/"
+            <button 
+              onClick={handleGoBack}
               className="flex items-center space-x-3 text-gray-600 hover:text-gray-900 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
               <span className="font-medium">返回</span>
-            </Link>
+            </button>
             
             <div className="flex items-center space-x-4">
               <button
