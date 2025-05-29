@@ -20,6 +20,7 @@ import { isAdminUser } from "@/lib/admin-config";
 import { ThreeDPhotoCarousel } from "@/components/ui/three-d-carousel";
 import { useRouter } from "next/navigation";
 import { useUnreadNotificationCount } from "@/hooks/useNotifications";
+import { SimpleImageCarousel } from "@/components/ui/simple-image-carousel";
 
 // 临时导入迁移函数
 const migrateTestData = async () => {
@@ -548,20 +549,33 @@ export default function HomePage() {
           </div>
           
           <div className="relative overflow-hidden">
-            {/* 使用3D轮播展示多张图片，如果只有一张或没有images数组则使用传统显示 */}
+            {/* 使用简化轮播展示多张图片，更稳定可靠 */}
             {post.images && post.images.length > 1 ? (
-              <ThreeDPhotoCarousel 
+              // 使用简化的轮播组件
+              <SimpleImageCarousel 
                 images={post.images} 
-                className="h-48"
+                height="h-48"
+                className=""
               />
             ) : (
-            <img
-              src={post.image}
-              alt={post.title}
-              className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
-            />
+              // 单张图片显示，确保总是有图片显示
+              <img
+                src={post.image || post.images?.[0] || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=300&fit=crop"}
+                alt={post.title}
+                className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
+                onError={(e) => {
+                  // 图片加载失败时的回退处理
+                  const target = e.target as HTMLImageElement;
+                  if (target.src !== "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=300&fit=crop") {
+                    target.src = "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=300&fit=crop";
+                  }
+                }}
+              />
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            {/* 只在单张图片时显示渐变层 */}
+            {!(post.images && post.images.length > 1) && (
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            )}
           </div>
           
           <div className="p-4">
