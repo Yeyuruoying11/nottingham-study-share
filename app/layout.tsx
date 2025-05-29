@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { AuthProvider } from '@/contexts/AuthContext'
+import { AuthContextProvider } from '@/contexts/AuthContext'
+import Head from 'next/head'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -12,6 +13,9 @@ export const metadata: Metadata = {
   title: '诺丁汉留学圈 - 分享你的留学故事',
   description: '专为诺丁汉大学留学生打造的社交分享平台，分享留学攻略、生活经验、美食推荐等内容',
   keywords: '诺丁汉大学,留学,攻略,分享,社交,英国留学',
+  icons: {
+    icon: 'data:image/svg+xml,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 32 32\'><rect width=\'32\' height=\'32\' fill=\'%2316a34a\'/><text x=\'16\' y=\'24\' font-family=\'Arial\' font-size=\'20\' font-weight=\'bold\' text-anchor=\'middle\' fill=\'white\'>N</text></svg>',
+  },
 }
 
 export default function RootLayout({
@@ -22,9 +26,9 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body className={inter.className}>
-        <AuthProvider>
+        <AuthContextProvider>
           {children}
-        </AuthProvider>
+        </AuthContextProvider>
       </body>
     </html>
   )

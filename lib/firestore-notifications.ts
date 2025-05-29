@@ -69,19 +69,19 @@ export async function sendSystemNotification(
   }
 }
 
-// 获取用户的通知列表
+// 获取用户的通知列表（简化版，减少索引依赖）
 export async function getUserNotifications(userId: string, limitCount: number = 20): Promise<Notification[]> {
   try {
+    // 使用更简单的查询，避免复合索引
     const notificationsQuery = query(
       collection(db, 'notifications'),
       where('userId', '==', userId),
-      orderBy('createdAt', 'desc'),
       limit(limitCount)
     );
     
     const snapshot = await getDocs(notificationsQuery);
     
-    return snapshot.docs.map(doc => {
+    const notifications = snapshot.docs.map(doc => {
       const data = doc.data();
       return {
         id: doc.id,
@@ -90,6 +90,9 @@ export async function getUserNotifications(userId: string, limitCount: number = 
         updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate() : new Date(data.updatedAt)
       } as Notification;
     });
+
+    // 在客户端排序，避免orderBy索引要求
+    return notifications.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   } catch (error) {
     console.error('获取通知失败:', error);
     throw error;
@@ -190,6 +193,85 @@ export async function createInteractionNotification(
     });
   } catch (error) {
     console.error('创建互动通知失败:', error);
+    throw error;
+  }
+}
+
+// 获取管理员发送的系统通知（简化版）
+export async function getAdminSentNotifications(adminId: string, limitCount: number = 50): Promise<Notification[]> {
+  try {
+    // 分步查询以避免复杂索引
+    const notificationsQuery = query(
+      collection(db, 'notifications'),
+      where('adminId', '==', adminId),
+      limit(limitCount)
+    );
+    
+    const snapshot = await getDocs(notificationsQuery);
+    
+    // 去重，因为同一条通知会发给多个用户
+    const uniqueNotifications = new Map();
+    
+    snapshot.docs.forEach(doc => {
+      const data = doc.data();
+      if (data.type === 'system') {  // 在客户端过滤
+        const key = `${data.title}-${data.message}-${data.createdAt?.seconds}`;
+        
+        if (!uniqueNotifications.has(key)) {
+          uniqueNotifications.set(key, {
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date(data.createdAt),
+            updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate() : new Date(data.updatedAt)
+          } as Notification);
+        }
+      }
+    });
+    
+    // 在客户端排序
+    const notifications = Array.from(uniqueNotifications.values());
+    return notifications.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  } catch (error) {
+    console.error('获取管理员通知失败:', error);
+    throw error;
+  }
+}
+
+// 删除特定管理员发送的所有相同通知（简化版）
+export async function deleteAdminNotificationBatch(
+  adminId: string, 
+  title: string, 
+  message: string,
+  createdTime: Date
+): Promise<void> {
+  try {
+    // 使用更简单的查询
+    const notificationsQuery = query(
+      collection(db, 'notifications'),
+      where('adminId', '==', adminId),
+      where('title', '==', title)
+    );
+    
+    const snapshot = await getDocs(notificationsQuery);
+    const batch = writeBatch(db);
+    
+    // 批量删除匹配的通知
+    snapshot.docs.forEach((doc) => {
+      const data = doc.data();
+      const docTime = data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date(data.createdAt);
+      
+      // 检查消息和时间是否匹配
+      if (data.message === message && 
+          data.type === 'system' &&
+          Math.abs(docTime.getTime() - createdTime.getTime()) < 60000) {
+        batch.delete(doc.ref);
+      }
+    });
+    
+    await batch.commit();
+    console.log('批量删除通知成功');
+  } catch (error) {
+    console.error('批量删除通知失败:', error);
     throw error;
   }
 } 

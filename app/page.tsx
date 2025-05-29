@@ -82,21 +82,27 @@ export default function HomePage() {
   useEffect(() => {
     const loadPosts = async () => {
       try {
+        console.log('开始加载帖子，当前分类:', selectedCategory);
         setLoading(true);
         let postsData;
         
         // 根据选中的分类加载不同的帖子
         if (selectedCategory === "全部") {
+          console.log('正在获取所有帖子...');
           postsData = await getAllPostsFromFirestore();
         } else {
+          console.log('正在获取分类帖子:', selectedCategory);
           postsData = await getPostsByCategoryFromFirestore(selectedCategory);
         }
         
+        console.log('帖子加载成功，数量:', postsData.length);
         setPosts(postsData);
       } catch (error) {
         console.error("加载帖子失败:", error);
+        console.error("错误详情:", error instanceof Error ? error.message : String(error));
         setPosts([]);
       } finally {
+        console.log('设置loading为false');
         setLoading(false);
       }
     };
@@ -926,7 +932,25 @@ export default function HomePage() {
           <div className="flex justify-center items-center py-12">
             <div className="text-center">
               <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-gray-600">加载帖子中...</p>
+              <p className="text-gray-600 mb-4">加载帖子中...</p>
+              <div className="text-sm text-gray-500 space-y-2">
+                <p>💡 如果一直显示加载中，请尝试：</p>
+                <div className="space-y-1">
+                  <p>1. 按 F12 打开控制台查看错误信息</p>
+                  <p>2. 确保已登录账户</p>
+                  <p>3. 登录后可初始化测试数据</p>
+                </div>
+                {!user && (
+                  <div className="mt-4">
+                    <Link 
+                      href="/login"
+                      className="inline-block bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
+                    >
+                      立即登录
+                    </Link>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         ) : posts.length === 0 ? (
