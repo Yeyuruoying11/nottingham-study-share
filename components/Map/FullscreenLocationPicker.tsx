@@ -120,7 +120,7 @@ export default function FullscreenLocationPicker({
         };
         
         handleLocationSelect(location);
-        setMapCenter([location.latitude, location.longitude]);
+        // 移除自动居中，避免地图闪烁
       } else {
         showToast('未找到位置，请尝试其他搜索词');
       }
@@ -145,17 +145,14 @@ export default function FullscreenLocationPicker({
       city: destination.name
     };
     
-    // 先设置位置
+    // 设置位置，但不移动地图中心
     handleLocationSelect(location);
-    
-    // 设置地图中心，使用适合城市查看的缩放级别
-    setMapCenter([destination.lat, destination.lng]);
     
     // 添加提示信息
     setTimeout(() => {
-      showToast(`📍 图标已移动到${destination.name}，${destination.country}`);
+      showToast(`📍 已选择${destination.name}，${destination.country}`);
       setIsSelecting(false); // 重置防重复标识
-    }, 300); // 延迟300ms让地图先移动
+    }, 300);
   };
 
   const handleClose = () => {
@@ -274,7 +271,6 @@ export default function FullscreenLocationPicker({
             <div className="flex-1 relative">
               {mapReady ? (
                 <MapContainer
-                  key={mapCenter.join(',')}
                   center={mapCenter}
                   zoom={selectedLocation ? 12 : 6}
                   style={{ height: '100%', width: '100%' }}
