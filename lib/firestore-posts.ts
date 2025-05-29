@@ -227,7 +227,8 @@ export async function addPostToFirestore(postData: {
   };
 }): Promise<string | null> {
   try {
-    const newPost: Omit<FirestorePost, 'id'> = {
+    // 构建基础帖子对象，不包含可能为 undefined 的字段
+    const newPost: any = {
       title: postData.title,
       content: postData.content.length > 100 ? postData.content.substring(0, 100) + "..." : postData.content,
       fullContent: postData.content,
@@ -241,19 +242,21 @@ export async function addPostToFirestore(postData: {
       category: postData.category
     };
     
-    // 只有当这些字段有值时才添加到对象中
-    if (postData.location) {
+    // 只有当这些字段有值且不为 undefined 时才添加到对象中
+    if (postData.location && postData.location !== undefined) {
       newPost.location = postData.location;
     }
-    if (postData.school) {
+    if (postData.school && postData.school !== undefined && postData.school !== '' && postData.school.trim() !== '') {
       newPost.school = postData.school;
     }
-    if (postData.department) {
+    if (postData.department && postData.department !== undefined && postData.department !== '' && postData.department.trim() !== '') {
       newPost.department = postData.department;
     }
-    if (postData.course) {
+    if (postData.course && postData.course !== undefined && postData.course !== '' && postData.course.trim() !== '') {
       newPost.course = postData.course;
     }
+    
+    console.log('📝 准备添加的帖子数据:', JSON.stringify(newPost, null, 2));
     
     const docRef = await addDoc(postsCollection, newPost);
     console.log('帖子已添加到Firestore，ID:', docRef.id);
