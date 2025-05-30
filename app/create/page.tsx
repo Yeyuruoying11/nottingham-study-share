@@ -722,14 +722,6 @@ export default function CreatePostPage() {
                   </div>
                 )}
 
-                {/* Google Maps 嵌入教程 - 仅在租房分类时显示 */}
-                {formData.category === "租房" && (
-                  <GoogleMapsEmbedTutorial
-                    onEmbedCodeChange={handleEmbedCodeChange}
-                    embedCode={formData.embedHtml}
-                  />
-                )}
-
                 {/* 学术分类选择器 - 仅在学习分类时显示 */}
                 {formData.category === "学习" && (
                   <div className="space-y-4">
@@ -974,9 +966,24 @@ export default function CreatePostPage() {
             </motion.div>
           </div>
 
-          {/* 预览区域 */}
-          {showPreview && (
-            <div className="space-y-6">
+          {/* 右边区域 - 根据分类显示不同内容 */}
+          <div className="space-y-6">
+            {/* Google Maps 教程 - 仅在租房分类时显示 */}
+            {formData.category === "租房" && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-2xl shadow-lg overflow-hidden"
+              >
+                <GoogleMapsEmbedTutorial
+                  onEmbedCodeChange={handleEmbedCodeChange}
+                  embedCode={formData.embedHtml}
+                />
+              </motion.div>
+            )}
+
+            {/* 预览区域 - 在显示预览或非租房分类时显示 */}
+            {(showPreview || formData.category !== "租房") && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -990,12 +997,12 @@ export default function CreatePostPage() {
                 {imagePreviews.length > 0 && (
                   <div className="mb-4">
                     {imagePreviews.length === 1 ? (
-                  <div className="relative h-48">
-                    <img
+                      <div className="relative h-48">
+                        <img
                           src={imagePreviews[0]}
-                      alt="预览"
+                          alt="预览"
                           className="w-full h-full object-cover rounded-lg"
-                    />
+                        />
                       </div>
                     ) : (
                       <div className="grid grid-cols-2 gap-2">
@@ -1068,8 +1075,8 @@ export default function CreatePostPage() {
                   </div>
                 </div>
               </motion.div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </main>
     </div>

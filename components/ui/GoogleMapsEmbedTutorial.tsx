@@ -61,7 +61,7 @@ export default function GoogleMapsEmbedTutorial({ onEmbedCodeChange, embedCode }
   };
 
   return (
-    <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 w-full">
+    <div className="p-6 w-full">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-4">
           <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
