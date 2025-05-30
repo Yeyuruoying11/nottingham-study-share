@@ -11,7 +11,8 @@ import {
   getOtherParticipant, 
   formatMessageTime,
   updateUserOnlineStatus,
-  getUserConversations
+  getUserConversations,
+  deleteConversation
 } from '@/lib/chat-service';
 import { Conversation } from '@/lib/types';
 import ChatInterface from '@/components/Chat/ChatInterface';
@@ -28,6 +29,8 @@ export default function ChatPage() {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [showUserSearch, setShowUserSearch] = useState(false);
   const [indexBuilding, setIndexBuilding] = useState(false);
+  const [showDeleteMenu, setShowDeleteMenu] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // 监听用户会话
   useEffect(() => {
@@ -83,6 +86,23 @@ export default function ChatPage() {
     };
   }, [user, conversationIdFromUrl]); // 移除 selectedConversation 依赖
 
+  // 点击外部关闭删除菜单
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.delete-menu-container')) {
+        setShowDeleteMenu(null);
+      }
+    };
+
+    if (showDeleteMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [showDeleteMenu]);
+
   // 处理聊天创建完成
   const handleChatCreated = async (conversationId: string) => {
     try {
@@ -99,6 +119,26 @@ export default function ChatPage() {
       }
     } catch (error) {
       console.error('获取更新后的会话列表失败:', error);
+    }
+  };
+
+  // 处理删除会话
+  const handleDeleteConversation = async (conversationId: string) => {
+    if (!user || !window.confirm('确定要删除这个聊天吗？删除后无法恢复。')) {
+      return;
+    }
+
+    setDeletingId(conversationId);
+    try {
+      await deleteConversation(conversationId, user.uid);
+      // 删除成功后，从列表中移除
+      setConversations(prev => prev.filter(c => c.id !== conversationId));
+      setShowDeleteMenu(null);
+    } catch (error) {
+      console.error('删除会话失败:', error);
+      alert('删除失败，请重试');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -159,6 +199,7 @@ export default function ChatPage() {
 
     const unreadCount = conversation.unreadCount?.[user.uid] || 0;
     const isUnread = unreadCount > 0;
+    const isDeleting = deletingId === conversation.id;
 
     return (
       <motion.div
@@ -167,8 +208,10 @@ export default function ChatPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
-        onClick={() => setSelectedConversation(conversation)}
-        className="flex items-center p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 transition-colors group"
+        onClick={() => !isDeleting && setSelectedConversation(conversation)}
+        className={`flex items-center p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 transition-colors group ${
+          isDeleting ? 'opacity-50 pointer-events-none' : ''
+        }`}
       >
         {/* 头像 */}
         <div className="relative mr-3">
@@ -209,15 +252,39 @@ export default function ChatPage() {
         </div>
 
         {/* 更多选项按钮 */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            // 这里可以添加更多选项的处理逻辑
-          }}
-          className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full ml-2 transition-colors opacity-0 group-hover:opacity-100"
-        >
-          <MoreVertical className="w-4 h-4" />
-        </button>
+        <div className="relative delete-menu-container">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowDeleteMenu(showDeleteMenu === conversation.id ? null : conversation.id);
+            }}
+            className={`p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full ml-2 transition-colors ${
+              showDeleteMenu === conversation.id || isDeleting ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+            }`}
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
+
+          {/* 删除菜单 */}
+          {showDeleteMenu === conversation.id && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="absolute right-0 top-full mt-1 w-32 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
+            >
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteConversation(conversation.id);
+                }}
+                className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
+              >
+                <span>{isDeleting ? '删除中...' : '删除聊天'}</span>
+              </button>
+            </motion.div>
+          )}
+        </div>
       </motion.div>
     );
   };

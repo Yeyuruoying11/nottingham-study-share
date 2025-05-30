@@ -245,6 +245,52 @@ export function subscribeToUserConversations(
   );
 }
 
+// 删除会话
+export async function deleteConversation(
+  conversationId: string,
+  userId: string
+): Promise<void> {
+  try {
+    console.log('🗑️ 开始删除会话:', conversationId);
+    
+    // 获取会话信息，确认用户是参与者
+    const conversationRef = doc(conversationsCollection, conversationId);
+    const conversationDoc = await getDoc(conversationRef);
+    
+    if (!conversationDoc.exists()) {
+      throw new Error('会话不存在');
+    }
+    
+    const conversation = conversationDoc.data() as Conversation;
+    
+    // 验证用户是否是会话参与者
+    if (!conversation.participants.includes(userId)) {
+      throw new Error('您无权删除此会话');
+    }
+    
+    // 删除会话下的所有消息
+    const messagesQuery = query(
+      messagesCollection,
+      where('conversationId', '==', conversationId)
+    );
+    
+    const messagesSnapshot = await getDocs(messagesQuery);
+    const deletePromises = messagesSnapshot.docs.map(doc => deleteDoc(doc.ref));
+    
+    // 批量删除消息
+    await Promise.all(deletePromises);
+    console.log(`✅ 已删除 ${messagesSnapshot.size} 条消息`);
+    
+    // 删除会话
+    await deleteDoc(conversationRef);
+    console.log('✅ 会话删除成功');
+    
+  } catch (error) {
+    console.error('❌ 删除会话失败:', error);
+    throw error;
+  }
+}
+
 // ==================== 消息管理 ====================
 
 // 发送消息
