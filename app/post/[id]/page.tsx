@@ -23,8 +23,24 @@ import {
 } from "@/lib/firestore-posts";
 import { isAdminUser } from "@/lib/admin-config";
 import { ThreeDPhotoCarousel } from "@/components/ui/three-d-carousel";
-import GoogleStreetViewEmbed from '@/components/Map/GoogleStreetViewEmbed';
+import dynamic from 'next/dynamic';
 import { getOrCreateConversation } from "@/lib/chat-service";
+
+// 动态导入GoogleStreetViewEmbed组件，避免SSR问题
+const GoogleStreetViewEmbed = dynamic(
+  () => import('@/components/Map/GoogleStreetViewEmbed'),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-[500px] bg-gray-100 rounded-lg flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+          <p className="text-gray-500">加载街景组件中...</p>
+        </div>
+      </div>
+    )
+  }
+);
 
 export default function PostDetailPage() {
   const params = useParams();
