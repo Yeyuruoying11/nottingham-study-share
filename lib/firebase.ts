@@ -14,24 +14,26 @@ import { getStorage } from "firebase/storage";
 // 5. 或创建 .env.local 文件设置环境变量
 
 const firebaseConfig = {
-  // 🚨 请替换为您的真实Firebase配置
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "your_api_key_here",
+  // ✅ 用户提供的正确Firebase配置
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyBLxCAIw1BjHWoVekUW9yj7i3P6_HMWpO4",
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "guidin-db601.firebaseapp.com",
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "guidin-db601",
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "guidin-db601.firebasestorage.app",
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "1026468227635",
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:1026468227635:web:8701872bb5c1e0fb40d1f9",
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "831633555817",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:831633555817:web:cf598c871c41f83a4dfdf8",
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-EHKPF1364Q"
 };
 
 // 验证配置
-if (firebaseConfig.apiKey === "your_api_key_here") {
+if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "your_api_key_here") {
   console.error("🚨 Firebase配置无效！请设置正确的API密钥。");
   console.log("📝 获取配置步骤：");
   console.log("1. 访问：https://console.firebase.google.com/");
   console.log("2. 选择项目：guidin-db601（或创建新项目）");
   console.log("3. 项目设置 > 常规 > 您的应用");
   console.log("4. 复制Web应用的配置");
+} else {
+  console.log("✅ Firebase配置已加载");
 }
 
 // Initialize Firebase
@@ -61,7 +63,7 @@ let analytics = null;
 if (typeof window !== 'undefined') {
   // 检查是否支持Analytics并且没有被CSP阻止
   isSupported().then(supported => {
-    if (supported && firebaseConfig.apiKey !== "your_api_key_here") {
+    if (supported && firebaseConfig.apiKey !== "your_api_key_here" && firebaseConfig.apiKey) {
       try {
         analytics = getAnalytics(app);
         console.log('Firebase Analytics initialized');

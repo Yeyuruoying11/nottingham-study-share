@@ -16,6 +16,7 @@ import {
   toggleLike,
   toggleCommentLike,
   getUserLikeStatus,
+  getUserCommentLikeStatus,
   formatTimestamp,
   type FirestorePost,
   type FirestoreComment 
