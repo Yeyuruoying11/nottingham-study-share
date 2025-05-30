@@ -256,7 +256,7 @@ export default function ChatPage() {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              setShowDeleteMenu(showDeleteMenu === conversation.id ? null : conversation.id);
+              setShowDeleteMenu(showDeleteMenu === conversation.id ? null : (conversation.id || null));
             }}
             className={`p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full ml-2 transition-colors ${
               showDeleteMenu === conversation.id || isDeleting ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
@@ -276,7 +276,9 @@ export default function ChatPage() {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleDeleteConversation(conversation.id);
+                  if (conversation.id) {
+                    handleDeleteConversation(conversation.id);
+                  }
                 }}
                 className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
               >
