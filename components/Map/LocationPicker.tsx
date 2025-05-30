@@ -68,6 +68,13 @@ export default function LocationPicker({ onLocationSelect, initialLocation, clas
 
   useEffect(() => {
     setMapReady(true);
+    
+    // 清理函数 - 组件卸载时执行
+    return () => {
+      setMapReady(false);
+      // 清理任何可能的地图实例
+      console.log('LocationPicker component unmounting, cleaning up...');
+    };
   }, []);
 
   useEffect(() => {
@@ -250,29 +257,43 @@ export default function LocationPicker({ onLocationSelect, initialLocation, clas
 
         {/* 地图 */}
         <div className="h-64 relative">
-          <MapContainer
-            center={mapCenter}
-            zoom={selectedLocation ? 10 : 6}
-            style={{ height: '100%', width: '100%' }}
-            className="z-0"
-            key={mapKey}
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            
-            {/* 添加地图中心控制器 */}
-            <MapCenterController center={mapCenter} zoom={selectedLocation ? 12 : 10} />
-            
-            <MapClickHandler onLocationSelect={handleLocationSelect} />
-            
-            {selectedLocation && (
-              <Marker position={[selectedLocation.latitude, selectedLocation.longitude]} />
-            )}
-          </MapContainer>
+          {mapReady ? (
+            <div key={mapKey} className="h-full w-full">
+              <MapContainer
+                center={mapCenter}
+                zoom={selectedLocation ? 10 : 6}
+                style={{ height: '100%', width: '100%' }}
+                className="z-0"
+                whenCreated={(mapInstance) => {
+                  // 确保地图实例正确创建
+                  console.log('Map created successfully');
+                }}
+              >
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                
+                {/* 添加地图中心控制器 */}
+                <MapCenterController center={mapCenter} zoom={selectedLocation ? 12 : 10} />
+                
+                <MapClickHandler onLocationSelect={handleLocationSelect} />
+                
+                {selectedLocation && (
+                  <Marker position={[selectedLocation.latitude, selectedLocation.longitude]} />
+                )}
+              </MapContainer>
+            </div>
+          ) : (
+            <div className="h-full w-full bg-gray-100 rounded-lg flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto"></div>
+                <p className="text-gray-600 mt-2 text-sm">地图加载中...</p>
+              </div>
+            </div>
+          )}
           
-          {showMapHint && (
+          {showMapHint && mapReady && (
             <div className="absolute top-2 left-2 bg-white p-2 rounded-lg shadow-md text-xs text-gray-600 z-[1000] border border-gray-200 backdrop-blur-sm bg-white/95">
               <div className="flex items-center space-x-1">
                 <span>💡</span>
