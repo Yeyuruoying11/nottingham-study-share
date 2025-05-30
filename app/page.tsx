@@ -683,15 +683,15 @@ export default function HomePage() {
         className="bg-white shadow-sm border-b sticky top-0 z-50"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-18">
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-3">
-              <div className="w-10 h-10 notts-green rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-white text-lg font-bold">N</span>
+              <div className="w-12 h-12 notts-green rounded-xl flex items-center justify-center shadow-lg">
+                <span className="text-white text-xl font-bold">N</span>
               </div>
               <div className="hidden sm:block">
-                <h1 className="text-xl font-bold text-gray-900">诺丁汉留学圈</h1>
-                <p className="text-xs text-gray-500">分享你的留学故事</p>
+                <h1 className="text-2xl font-bold text-gray-900">诺丁汉留学圈</h1>
+                <p className="text-sm text-gray-500">分享你的留学故事</p>
               </div>
             </Link>
 
@@ -711,7 +711,7 @@ export default function HomePage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={handleSearchKeyPress}
                   placeholder="搜索攻略、美食、生活经验..."
-                  className="w-full pl-10 pr-10 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-base"
                 />
                 {searchQuery && (
                   <button
@@ -731,16 +731,16 @@ export default function HomePage() {
                 <>
                   {/* 发布按钮 */}
                   <Link href="/create">
-                    <button className="notts-green text-white px-4 py-2 rounded-xl font-medium flex items-center space-x-2 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95">
-                      <Plus className="w-4 h-4" />
+                    <button className="notts-green text-white px-5 py-2.5 rounded-xl font-medium flex items-center space-x-2 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95">
+                      <Plus className="w-5 h-5" />
                       <span className="hidden sm:inline">发布</span>
                     </button>
                   </Link>
 
                   {/* 聊天按钮 */}
                   <Link href="/chat">
-                    <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all duration-200 relative hover:scale-105 active:scale-95">
-                      <MessageCircle className="w-5 h-5" />
+                    <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all duration-200 relative hover:scale-105 active:scale-95">
+                      <MessageCircle className="w-6 h-6" />
                       {/* 未读消息数量标识 - 这里可以后续添加实时未读计数 */}
                       {/* <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span> */}
                     </button>
@@ -748,8 +748,8 @@ export default function HomePage() {
 
                   {/* 通知按钮 */}
                   <Link href="/notifications">
-                    <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all duration-200 relative hover:scale-105 active:scale-95">
-                    <Bell className="w-5 h-5" />
+                    <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all duration-200 relative hover:scale-105 active:scale-95">
+                    <Bell className="w-6 h-6" />
                       {unreadNotificationCount > 0 && (
                         <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
                           {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
@@ -762,7 +762,7 @@ export default function HomePage() {
                   <div className="relative" ref={userMenuRef}>
                     <button
                       onClick={handleAvatarClick}
-                      className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-2 border-transparent hover:border-green-500 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                      className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-2 border-transparent hover:border-green-500 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                     >
                       {firestoreUserAvatar ? (
                         <img 
@@ -771,7 +771,7 @@ export default function HomePage() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <User className="w-4 h-4 text-gray-600" />
+                        <User className="w-5 h-5 text-gray-600" />
                       )}
                     </button>
 
@@ -855,18 +855,18 @@ export default function HomePage() {
         className="bg-white border-b"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center space-x-6 py-4 overflow-x-auto">
+          <div className="flex items-center space-x-6 py-5 overflow-x-auto">
             <button
               onClick={() => setSelectedCategory("全部")}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-full whitespace-nowrap transition-all duration-300 ${
+              className={`flex items-center space-x-3 px-6 py-3 rounded-full whitespace-nowrap transition-all duration-300 ${
                 selectedCategory === "全部"
                   ? "bg-green-500 text-white shadow-lg"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
-              <span>🌟</span>
-              <span className="text-sm font-medium">全部</span>
-              <span className={`text-xs px-2 py-1 rounded-full ${
+              <span className="text-lg">🌟</span>
+              <span className="text-base font-medium">全部</span>
+              <span className={`text-sm px-2 py-1 rounded-full ${
                 selectedCategory === "全部" 
                   ? "bg-white/20 text-white" 
                   : "bg-gray-200 text-gray-500"
@@ -878,11 +878,11 @@ export default function HomePage() {
             {/* 学习按钮 */}
             <button
               onClick={() => router.push("/academic")}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-full whitespace-nowrap transition-all duration-300 bg-blue-100 text-blue-800 hover:shadow-md`}
+              className={`flex items-center space-x-3 px-6 py-3 rounded-full whitespace-nowrap transition-all duration-300 bg-blue-100 text-blue-800 hover:shadow-md`}
             >
-              <span>📚</span>
-              <span className="text-sm font-medium">学习</span>
-              <span className={`text-xs px-2 py-1 rounded-full bg-white/50 text-gray-600`}>
+              <span className="text-lg">📚</span>
+              <span className="text-base font-medium">学习</span>
+              <span className={`text-sm px-2 py-1 rounded-full bg-white/50 text-gray-600`}>
                 {getCategoryCount("学习")}
               </span>
             </button>
@@ -899,15 +899,15 @@ export default function HomePage() {
                     setSelectedCategory(category.name);
                   }
                 }}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-full whitespace-nowrap transition-all duration-300 ${
+                className={`flex items-center space-x-3 px-6 py-3 rounded-full whitespace-nowrap transition-all duration-300 ${
                   selectedCategory === category.name
                     ? "bg-green-500 text-white shadow-lg"
                     : `${category.color} hover:shadow-md`
                 }`}
               >
-                <span>{category.icon}</span>
-                <span className="text-sm font-medium">{category.name}</span>
-                  <span className={`text-xs px-2 py-1 rounded-full ${
+                <span className="text-lg">{category.icon}</span>
+                <span className="text-base font-medium">{category.name}</span>
+                  <span className={`text-sm px-2 py-1 rounded-full ${
                     selectedCategory === category.name 
                       ? "bg-white/20 text-white" 
                       : "bg-white/50 text-gray-600"
