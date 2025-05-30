@@ -720,4 +720,45 @@ export async function getCommentsWithRepliesFromFirestore(postId: string): Promi
     console.error('获取评论失败:', error);
     return [];
   }
+}
+
+// 根据用户ID获取用户发布的帖子
+export async function getUserPostsFromFirestore(userId: string): Promise<FirestorePost[]> {
+  try {
+    console.log(`正在获取用户 ${userId} 的帖子...`);
+    const postsRef = collection(db, 'posts');
+    const q = query(postsRef, where('author.uid', '==', userId), orderBy('createdAt', 'desc'));
+    const querySnapshot = await getDocs(q);
+    
+    console.log(`用户 ${userId} 查询结果: ${querySnapshot.size} 个帖子`);
+    
+    const posts: FirestorePost[] = [];
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      posts.push({
+        id: doc.id,
+        title: data.title,
+        content: data.content,
+        fullContent: data.fullContent || data.content,
+        category: data.category,
+        tags: data.tags || [],
+        image: data.image || "",
+        images: data.images || [],
+        author: data.author,
+        likes: data.likes || 0,
+        likedBy: data.likedBy || [],
+        comments: data.comments || 0,
+        createdAt: data.createdAt,
+        location: data.location,
+        school: data.school,
+        department: data.department,
+        course: data.course
+      });
+    });
+    
+    return posts;
+  } catch (error) {
+    console.error(`获取用户${userId}的帖子失败:`, error);
+    return [];
+  }
 } 
