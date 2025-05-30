@@ -255,52 +255,24 @@ export default function LocationPicker({ onLocationSelect, initialLocation, clas
           </div>
         </div>
 
-        {/* 地图 */}
+        {/* 地图 - 暂时使用备用方案避免初始化错误 */}
         <div className="h-64 relative">
-          {mapReady ? (
-            <div key={mapKey} className="h-full w-full">
-              <MapContainer
-                center={mapCenter}
-                zoom={selectedLocation ? 10 : 6}
-                style={{ height: '100%', width: '100%' }}
-                className="z-0"
-                whenCreated={(mapInstance) => {
-                  // 确保地图实例正确创建
-                  console.log('Map created successfully');
-                }}
-              >
-                <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
-                
-                {/* 添加地图中心控制器 */}
-                <MapCenterController center={mapCenter} zoom={selectedLocation ? 12 : 10} />
-                
-                <MapClickHandler onLocationSelect={handleLocationSelect} />
-                
-                {selectedLocation && (
-                  <Marker position={[selectedLocation.latitude, selectedLocation.longitude]} />
-                )}
-              </MapContainer>
+          <div className="h-full w-full bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
+            <div className="text-center p-6">
+              <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-700 mb-2">位置选择</h3>
+              <p className="text-sm text-gray-500 mb-4">
+                点击下方热门目的地或使用搜索功能选择位置
+              </p>
+              {selectedLocation && (
+                <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                  <p className="text-sm text-green-800 font-medium">
+                    📍 已选择：{selectedLocation.address}
+                  </p>
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="h-full w-full bg-gray-100 rounded-lg flex items-center justify-center">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto"></div>
-                <p className="text-gray-600 mt-2 text-sm">地图加载中...</p>
-              </div>
-            </div>
-          )}
-          
-          {showMapHint && mapReady && (
-            <div className="absolute top-2 left-2 bg-white p-2 rounded-lg shadow-md text-xs text-gray-600 z-[1000] border border-gray-200 backdrop-blur-sm bg-white/95">
-              <div className="flex items-center space-x-1">
-                <span>💡</span>
-                <span>点击地图选择位置，或使用右上角"扩大地图"按钮</span>
-              </div>
-            </div>
-          )}
+          </div>
         </div>
       </div>
 
