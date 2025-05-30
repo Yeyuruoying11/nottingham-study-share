@@ -251,7 +251,7 @@ export default function AvatarSelector({ isOpen, onClose, onSelect, currentAvata
           <div className="px-6 pt-4 pb-2">
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
               <p className="text-sm text-blue-800">
-                💡 <strong>温馨提示：</strong>为了更好的使用体验，建议不要从其他网站下载头像。你可以通过{' '}
+                💡 <strong>温馨提示：</strong>为了避免再分发产品，请勿尝试从本网站获取头像并保存。你可以通过{' '}
                 <a 
                   href="https://peeps.ui8.net/" 
                   target="_blank" 
@@ -260,7 +260,7 @@ export default function AvatarSelector({ isOpen, onClose, onSelect, currentAvata
                 >
                   peeps.ui8.net
                 </a>
-                {' '}免费定制个性化头像。
+                {' '}这个链接自己定制免费的头像。
               </p>
             </div>
           </div>
