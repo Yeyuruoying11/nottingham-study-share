@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Plus, MessageCircle, ArrowLeft, Users, MoreVertical } from 'lucide-react';
 import Link from 'next/link';
@@ -18,7 +18,8 @@ import { Conversation } from '@/lib/types';
 import ChatInterface from '@/components/Chat/ChatInterface';
 import UserSearchModal from '@/components/Chat/UserSearchModal';
 
-export default function ChatPage() {
+// 单独的组件来处理搜索参数
+function ChatPageContent() {
   const { user } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -142,35 +143,16 @@ export default function ChatPage() {
     }
   };
 
-  // 如果未登录，显示登录提示
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <MessageCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">请先登录</h1>
-          <p className="text-gray-600 mb-6">您需要登录后才能使用聊天功能</p>
-          <Link 
-            href="/login"
-            className="bg-green-500 text-white px-6 py-3 rounded-xl hover:bg-green-600 transition-colors"
-          >
-            去登录
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   // 筛选会话
   const filteredConversations = conversations.filter(conversation => {
-    if (!searchQuery) return true;
+    if (!searchQuery || !user) return true;
     const otherUser = getOtherParticipant(conversation, user.uid);
     return otherUser?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
            conversation.lastMessage?.content.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
   // 如果选中了会话，显示聊天界面
-  if (selectedConversation) {
+  if (selectedConversation && user) {
     const otherUser = getOtherParticipant(selectedConversation, user.uid);
     if (!otherUser) {
       setSelectedConversation(null);
@@ -194,6 +176,8 @@ export default function ChatPage() {
 
   // 渲染会话项
   const renderConversationItem = (conversation: Conversation) => {
+    if (!user) return null;
+    
     const otherUser = getOtherParticipant(conversation, user.uid);
     if (!otherUser) return null;
 
@@ -290,6 +274,25 @@ export default function ChatPage() {
       </motion.div>
     );
   };
+
+  // 如果未登录，显示登录提示
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <MessageCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">请先登录</h1>
+          <p className="text-gray-600 mb-6">您需要登录后才能使用聊天功能</p>
+          <Link 
+            href="/login"
+            className="bg-green-500 text-white px-6 py-3 rounded-xl hover:bg-green-600 transition-colors"
+          >
+            去登录
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -432,5 +435,20 @@ export default function ChatPage() {
         onChatCreated={handleChatCreated}
       />
     </div>
+  );
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">加载聊天页面中...</p>
+        </div>
+      </div>
+    }>
+      <ChatPageContent />
+    </Suspense>
   );
 } 

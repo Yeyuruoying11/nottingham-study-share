@@ -45,6 +45,8 @@ const Popup = dynamic(
 
 interface TravelMapProps {
   className?: string;
+  onPostSelect?: (post: FirestorePost) => void;
+  selectedPostId?: string;
 }
 
 // 旅行地图组件
@@ -52,7 +54,7 @@ const TravelLeafletMap = React.memo(({
   travelPosts, 
   onPostClick 
 }: {
-  travelPosts: Post[];
+  travelPosts: FirestorePost[];
   onPostClick: (postId: string) => void;
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -100,7 +102,7 @@ const TravelLeafletMap = React.memo(({
         // 添加旅行帖子标记
         const markers: any[] = [];
         travelPosts.forEach((post) => {
-          if (post.location) {
+          if (post.location && post.id) {
             const marker = L.marker([post.location.latitude, post.location.longitude])
               .addTo(map)
               .bindPopup(`
@@ -117,7 +119,7 @@ const TravelLeafletMap = React.memo(({
               `);
             
             marker.on('click', () => {
-              onPostClick(post.id);
+              onPostClick(post.id!);
             });
             
             markers.push(marker);
@@ -128,7 +130,7 @@ const TravelLeafletMap = React.memo(({
 
         // 如果有标记，调整地图视图以包含所有标记
         if (markers.length > 0) {
-          const group = new L.featureGroup(markers);
+          const group = L.featureGroup(markers);
           map.fitBounds(group.getBounds().pad(0.1));
         }
 
@@ -158,9 +160,13 @@ const TravelLeafletMap = React.memo(({
 
 TravelLeafletMap.displayName = 'TravelLeafletMap';
 
-export default function TravelMap({ className = "" }: TravelMapProps = {}) {
+export default function TravelMap({ 
+  className = "", 
+  onPostSelect,
+  selectedPostId 
+}: TravelMapProps) {
   const router = useRouter();
-  const [travelPosts, setTravelPosts] = useState<Post[]>([]);
+  const [travelPosts, setTravelPosts] = useState<FirestorePost[]>([]);
   const [loading, setLoading] = useState(true);
   const [mapReady, setMapReady] = useState(false);
 
@@ -181,7 +187,7 @@ export default function TravelMap({ className = "" }: TravelMapProps = {}) {
     const fetchTravelPosts = async () => {
         setLoading(true);
       try {
-        const posts = await getPostsByCategoryFromFirestore('travel');
+        const posts = await getPostsByCategoryFromFirestore('旅行');
         setTravelPosts(posts);
       } catch (error) {
         console.error('Failed to fetch travel posts:', error);
@@ -196,6 +202,14 @@ export default function TravelMap({ className = "" }: TravelMapProps = {}) {
   }, [mapReady]);
 
   const handlePostClick = (postId: string) => {
+    // 如果提供了onPostSelect回调，使用它
+    if (onPostSelect) {
+      const selectedPost = travelPosts.find(post => post.id === postId);
+      if (selectedPost) {
+        onPostSelect(selectedPost);
+      }
+    }
+    // 同时导航到帖子页面
     router.push(`/post/${postId}`);
   };
 
