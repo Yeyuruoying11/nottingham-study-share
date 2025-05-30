@@ -222,6 +222,7 @@ export async function addPostToFirestore(postData: {
   school?: string; // 新增：学院ID
   department?: string; // 新增：专业ID
   course?: string; // 新增：课程ID
+  embedHtml?: string; // 新增：Google Maps嵌入HTML代码
   author: {
     name: string;
     avatar: string;
@@ -258,6 +259,11 @@ export async function addPostToFirestore(postData: {
     }
     if (postData.course && postData.course !== undefined && postData.course !== '' && postData.course.trim() !== '') {
       newPost.course = postData.course;
+    }
+    // 添加embedHtml字段的处理
+    if (postData.embedHtml && postData.embedHtml !== undefined && postData.embedHtml.trim() !== '') {
+      newPost.embedHtml = postData.embedHtml.trim();
+      console.log('✅ embedHtml 已添加到帖子数据');
     }
     
     console.log('📝 准备添加的帖子数据:', JSON.stringify(newPost, null, 2));
