@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Heart, MessageCircle, Share, Bookmark, MoreHorizontal, Send, Trash2, User, MessageSquare } from "lucide-react";
+import { ArrowLeft, Heart, MessageCircle, Share, Bookmark, MoreHorizontal, Send, Trash2, User, MessageSquare, MapPin } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { 
@@ -25,6 +25,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { isAdminUser } from "@/lib/admin-config";
 import { ThreeDPhotoCarousel } from "@/components/ui/three-d-carousel";
 import { getOrCreateConversation } from "@/lib/chat-service";
+import Google3DMapView from "@/components/Map/Google3DMapView";
 
 export default function PostDetailPage() {
   const params = useParams();
@@ -682,7 +683,11 @@ export default function PostDetailPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 顶部导航 */}
-      <header className="bg-white shadow-sm border-b sticky top-0 z-50">
+      <motion.header
+        initial={{ y: -50 }}
+        animate={{ y: 0 }}
+        className="bg-white shadow-sm sticky top-0 z-30"
+      >
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <button 
@@ -770,7 +775,7 @@ export default function PostDetailPage() {
             </div>
           </div>
         </div>
-      </header>
+      </motion.header>
 
       {/* 主要内容 */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -815,6 +820,29 @@ export default function PostDetailPage() {
               </h1>
             </div>
           </div>
+
+          {/* 租房帖子的3D地图视图 */}
+          {post.category === '租房' && post.location && (
+            <div className="mb-6">
+              <div className="px-6 py-4 border-b">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <MapPin className="w-5 h-5 mr-2 text-green-500" />
+                  建筑外观 - 3D视图
+                </h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  拖动地图查看不同角度，鼠标悬停自动旋转
+                </p>
+              </div>
+              <div className="px-6 pb-6">
+                <Google3DMapView
+                  address={post.location.address}
+                  latitude={post.location.latitude}
+                  longitude={post.location.longitude}
+                  height="h-[500px]"
+                />
+              </div>
+            </div>
+          )}
 
           {/* 作者信息和互动 */}
           <div className="p-6 border-b">

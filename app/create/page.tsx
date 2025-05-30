@@ -256,8 +256,8 @@ export default function CreatePostPage() {
       })
     }));
     
-    // 如果不是旅行分类，清除位置信息
-    if (categoryName !== "旅行") {
+    // 如果不是旅行或租房分类，清除位置信息
+    if (categoryName !== "旅行" && categoryName !== "租房") {
       setLocation(null);
       setFormData(prev => ({
         ...prev,
@@ -690,20 +690,21 @@ export default function CreatePostPage() {
                   </div>
                 </div>
 
-                {/* 位置选择器 - 仅在旅行分类时显示 */}
-                {formData.category === "旅行" && (
+                {/* 位置选择器 - 在旅行或租房分类时显示 */}
+                {(formData.category === "旅行" || formData.category === "租房") && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      旅行地点
+                      {formData.category === "旅行" ? "旅行地点" : "房屋位置"}
                     </label>
                     <LocationPicker
                       onLocationSelect={handleLocationSelect}
                       initialLocation={location || undefined}
-                      className="w-full"
                     />
-                    <p className="text-xs text-gray-500 mt-2">
-                      选择旅行地点，让其他同学在地图上找到你的分享
-                    </p>
+                    {formData.category === "租房" && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        设置准确的位置，租客可以在3D地图中查看建筑外观
+                      </p>
+                    )}
                   </div>
                 )}
 
