@@ -65,6 +65,7 @@ const categories = [
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeSearchQuery, setActiveSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("全部");
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [posts, setPosts] = useState<FirestorePost[]>([]);
@@ -148,11 +149,11 @@ export default function HomePage() {
 
   // 筛选帖子的逻辑（只处理搜索，分类筛选已经在loadPosts中处理）
   const filteredPosts = posts.filter(post => {
-    // 只进行搜索筛选，分类筛选已经在loadPosts中完成
-    const searchMatch = searchQuery === "" || 
-      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+    // 使用activeSearchQuery进行搜索筛选，而不是searchQuery
+    const searchMatch = activeSearchQuery === "" || 
+      post.title.toLowerCase().includes(activeSearchQuery.toLowerCase()) ||
+      post.content.toLowerCase().includes(activeSearchQuery.toLowerCase()) ||
+      post.tags.some(tag => tag.toLowerCase().includes(activeSearchQuery.toLowerCase()));
     
     return searchMatch;
   });
@@ -655,6 +656,24 @@ export default function HomePage() {
     );
   };
 
+  // 处理搜索
+  const handleSearch = () => {
+    setActiveSearchQuery(searchQuery.trim());
+  };
+
+  // 处理搜索输入框回车键
+  const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  // 清除搜索
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setActiveSearchQuery("");
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 导航栏 */}
@@ -679,17 +698,24 @@ export default function HomePage() {
             {/* 搜索栏 */}
             <div className="flex-1 max-w-lg mx-8">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <button
+                  onClick={handleSearch}
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-green-500 transition-colors z-10"
+                  title="搜索"
+                >
+                  <Search className="w-5 h-5" />
+                </button>
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={handleSearchKeyPress}
                   placeholder="搜索攻略、美食、生活经验..."
                   className="w-full pl-10 pr-10 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
                 {searchQuery && (
                   <button
-                    onClick={() => setSearchQuery("")}
+                    onClick={handleClearSearch}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                     title="清除搜索"
                   >
@@ -969,7 +995,7 @@ export default function HomePage() {
                 {selectedCategory !== "全部" ? `没有找到"${selectedCategory}"分类的帖子` : "没有找到相关帖子"}
               </h3>
               <p className="text-gray-600 mb-6">
-                {searchQuery ? `搜索"${searchQuery}"没有找到相关内容` : "该分类下暂时没有帖子"}
+                {activeSearchQuery ? `搜索"${activeSearchQuery}"没有找到相关内容` : "该分类下暂时没有帖子"}
               </p>
               <div className="space-x-4">
                 {selectedCategory !== "全部" && (
@@ -980,9 +1006,9 @@ export default function HomePage() {
                     查看全部帖子
                   </button>
                 )}
-                {searchQuery && (
+                {activeSearchQuery && (
                   <button
-                    onClick={() => setSearchQuery("")}
+                    onClick={handleClearSearch}
                     className="inline-block bg-blue-500 text-white px-6 py-3 rounded-xl hover:bg-blue-600 transition-colors"
                   >
                     清除搜索
@@ -999,7 +1025,7 @@ export default function HomePage() {
           </div>
         ) : (
           <motion.div 
-            key={selectedCategory + searchQuery} // 当分类或搜索改变时重新渲染动画
+            key={selectedCategory + activeSearchQuery} // 使用activeSearchQuery而不是searchQuery
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
