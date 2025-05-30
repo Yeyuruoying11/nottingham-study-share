@@ -15,7 +15,8 @@ import {
   arrayUnion,
   arrayRemove,
   increment,
-  Timestamp
+  Timestamp,
+  writeBatch
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from './firebase';
@@ -463,42 +464,54 @@ export async function markMessagesAsRead(
   userId: string
 ): Promise<void> {
   try {
-    // 获取会话中用户未读的消息
+    console.log('开始标记消息为已读:', { conversationId, userId });
+    
+    // 获取会话中的所有消息（避免使用 not-in 查询）
     const q = query(
       messagesCollection,
       where('conversationId', '==', conversationId),
-      where('readBy', 'not-in', [[userId]])
+      orderBy('timestamp', 'desc'),
+      limit(50) // 限制查询数量，只处理最近的50条消息
     );
     
     const querySnapshot = await getDocs(q);
     
+    // 在客户端过滤出未读消息
+    const unreadMessages = querySnapshot.docs.filter(messageDoc => {
+      const message = messageDoc.data() as ChatMessage;
+      const readBy = message.readBy || [];
+      return !readBy.includes(userId) && message.senderId !== userId; // 不标记自己发送的消息
+    });
+    
+    console.log(`找到 ${unreadMessages.length} 条未读消息`);
+    
+    if (unreadMessages.length === 0) {
+      console.log('没有未读消息需要标记');
+      return;
+    }
+    
     // 批量更新消息为已读
-    const updatePromises = querySnapshot.docs.map(messageDoc => {
-      return updateDoc(messageDoc.ref, {
+    const batch = writeBatch(db);
+    
+    unreadMessages.forEach(messageDoc => {
+      batch.update(messageDoc.ref, {
         readBy: arrayUnion(userId)
       });
     });
     
-    await Promise.all(updatePromises);
-    
-    // 重置会话的未读计数
+    // 同时更新会话的未读计数
     const conversationRef = doc(conversationsCollection, conversationId);
-    const conversationDoc = await getDoc(conversationRef);
+    batch.update(conversationRef, {
+      [`unreadCount.${userId}`]: 0
+    });
     
-    if (conversationDoc.exists()) {
-      const conversation = conversationDoc.data() as Conversation;
-      const updatedUnreadCount = { ...conversation.unreadCount };
-      updatedUnreadCount[userId] = 0;
-      
-      await updateDoc(conversationRef, {
-        unreadCount: updatedUnreadCount
-      });
-    }
+    await batch.commit();
     
     console.log('消息已标记为已读');
   } catch (error) {
     console.error('标记消息已读失败:', error);
-    throw error;
+    // 不再抛出错误，避免影响用户体验
+    // throw error;
   }
 }
 

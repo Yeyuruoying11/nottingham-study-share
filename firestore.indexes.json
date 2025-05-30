@@ -16,7 +16,7 @@
     },
     {
       "collectionGroup": "messages",
-      "queryScope": "COLLECTION", 
+      "queryScope": "COLLECTION",
       "fields": [
         {
           "fieldPath": "conversationId",
@@ -33,7 +33,7 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "author.uid",
+          "fieldPath": "category",
           "order": "ASCENDING"
         },
         {
@@ -47,7 +47,7 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "category",
+          "fieldPath": "author.uid",
           "order": "ASCENDING"
         },
         {
