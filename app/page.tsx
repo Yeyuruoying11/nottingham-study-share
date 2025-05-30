@@ -79,6 +79,9 @@ export default function HomePage() {
   const { user, logout } = useAuth();
   const router = useRouter();
 
+  // 添加防抖定时器的引用
+  const searchDebounceTimer = useRef<NodeJS.Timeout>();
+
   // 加载帖子数据
   useEffect(() => {
     const loadPosts = async () => {
@@ -155,9 +158,9 @@ export default function HomePage() {
         post.title.toLowerCase().includes(activeSearchQuery.toLowerCase()) ||
         post.content.toLowerCase().includes(activeSearchQuery.toLowerCase()) ||
         post.tags.some(tag => tag.toLowerCase().includes(activeSearchQuery.toLowerCase()));
-      
-      return searchMatch;
-    });
+    
+    return searchMatch;
+  });
   }, [posts, activeSearchQuery]); // 只在posts或activeSearchQuery变化时重新计算
 
   // 计算每个分类的帖子数量
@@ -489,9 +492,9 @@ export default function HomePage() {
 
     return (
         <motion.div
-          initial={{ opacity: 0, y: 50 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: index * 0.1 }}
+          transition={{ duration: 0.3, delay: index * 0.05 }} // 减少延迟时间从0.1秒到0.05秒
           className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 group cursor-pointer relative"
         onClick={handleCardClick}
         >
@@ -663,8 +666,27 @@ export default function HomePage() {
            prevProps.post.likes === nextProps.post.likes;
   });
 
-  // 处理搜索
+  // 处理搜索输入变化 - 添加防抖功能
+  const handleSearchInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    
+    // 清除之前的定时器
+    if (searchDebounceTimer.current) {
+      clearTimeout(searchDebounceTimer.current);
+    }
+    
+    // 设置新的定时器，延迟 300ms 执行搜索
+    searchDebounceTimer.current = setTimeout(() => {
+      setActiveSearchQuery(value.trim());
+    }, 300);
+  }, []);
+
+  // 处理搜索按钮点击 - 立即执行搜索
   const handleSearch = useCallback(() => {
+    if (searchDebounceTimer.current) {
+      clearTimeout(searchDebounceTimer.current);
+    }
     setActiveSearchQuery(searchQuery.trim());
   }, [searchQuery]);
 
@@ -677,13 +699,20 @@ export default function HomePage() {
 
   // 清除搜索
   const handleClearSearch = useCallback(() => {
+    if (searchDebounceTimer.current) {
+      clearTimeout(searchDebounceTimer.current);
+    }
     setSearchQuery("");
     setActiveSearchQuery("");
   }, []);
 
-  // 处理搜索输入变化
-  const handleSearchInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
+  // 清理定时器
+  useEffect(() => {
+    return () => {
+      if (searchDebounceTimer.current) {
+        clearTimeout(searchDebounceTimer.current);
+      }
+    };
   }, []);
 
   return (
@@ -743,32 +772,32 @@ export default function HomePage() {
                 <>
                   {/* 桌面端按钮 - 移动端隐藏 */}
                   <div className="hidden md:flex items-center space-x-4">
-                    {/* 发布按钮 */}
-                    <Link href="/create">
+                  {/* 发布按钮 */}
+                  <Link href="/create">
                       <button className="notts-green text-white px-5 py-2.5 rounded-xl font-medium flex items-center space-x-2 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95">
                         <Plus className="w-5 h-5" />
                         <span>发布</span>
-                      </button>
-                    </Link>
+                    </button>
+                  </Link>
 
-                    {/* 聊天按钮 */}
-                    <Link href="/chat">
+                  {/* 聊天按钮 */}
+                  <Link href="/chat">
                       <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all duration-200 relative hover:scale-105 active:scale-95">
                         <MessageCircle className="w-6 h-6" />
-                      </button>
-                    </Link>
+                    </button>
+                  </Link>
 
-                    {/* 通知按钮 */}
-                    <Link href="/notifications">
+                  {/* 通知按钮 */}
+                  <Link href="/notifications">
                       <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all duration-200 relative hover:scale-105 active:scale-95">
                         <Bell className="w-6 h-6" />
-                        {unreadNotificationCount > 0 && (
-                          <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
-                            {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
-                          </span>
-                        )}
-                      </button>
-                    </Link>
+                      {unreadNotificationCount > 0 && (
+                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
+                          {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                        </span>
+                      )}
+                    </button>
+                  </Link>
                   </div>
 
                   {/* 用户头像菜单 - 桌面端和移动端都显示 */}
@@ -1032,17 +1061,20 @@ export default function HomePage() {
             </div>
           </div>
         ) : (
-          <motion.div 
-            key={selectedCategory} // 只在分类变化时重新渲染，搜索时不重新渲染
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6"
-          >
-            {filteredPosts.map((post, index) => (
-              <PostCard key={post.id} post={post} index={index} />
-            ))}
-          </motion.div>
+          <AnimatePresence mode="wait">
+            <motion.div 
+              key={`${selectedCategory}-${activeSearchQuery}`} // 同时考虑分类和搜索词
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6"
+            >
+              {filteredPosts.map((post, index) => (
+                <PostCard key={post.id} post={post} index={index} />
+              ))}
+            </motion.div>
+          </AnimatePresence>
         )}
 
         {/* 加载更多 */}

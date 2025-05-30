@@ -720,7 +720,7 @@ export async function getCommentsWithRepliesFromFirestore(postId: string): Promi
     console.error('获取评论失败:', error);
     return [];
   }
-}
+} 
 
 // 根据用户ID获取用户发布的帖子
 export async function getUserPostsFromFirestore(userId: string): Promise<FirestorePost[]> {
