@@ -548,8 +548,18 @@ export default function CreatePostPage() {
         postData.course = finalCourseId;
       }
       // 添加Google Maps嵌入HTML代码（仅对租房分类）
-      if (formData.category === "租房" && formData.embedHtml && formData.embedHtml.trim() !== '') {
-        postData.embedHtml = formData.embedHtml.trim();
+      if (formData.category === "租房") {
+        console.log('🏡 处理租房分类数据...');
+        console.log('📍 embedHtml 值:', formData.embedHtml);
+        console.log('📍 embedHtml 是否为空:', !formData.embedHtml);
+        console.log('📍 embedHtml trim后是否为空:', !formData.embedHtml?.trim());
+        
+        if (formData.embedHtml && formData.embedHtml.trim() !== '') {
+          postData.embedHtml = formData.embedHtml.trim();
+          console.log('✅ embedHtml 已添加到 postData');
+        } else {
+          console.log('❌ embedHtml 为空，未添加到 postData');
+        }
       }
 
       console.log('🚀 发送到 Firestore 的数据:', JSON.stringify(postData, null, 2));
@@ -594,10 +604,16 @@ export default function CreatePostPage() {
   };
 
   const handleEmbedCodeChange = (embedCode: string) => {
-    setFormData(prev => ({
-      ...prev,
-      embedHtml: embedCode
-    }));
+    console.log('📝 Google Maps Embed Code 更新:', embedCode);
+    console.log('📝 Code 长度:', embedCode.length);
+    setFormData(prev => {
+      const newFormData = {
+        ...prev,
+        embedHtml: embedCode
+      };
+      console.log('📝 更新后的 formData.embedHtml:', newFormData.embedHtml);
+      return newFormData;
+    });
   };
 
   return (
