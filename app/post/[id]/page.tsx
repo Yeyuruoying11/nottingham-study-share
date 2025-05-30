@@ -1,31 +1,29 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
-import { ArrowLeft, Heart, MessageCircle, Share, Bookmark, MoreHorizontal, Send, Trash2, User, MessageSquare, MapPin } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, Heart, MessageCircle, Share, Bookmark, MoreVertical, Send, Trash2, User, MessageSquare, MapPin } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   getPostByIdFromFirestore, 
-  getCommentsByPostIdFromFirestore, 
   getCommentsWithRepliesFromFirestore,
-  deletePostFromFirestore,
-  deleteCommentFromFirestore,
   addCommentToFirestore,
   addReplyToCommentFirestore,
-  toggleCommentLike,
-  getUserCommentLikeStatus,
-  formatTimestamp,
+  deletePostFromFirestore,
+  deleteCommentFromFirestore,
   toggleLike,
+  toggleCommentLike,
   getUserLikeStatus,
+  formatTimestamp,
   type FirestorePost,
-  type FirestoreComment
+  type FirestoreComment 
 } from "@/lib/firestore-posts";
-import { useAuth } from "@/contexts/AuthContext";
 import { isAdminUser } from "@/lib/admin-config";
 import { ThreeDPhotoCarousel } from "@/components/ui/three-d-carousel";
-import { getOrCreateConversation } from "@/lib/chat-service";
 import GoogleStreetViewEmbed from '@/components/Map/GoogleStreetViewEmbed';
+import { getOrCreateConversation } from "@/lib/chat-service";
 
 export default function PostDetailPage() {
   const params = useParams();
@@ -723,7 +721,7 @@ export default function PostDetailPage() {
                   onClick={handleMenuClick}
                   className="p-2 text-gray-600 hover:bg-gray-100 rounded-xl transition-all"
                 >
-                  <MoreHorizontal className="w-5 h-5" />
+                  <MoreVertical className="w-5 h-5" />
                 </button>
 
                 {/* 下拉菜单 */}
@@ -835,11 +833,43 @@ export default function PostDetailPage() {
               </div>
               <div className="px-6 pb-6">
                 {post.embedHtml ? (
-                  // 使用存储的Google Maps嵌入HTML
-                  <div 
-                    className="w-full h-[500px] rounded-lg overflow-hidden"
-                    dangerouslySetInnerHTML={{ __html: post.embedHtml }}
-                  />
+                  // 解析嵌入HTML中的iframe src
+                  (() => {
+                    try {
+                      // 从HTML字符串中提取iframe的src属性
+                      const srcMatch = post.embedHtml.match(/src="([^"]+)"/);
+                      const iframeSrc = srcMatch ? srcMatch[1] : null;
+                      
+                      if (iframeSrc) {
+                        return (
+                          <iframe
+                            src={iframeSrc}
+                            width="100%"
+                            height="500"
+                            style={{ border: 0, borderRadius: '8px' }}
+                            allowFullScreen
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
+                            title="Google Street View"
+                          />
+                        );
+                      } else {
+                        // 如果无法解析，显示错误信息
+                        return (
+                          <div className="w-full h-[500px] bg-gray-100 rounded-lg flex items-center justify-center">
+                            <p className="text-gray-500">街景视图加载失败，请联系管理员</p>
+                          </div>
+                        );
+                      }
+                    } catch (error) {
+                      console.error('解析嵌入HTML失败:', error);
+                      return (
+                        <div className="w-full h-[500px] bg-gray-100 rounded-lg flex items-center justify-center">
+                          <p className="text-gray-500">街景视图解析失败</p>
+                        </div>
+                      );
+                    }
+                  })()
                 ) : (
                   // 备用方案：使用之前的组件（兼容旧数据）
                   <GoogleStreetViewEmbed

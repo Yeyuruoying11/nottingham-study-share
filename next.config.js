@@ -31,6 +31,31 @@ const nextConfig = {
       config.externals.push('firebase');
     }
     return config;
+  },
+  // 添加安全头部配置
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: `
+              default-src 'self';
+              script-src 'self' 'unsafe-eval' 'unsafe-inline' *.googleapis.com *.google.com;
+              style-src 'self' 'unsafe-inline' fonts.googleapis.com;
+              img-src 'self' data: blob: https:;
+              font-src 'self' fonts.gstatic.com;
+              connect-src 'self' *.googleapis.com *.firebaseio.com *.cloudfunctions.net wss:;
+              frame-src 'self' *.google.com maps.google.com;
+              object-src 'none';
+              base-uri 'self';
+              form-action 'self';
+            `.replace(/\s+/g, ' ').trim()
+          }
+        ]
+      }
+    ];
   }
 }
 
