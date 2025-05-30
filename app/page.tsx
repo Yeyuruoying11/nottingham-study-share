@@ -317,7 +317,7 @@ export default function HomePage() {
     setShowUserMenu(prev => !prev);
   }, []);
 
-  const PostCard = ({ post, index }: { post: any; index: number }) => {
+  const PostCard = React.memo(({ post, index }: { post: any; index: number }) => {
     const [isDeleting, setIsDeleting] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
     const [isLiking, setIsLiking] = useState(false);
@@ -656,7 +656,12 @@ export default function HomePage() {
           </div>
         </motion.div>
     );
-  };
+  }, (prevProps, nextProps) => {
+    // 只有当post的关键属性或index发生变化时才重新渲染
+    return prevProps.post.id === nextProps.post.id && 
+           prevProps.post.likes === nextProps.post.likes &&
+           prevProps.index === nextProps.index;
+  });
 
   // 处理搜索
   const handleSearch = useCallback(() => {
@@ -682,19 +687,19 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-3">
+    <div className="min-h-screen bg-gray-50 pt-3 pb-16 md:pb-0">
       {/* 导航栏 */}
       <motion.header
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        className="bg-white shadow-sm border border-gray-100 sticky top-3 z-50 mx-4 rounded-xl"
+        className="bg-white shadow-sm border border-gray-100 sticky top-3 z-50 mx-2 sm:mx-4 rounded-xl"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <div className="flex items-center justify-between h-20">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-3">
+          <div className="flex items-center justify-between h-16 sm:h-20">
             {/* Logo */}
-            <Link href="/" className="flex items-center space-x-3">
-              <div className="w-12 h-12 notts-green rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-white text-xl font-bold">N</span>
+            <Link href="/" className="flex items-center space-x-2 sm:space-x-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 notts-green rounded-xl flex items-center justify-center shadow-lg">
+                <span className="text-white text-lg sm:text-xl font-bold">N</span>
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-2xl font-bold text-gray-900">诺丁汉留学圈</h1>
@@ -703,14 +708,14 @@ export default function HomePage() {
             </Link>
 
             {/* 搜索栏 */}
-            <div className="flex-1 max-w-lg mx-8">
+            <div className="flex-1 max-w-lg mx-2 sm:mx-8">
               <div className="relative">
                 <button
                   onClick={handleSearch}
                   className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-green-500 transition-colors z-10"
                   title="搜索"
                 >
-                  <Search className="w-5 h-5" />
+                  <Search className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
                 <input
                   type="text"
@@ -718,7 +723,7 @@ export default function HomePage() {
                   onChange={handleSearchInputChange}
                   onKeyDown={handleSearchKeyPress}
                   placeholder="搜索攻略、美食、生活经验..."
-                  className="w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-base"
+                  className="w-full pl-8 sm:pl-10 pr-8 sm:pr-10 py-2 sm:py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base"
                 />
                 {searchQuery && (
                   <button
@@ -726,50 +731,51 @@ export default function HomePage() {
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                     title="清除搜索"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-3 h-3 sm:w-4 sm:h-4" />
                   </button>
                 )}
               </div>
             </div>
 
-            {/* 右侧按钮 */}
-            <div className="flex items-center space-x-4">
+            {/* 右侧按钮 - 桌面端和移动端分别处理 */}
+            <div className="flex items-center space-x-2 sm:space-x-4">
               {user ? (
                 <>
-                  {/* 发布按钮 */}
-                  <Link href="/create">
-                    <button className="notts-green text-white px-5 py-2.5 rounded-xl font-medium flex items-center space-x-2 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95">
-                      <Plus className="w-5 h-5" />
-                      <span className="hidden sm:inline">发布</span>
-                    </button>
-                  </Link>
+                  {/* 桌面端按钮 - 移动端隐藏 */}
+                  <div className="hidden md:flex items-center space-x-4">
+                    {/* 发布按钮 */}
+                    <Link href="/create">
+                      <button className="notts-green text-white px-5 py-2.5 rounded-xl font-medium flex items-center space-x-2 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95">
+                        <Plus className="w-5 h-5" />
+                        <span>发布</span>
+                      </button>
+                    </Link>
 
-                  {/* 聊天按钮 */}
-                  <Link href="/chat">
-                    <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all duration-200 relative hover:scale-105 active:scale-95">
-                      <MessageCircle className="w-6 h-6" />
-                      {/* 未读消息数量标识 - 这里可以后续添加实时未读计数 */}
-                      {/* <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span> */}
-                    </button>
-                  </Link>
+                    {/* 聊天按钮 */}
+                    <Link href="/chat">
+                      <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all duration-200 relative hover:scale-105 active:scale-95">
+                        <MessageCircle className="w-6 h-6" />
+                      </button>
+                    </Link>
 
-                  {/* 通知按钮 */}
-                  <Link href="/notifications">
-                    <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all duration-200 relative hover:scale-105 active:scale-95">
-                    <Bell className="w-6 h-6" />
-                      {unreadNotificationCount > 0 && (
-                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
-                          {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
-                        </span>
-                      )}
-                    </button>
-                  </Link>
+                    {/* 通知按钮 */}
+                    <Link href="/notifications">
+                      <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all duration-200 relative hover:scale-105 active:scale-95">
+                        <Bell className="w-6 h-6" />
+                        {unreadNotificationCount > 0 && (
+                          <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
+                            {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                          </span>
+                        )}
+                      </button>
+                    </Link>
+                  </div>
 
-                  {/* 用户头像菜单 */}
+                  {/* 用户头像菜单 - 桌面端和移动端都显示 */}
                   <div className="relative" ref={userMenuRef}>
                     <button
                       onClick={handleAvatarClick}
-                      className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-2 border-transparent hover:border-green-500 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                      className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-2 border-transparent hover:border-green-500 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                     >
                       {firestoreUserAvatar ? (
                         <img 
@@ -778,7 +784,7 @@ export default function HomePage() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <User className="w-5 h-5 text-gray-600" />
+                        <User className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
                       )}
                     </button>
 
@@ -830,26 +836,21 @@ export default function HomePage() {
                 </>
               ) : (
                 /* 未登录状态 */
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2 sm:space-x-3">
                   <Link 
                     href="/login"
-                    className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+                    className="text-gray-600 hover:text-gray-900 font-medium transition-colors text-sm sm:text-base"
                   >
                     登录
                   </Link>
                   <Link 
                     href="/login"
-                    className="notts-green text-white px-4 py-2 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all"
+                    className="notts-green text-white px-3 sm:px-4 py-2 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all text-sm sm:text-base"
                   >
                     注册
                   </Link>
                 </div>
               )}
-
-              {/* 移动端菜单按钮 */}
-              <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all duration-200 md:hidden hover:scale-105 active:scale-95">
-                <Menu className="w-5 h-5" />
-              </button>
             </div>
           </div>
         </div>
@@ -861,19 +862,19 @@ export default function HomePage() {
         animate={{ opacity: 1 }}
         className="bg-white border-b"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center space-x-6 py-5 overflow-x-auto">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+          <div className="flex items-center space-x-3 sm:space-x-6 py-3 sm:py-5 overflow-x-auto scrollbar-hide">
             <button
               onClick={() => setSelectedCategory("全部")}
-              className={`flex items-center space-x-3 px-6 py-3 rounded-full whitespace-nowrap transition-all duration-300 ${
+              className={`flex items-center space-x-2 sm:space-x-3 px-4 sm:px-6 py-2 sm:py-3 rounded-full whitespace-nowrap transition-all duration-300 ${
                 selectedCategory === "全部"
                   ? "bg-green-500 text-white shadow-lg"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
-              <span className="text-lg">🌟</span>
-              <span className="text-base font-medium">全部</span>
-              <span className={`text-sm px-2 py-1 rounded-full ${
+              <span className="text-base sm:text-lg">🌟</span>
+              <span className="text-sm sm:text-base font-medium">全部</span>
+              <span className={`text-xs sm:text-sm px-2 py-1 rounded-full ${
                 selectedCategory === "全部" 
                   ? "bg-white/20 text-white" 
                   : "bg-gray-200 text-gray-500"
@@ -885,11 +886,11 @@ export default function HomePage() {
             {/* 学习按钮 */}
             <button
               onClick={() => router.push("/academic")}
-              className={`flex items-center space-x-3 px-6 py-3 rounded-full whitespace-nowrap transition-all duration-300 bg-blue-100 text-blue-800 hover:shadow-md`}
+              className={`flex items-center space-x-2 sm:space-x-3 px-4 sm:px-6 py-2 sm:py-3 rounded-full whitespace-nowrap transition-all duration-300 bg-blue-100 text-blue-800 hover:shadow-md`}
             >
-              <span className="text-lg">📚</span>
-              <span className="text-base font-medium">学习</span>
-              <span className={`text-sm px-2 py-1 rounded-full bg-white/50 text-gray-600`}>
+              <span className="text-base sm:text-lg">📚</span>
+              <span className="text-sm sm:text-base font-medium">学习</span>
+              <span className={`text-xs sm:text-sm px-2 py-1 rounded-full bg-white/50 text-gray-600`}>
                 {getCategoryCount("学习")}
               </span>
             </button>
@@ -906,15 +907,15 @@ export default function HomePage() {
                     setSelectedCategory(category.name);
                   }
                 }}
-                className={`flex items-center space-x-3 px-6 py-3 rounded-full whitespace-nowrap transition-all duration-300 ${
+                className={`flex items-center space-x-2 sm:space-x-3 px-4 sm:px-6 py-2 sm:py-3 rounded-full whitespace-nowrap transition-all duration-300 ${
                   selectedCategory === category.name
                     ? "bg-green-500 text-white shadow-lg"
                     : `${category.color} hover:shadow-md`
                 }`}
               >
-                <span className="text-lg">{category.icon}</span>
-                <span className="text-base font-medium">{category.name}</span>
-                  <span className={`text-sm px-2 py-1 rounded-full ${
+                <span className="text-base sm:text-lg">{category.icon}</span>
+                <span className="text-sm sm:text-base font-medium">{category.name}</span>
+                  <span className={`text-xs sm:text-sm px-2 py-1 rounded-full ${
                     selectedCategory === category.name 
                       ? "bg-white/20 text-white" 
                       : "bg-white/50 text-gray-600"
@@ -948,7 +949,7 @@ export default function HomePage() {
       </div>
 
       {/* 主要内容区域 */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-8">
         {loading ? (
           <div className="flex justify-center items-center py-12">
             <div className="text-center">
@@ -1032,11 +1033,11 @@ export default function HomePage() {
           </div>
         ) : (
           <motion.div 
-            key={selectedCategory + activeSearchQuery} // 使用activeSearchQuery而不是searchQuery
+            key={selectedCategory} // 只在分类变化时重新渲染，搜索时不重新渲染
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6"
           >
             {filteredPosts.map((post, index) => (
               <PostCard key={post.id} post={post} index={index} />
@@ -1049,9 +1050,9 @@ export default function HomePage() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-center mt-12"
+            className="text-center mt-8 sm:mt-12"
           >
-            <button className="px-8 py-3 bg-white border-2 border-gray-200 text-gray-600 rounded-full hover:border-green-500 hover:text-green-600 transition-all duration-300 shadow-lg hover:shadow-xl">
+            <button className="px-6 sm:px-8 py-3 bg-white border-2 border-gray-200 text-gray-600 rounded-full hover:border-green-500 hover:text-green-600 transition-all duration-300 shadow-lg hover:shadow-xl text-sm sm:text-base">
               加载更多精彩内容
             </button>
           </motion.div>
@@ -1060,7 +1061,7 @@ export default function HomePage() {
 
       {/* 底部导航（移动端） */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t md:hidden">
-        <div className="flex items-center justify-around py-2">
+        <div className="flex items-center justify-around py-2 safe-area-pb">
           <button className="flex flex-col items-center space-y-1 p-2">
             <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
               <span className="text-white text-xs">🏠</span>
@@ -1095,12 +1096,19 @@ export default function HomePage() {
           </button>
           </Link>
           
-          <button className="flex flex-col items-center space-y-1 p-2">
+          <Link href="/notifications">
+          <button className="flex flex-col items-center space-y-1 p-2 relative">
             <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
               <Bell className="w-4 h-4 text-gray-600" />
             </div>
             <span className="text-xs text-gray-600">消息</span>
+            {unreadNotificationCount > 0 && (
+              <span className="absolute -top-1 right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
+                {unreadNotificationCount > 9 ? '9+' : unreadNotificationCount}
+              </span>
+            )}
           </button>
+          </Link>
         </div>
       </div>
     </div>
