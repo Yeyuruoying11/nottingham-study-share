@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Heart, MessageCircle, Share, Bookmark, MoreHorizontal, Send, Trash2 } from "lucide-react";
+import { ArrowLeft, Heart, MessageCircle, Share, Bookmark, MoreHorizontal, Send, Trash2, User, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { 
@@ -24,6 +24,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { isAdminUser } from "@/lib/admin-config";
 import { ThreeDPhotoCarousel } from "@/components/ui/three-d-carousel";
+import { getOrCreateConversation } from "@/lib/chat-service";
 
 export default function PostDetailPage() {
   const params = useParams();
@@ -48,6 +49,7 @@ export default function PostDetailPage() {
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
   const [commentLikeStates, setCommentLikeStates] = useState<Record<string, { liked: boolean; likes: number }>>({});
   const [firestoreUserAvatar, setFirestoreUserAvatar] = useState<string>(''); // 新增：用户头像状态
+  const [isStartingChat, setIsStartingChat] = useState(false); // 新增：聊天状态
   const menuRef = useRef<HTMLDivElement>(null);
 
   // 添加返回上一页的处理函数
@@ -272,6 +274,74 @@ export default function PostDetailPage() {
       window.removeEventListener('userProfileUpdated', handleProfileUpdate as EventListener);
     };
   }, [user]);
+
+  // 处理发起聊天
+  const handleStartChat = async () => {
+    if (!user || !post) {
+      alert('请先登录才能发起聊天');
+      return;
+    }
+
+    if (user.uid === post.author.uid) {
+      // 如果是自己的帖子，不显示聊天按钮（这个检查是额外的保险）
+      return;
+    }
+
+    setIsStartingChat(true);
+
+    try {
+      // 获取当前用户的Firestore信息
+      const { doc, getDoc } = await import('firebase/firestore');
+      const { db } = await import('@/lib/firebase');
+      
+      let currentUserName = user.displayName || '用户';
+      let currentUserAvatar = firestoreUserAvatar || user.photoURL || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face";
+      
+      try {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          currentUserName = userData.displayName || user.displayName || '用户';
+          currentUserAvatar = userData.photoURL || user.photoURL || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face";
+        }
+      } catch (error) {
+        console.warn('获取当前用户信息失败，使用默认信息:', error);
+      }
+
+      // 创建或查找会话
+      const conversationId = await getOrCreateConversation(
+        user.uid,
+        post.author.uid!,
+        currentUserName,
+        currentUserAvatar,
+        post.author.name,
+        post.author.avatar
+      );
+
+      console.log('会话创建/获取成功:', conversationId);
+      
+      // 跳转到聊天页面
+      router.push(`/chat?conversationId=${conversationId}`);
+      
+    } catch (error) {
+      console.error('创建聊天会话失败:', error);
+      
+      let errorMessage = '创建聊天失败，请重试';
+      if (error instanceof Error) {
+        if (error.message.includes('权限')) {
+          errorMessage = '权限不足，无法创建聊天会话';
+        } else if (error.message.includes('网络')) {
+          errorMessage = '网络连接问题，请检查网络后重试';
+        } else {
+          errorMessage = `创建聊天失败: ${error.message}`;
+        }
+      }
+      
+      alert(errorMessage);
+    } finally {
+      setIsStartingChat(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -748,17 +818,51 @@ export default function PostDetailPage() {
           <div className="p-6 border-b">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <img
-                  src={post.author.avatar}
-                  alt={post.author.name}
-                  className="w-12 h-12 rounded-full object-cover"
-                />
-                <div>
-                  <h3 className="font-semibold text-gray-900">{post.author.name}</h3>
+                {/* 可点击的头像，跳转到用户资料页面 */}
+                <Link 
+                  href={`/user/${post.author.uid}`}
+                  className="flex-shrink-0 hover:scale-105 transition-transform"
+                  title={`查看 ${post.author.name} 的资料`}
+                >
+                  <img
+                    src={post.author.avatar}
+                    alt={post.author.name}
+                    className="w-12 h-12 rounded-full object-cover border-2 border-transparent hover:border-green-300 transition-colors"
+                  />
+                </Link>
+                <div className="flex-1">
+                  <Link 
+                    href={`/user/${post.author.uid}`}
+                    className="hover:text-green-600 transition-colors"
+                  >
+                    <h3 className="font-semibold text-gray-900">{post.author.name}</h3>
+                  </Link>
                   <p className="text-sm text-gray-500">
                     {post.author.university} · {post.author.year} · {formatTimestamp(post.createdAt)}
                   </p>
                 </div>
+                
+                {/* 发起聊天按钮 - 只有当前用户不是作者时才显示 */}
+                {user && user.uid !== post.author.uid && (
+                  <button
+                    onClick={handleStartChat}
+                    disabled={isStartingChat}
+                    className="flex items-center space-x-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
+                    title="发起聊天"
+                  >
+                    {isStartingChat ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-sm">连接中...</span>
+                      </>
+                    ) : (
+                      <>
+                        <MessageSquare className="w-4 h-4" />
+                        <span className="text-sm">发起聊天</span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
               
               <div className="flex items-center space-x-6">
