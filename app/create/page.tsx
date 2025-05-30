@@ -33,6 +33,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { schools, departments, courses, getDepartmentsBySchool, getCoursesByDepartment } from "@/lib/academic-data";
+import GoogleMapsEmbedTutorial from '@/components/ui/GoogleMapsEmbedTutorial';
 
 // 可拖拽的图片项组件
 function SortableImageItem({ 
@@ -127,6 +128,7 @@ export default function CreatePostPage() {
   const [formData, setFormData] = useState({
     title: "",
     content: "",
+    fullContent: "",
     category: "",
     tags: [] as string[],
     image: "",
@@ -135,7 +137,8 @@ export default function CreatePostPage() {
     school: "",
     department: "",
     course: "",
-    customCourseId: ""
+    customCourseId: "",
+    embedHtml: ""
   });
   
   const [newTag, setNewTag] = useState("");
@@ -544,6 +547,10 @@ export default function CreatePostPage() {
       if (formData.course && formData.course !== undefined && finalCourseId !== '' && finalCourseId.trim() !== '') {
         postData.course = finalCourseId;
       }
+      // 添加Google Maps嵌入HTML代码（仅对租房分类）
+      if (formData.category === "租房" && formData.embedHtml && formData.embedHtml.trim() !== '') {
+        postData.embedHtml = formData.embedHtml.trim();
+      }
 
       console.log('🚀 发送到 Firestore 的数据:', JSON.stringify(postData, null, 2));
 
@@ -584,6 +591,13 @@ export default function CreatePostPage() {
       setIsSubmitting(false);
       setUploadProgress([]);
     }
+  };
+
+  const handleEmbedCodeChange = (embedCode: string) => {
+    setFormData(prev => ({
+      ...prev,
+      embedHtml: embedCode
+    }));
   };
 
   return (
@@ -702,10 +716,18 @@ export default function CreatePostPage() {
                     />
                     {formData.category === "租房" && (
                       <p className="text-xs text-gray-500 mt-1">
-                        设置准确的位置，租客可以在3D地图中查看建筑外观
-                    </p>
+                        设置准确的位置，租客可以查看房屋周围环境
+                      </p>
                     )}
                   </div>
+                )}
+
+                {/* Google Maps 嵌入教程 - 仅在租房分类时显示 */}
+                {formData.category === "租房" && (
+                  <GoogleMapsEmbedTutorial
+                    onEmbedCodeChange={handleEmbedCodeChange}
+                    embedCode={formData.embedHtml}
+                  />
                 )}
 
                 {/* 学术分类选择器 - 仅在学习分类时显示 */}

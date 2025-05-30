@@ -45,6 +45,7 @@ export interface FirestorePost {
   school?: string; // 学院ID
   department?: string; // 专业ID
   course?: string; // 课程ID
+  embedHtml?: string; // Google Maps嵌入HTML代码
 }
 
 export interface FirestoreComment {
@@ -94,7 +95,8 @@ export async function getAllPostsFromFirestore(): Promise<FirestorePost[]> {
         location: data.location, // 包含位置信息
         school: data.school,
         department: data.department,
-        course: data.course
+        course: data.course,
+        embedHtml: data.embedHtml // Google Maps嵌入HTML代码
       });
     });
     
@@ -138,7 +140,8 @@ export async function getPostsByCategoryFromFirestore(category: string): Promise
         location: data.location, // 包含位置信息
         school: data.school,
         department: data.department,
-        course: data.course
+        course: data.course,
+        embedHtml: data.embedHtml // Google Maps嵌入HTML代码
       });
     });
     
@@ -774,7 +777,8 @@ export async function getUserPostsFromFirestore(userId: string): Promise<Firesto
           location: data.location,
           school: data.school,
           department: data.department,
-          course: data.course
+          course: data.course,
+          embedHtml: data.embedHtml // Google Maps嵌入HTML代码
         });
       }
     });

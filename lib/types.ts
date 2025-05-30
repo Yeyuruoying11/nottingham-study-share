@@ -50,6 +50,8 @@ export interface Post {
   isPublished: boolean;
   // 地理位置信息（主要用于旅行帖子）
   location?: Location;
+  // Google Maps嵌入HTML代码（主要用于租房帖子）
+  embedHtml?: string;
   createdAt: Date;
   updatedAt: Date;
 }

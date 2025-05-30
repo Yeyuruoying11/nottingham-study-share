@@ -822,7 +822,7 @@ export default function PostDetailPage() {
           </div>
 
           {/* 租房帖子的街景视图 */}
-          {post.category === '租房' && post.location && (
+          {post.category === '租房' && (post.embedHtml || post.location) && (
             <div className="mb-6">
               <div className="px-6 py-4 border-b">
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center">
@@ -834,12 +834,21 @@ export default function PostDetailPage() {
                 </p>
               </div>
               <div className="px-6 pb-6">
-                <GoogleStreetViewEmbed
-                  address={post.location.address}
-                  latitude={post.location.latitude}
-                  longitude={post.location.longitude}
-                  height="h-[500px]"
-                />
+                {post.embedHtml ? (
+                  // 使用存储的Google Maps嵌入HTML
+                  <div 
+                    className="w-full h-[500px] rounded-lg overflow-hidden"
+                    dangerouslySetInnerHTML={{ __html: post.embedHtml }}
+                  />
+                ) : (
+                  // 备用方案：使用之前的组件（兼容旧数据）
+                  <GoogleStreetViewEmbed
+                    address={post.location?.address}
+                    latitude={post.location?.latitude}
+                    longitude={post.location?.longitude}
+                    height="h-[500px]"
+                  />
+                )}
               </div>
             </div>
           )}
