@@ -84,6 +84,8 @@ export default function HomePage() {
     const loadPosts = async () => {
       try {
         console.log('开始加载帖子，当前分类:', selectedCategory);
+        console.log('用户登录状态:', user ? '已登录' : '未登录');
+        
         setLoading(true);
         let postsData;
         
@@ -97,10 +99,23 @@ export default function HomePage() {
         }
         
         console.log('帖子加载成功，数量:', postsData.length);
+        console.log('帖子数据预览:', postsData.slice(0, 2));
         setPosts(postsData);
       } catch (error) {
-        console.error("加载帖子失败:", error);
+        console.error("=== 帖子加载失败 ===");
+        console.error("错误对象:", error);
         console.error("错误详情:", error instanceof Error ? error.message : String(error));
+        console.error("错误堆栈:", error instanceof Error ? error.stack : '无堆栈信息');
+        
+        // 尝试获取更多调试信息
+        try {
+          const { db } = await import('@/lib/firebase');
+          console.log('Firebase数据库实例:', db);
+          console.log('Firebase项目ID:', db.app.options.projectId);
+        } catch (firebaseError) {
+          console.error('Firebase初始化检查失败:', firebaseError);
+        }
+        
         setPosts([]);
       } finally {
         console.log('设置loading为false');
@@ -131,7 +146,7 @@ export default function HomePage() {
       window.removeEventListener('postUpdated', handlePostUpdate);
       window.removeEventListener('storage', handleStoragePostUpdate);
     };
-  }, [selectedCategory]); // 当选中的分类改变时重新加载帖子
+  }, [selectedCategory, user]); // 添加user依赖以在登录状态变化时重新加载
 
   // 加载分类统计信息
   useEffect(() => {
@@ -968,9 +983,16 @@ export default function HomePage() {
                     立即登录
                   </Link>
                   <button
-                    onClick={() => {
-                      console.log('=== 调试信息 ===');
+                    onClick={async () => {
+                      console.log('=== 详细调试信息 ===');
                       console.log('用户状态:', user ? '已登录' : '未登录');
+                      if (user) {
+                        console.log('用户信息:', {
+                          uid: user.uid,
+                          email: user.email,
+                          displayName: user.displayName
+                        });
+                      }
                       console.log('Firebase配置:', {
                         projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "guidin-db601",
                         authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "guidin-db601.firebaseapp.com"
@@ -978,11 +1000,26 @@ export default function HomePage() {
                       console.log('选中分类:', selectedCategory);
                       console.log('当前帖子数量:', posts.length);
                       console.log('加载状态:', loading);
-                      alert('调试信息已打印到控制台，请按F12查看');
+                      
+                      // 测试Firebase连接
+                      try {
+                        const { testFirebaseConnection } = await import("@/lib/firestore-posts");
+                        const result = await testFirebaseConnection();
+                        console.log('Firebase连接测试结果:', result);
+                        
+                        if (result.success) {
+                          alert(`Firebase连接正常！\n项目ID: ${result.projectId}\n文档数量: ${result.docsCount}\n\n详细信息已打印到控制台`);
+                        } else {
+                          alert(`Firebase连接失败！\n错误: ${result.error}\n\n请检查控制台获取详细信息`);
+                        }
+                      } catch (error) {
+                        console.error('测试Firebase连接时出错:', error);
+                        alert('无法测试Firebase连接，请检查控制台');
+                      }
                     }}
                     className="inline-block bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
                   >
-                    查看调试信息
+                    检测Firebase连接
                   </button>
                 </div>
               </div>

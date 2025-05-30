@@ -14,7 +14,8 @@ import {
   increment,
   arrayUnion,
   arrayRemove,
-  where
+  where,
+  limit
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { deleteImageFromStorage } from './firebase-storage';
@@ -847,3 +848,33 @@ export async function getUserPostsFromFirestore(userId: string): Promise<Firesto
     return [];
   }
 } 
+
+// 新增：测试Firebase连接
+export const testFirebaseConnection = async () => {
+  try {
+    console.log('=== Firebase连接测试开始 ===');
+    
+    // 测试数据库连接
+    const testQuery = query(
+      collection(db, 'posts'),
+      limit(1)
+    );
+    
+    const snapshot = await getDocs(testQuery);
+    console.log('Firebase连接成功');
+    console.log('查询结果:', snapshot.size, '个文档');
+    console.log('Firebase项目ID:', db.app.options.projectId);
+    
+    return {
+      success: true,
+      docsCount: snapshot.size,
+      projectId: db.app.options.projectId
+    };
+  } catch (error) {
+    console.error('Firebase连接测试失败:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error)
+    };
+  }
+}; 
