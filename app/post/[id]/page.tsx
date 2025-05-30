@@ -275,6 +275,17 @@ export default function PostDetailPage() {
     };
   }, [user]);
 
+  // 处理分享功能
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      alert("链接已复制到剪贴板");
+    } catch (error) {
+      console.error('复制链接失败:', error);
+      alert("复制失败，请手动复制链接");
+    }
+  };
+
   // 处理发起聊天
   const handleStartChat = async () => {
     if (!user || !post) {
@@ -693,7 +704,11 @@ export default function PostDetailPage() {
               >
                 <Bookmark className="w-5 h-5" />
               </button>
-              <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-xl transition-all">
+              <button
+                onClick={handleShare}
+                className="p-2 text-gray-600 hover:bg-gray-100 rounded-xl transition-all"
+                title="分享帖子"
+              >
                 <Share className="w-5 h-5" />
               </button>
               
@@ -723,19 +738,6 @@ export default function PostDetailPage() {
                     >
                       <span>🚨</span>
                       <span>举报</span>
-                    </button>
-                    
-                    <button
-                      onClick={() => {
-                        setShowMenu(false);
-                        // 这里可以添加复制链接功能
-                        navigator.clipboard.writeText(window.location.href);
-                        alert("链接已复制到剪贴板");
-                      }}
-                      className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
-                    >
-                      <span>🔗</span>
-                      <span>复制链接</span>
                     </button>
 
                     {/* 删除选项 - 只有作者才能看到 */}

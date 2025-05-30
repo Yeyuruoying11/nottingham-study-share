@@ -446,6 +446,22 @@ export default function HomePage() {
       setShowMenu(!showMenu);
     };
 
+    // 处理分享功能
+    const handleShare = async (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setShowMenu(false);
+      
+      try {
+        const postUrl = `${window.location.origin}/post/${post.id}`;
+        await navigator.clipboard.writeText(postUrl);
+        alert("帖子链接已复制到剪贴板");
+      } catch (error) {
+        console.error('复制链接失败:', error);
+        alert("复制失败，请手动复制链接");
+      }
+    };
+
     // 处理卡片点击导航到帖子详情
     const handleCardClick = () => {
       router.push(`/post/${post.id}`);
@@ -508,12 +524,7 @@ export default function HomePage() {
                 </button>
                 
                 <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setShowMenu(false);
-                    // 这里可以添加分享功能
-                  }}
+                  onClick={handleShare}
                   className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
                 >
                   <Share className="w-4 h-4" />
@@ -559,10 +570,10 @@ export default function HomePage() {
               />
             ) : (
               // 单张图片显示，确保总是有图片显示
-              <img
+            <img
                 src={post.image || post.images?.[0] || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=300&fit=crop"}
-                alt={post.title}
-                className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
+              alt={post.title}
+              className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
                 onError={(e) => {
                   // 图片加载失败时的回退处理
                   const target = e.target as HTMLImageElement;
@@ -570,11 +581,11 @@ export default function HomePage() {
                     target.src = "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=300&fit=crop";
                   }
                 }}
-              />
+            />
             )}
             {/* 只在单张图片时显示渐变层 */}
             {!(post.images && post.images.length > 1) && (
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             )}
           </div>
           
