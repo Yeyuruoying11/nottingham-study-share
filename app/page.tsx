@@ -657,10 +657,10 @@ export default function HomePage() {
         </motion.div>
     );
   }, (prevProps, nextProps) => {
-    // 只有当post的关键属性或index发生变化时才重新渲染
+    // 只比较关键属性，避免不必要的重新渲染
     return prevProps.post.id === nextProps.post.id && 
-           prevProps.post.likes === nextProps.post.likes &&
-           prevProps.index === nextProps.index;
+           prevProps.post.title === nextProps.post.title &&
+           prevProps.post.likes === nextProps.post.likes;
   });
 
   // 处理搜索
