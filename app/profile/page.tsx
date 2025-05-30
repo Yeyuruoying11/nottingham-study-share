@@ -67,11 +67,29 @@ export default function ProfilePage() {
     
     try {
       setLoadingPosts(true);
+      console.log('🔍 开始获取用户帖子, 用户ID:', user.uid);
+      console.log('🔍 用户邮箱:', user.email);
+      console.log('🔍 用户显示名:', user.displayName);
+      
       const posts = await getUserPostsFromFirestore(user.uid);
+      console.log('📊 获取到的帖子数量:', posts.length);
+      console.log('📝 帖子详情:', posts);
+      
+      // 检查帖子中的author.uid
+      posts.forEach((post, index) => {
+        console.log(`📝 帖子 ${index + 1}:`, {
+          id: post.id,
+          title: post.title,
+          authorName: post.author.name,
+          authorUid: post.author.uid,
+          matches: post.author.uid === user.uid
+        });
+      });
+      
       setUserPosts(posts);
       setCurrentPage(1); // 重置到第一页
     } catch (error) {
-      console.error('获取用户帖子失败:', error);
+      console.error('❌ 获取用户帖子失败:', error);
       setUserPosts([]);
     } finally {
       setLoadingPosts(false);

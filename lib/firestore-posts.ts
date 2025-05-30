@@ -725,40 +725,116 @@ export async function getCommentsWithRepliesFromFirestore(postId: string): Promi
 // 根据用户ID获取用户发布的帖子
 export async function getUserPostsFromFirestore(userId: string): Promise<FirestorePost[]> {
   try {
-    console.log(`正在获取用户 ${userId} 的帖子...`);
-    const postsRef = collection(db, 'posts');
-    const q = query(postsRef, where('author.uid', '==', userId), orderBy('createdAt', 'desc'));
-    const querySnapshot = await getDocs(q);
+    console.log(`🔍 正在获取用户 ${userId} 的帖子...`);
     
-    console.log(`用户 ${userId} 查询结果: ${querySnapshot.size} 个帖子`);
-    
-    const posts: FirestorePost[] = [];
-    querySnapshot.forEach((doc) => {
-      const data = doc.data();
-      posts.push({
-        id: doc.id,
-        title: data.title,
-        content: data.content,
-        fullContent: data.fullContent || data.content,
-        category: data.category,
-        tags: data.tags || [],
-        image: data.image || "",
-        images: data.images || [],
-        author: data.author,
-        likes: data.likes || 0,
-        likedBy: data.likedBy || [],
-        comments: data.comments || 0,
-        createdAt: data.createdAt,
-        location: data.location,
-        school: data.school,
-        department: data.department,
-        course: data.course
+    // 方法1：尝试使用where查询（需要复合索引）
+    try {
+      const postsRef = collection(db, 'posts');
+      const q = query(postsRef, where('author.uid', '==', userId), orderBy('createdAt', 'desc'));
+      const querySnapshot = await getDocs(q);
+      
+      console.log(`📊 where查询结果: ${querySnapshot.size} 个帖子`);
+      
+      const posts: FirestorePost[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        console.log(`📝 找到用户帖子: ${data.title}, 作者UID: ${data.author?.uid}`);
+        posts.push({
+          id: doc.id,
+          title: data.title,
+          content: data.content,
+          fullContent: data.fullContent || data.content,
+          category: data.category,
+          tags: data.tags || [],
+          image: data.image || "",
+          images: data.images || [],
+          author: data.author,
+          likes: data.likes || 0,
+          likedBy: data.likedBy || [],
+          comments: data.comments || 0,
+          createdAt: data.createdAt,
+          location: data.location,
+          school: data.school,
+          department: data.department,
+          course: data.course
+        });
       });
-    });
-    
-    return posts;
+      
+      return posts;
+    } catch (indexError) {
+      console.warn('⚠️ where查询失败，可能需要索引，尝试备用方案:', indexError);
+      
+      // 方法2：备用方案 - 获取所有帖子然后手动过滤
+      console.log('🔄 使用备用方案：获取所有帖子然后手动过滤...');
+      const postsRef = collection(db, 'posts');
+      const querySnapshot = await getDocs(postsRef);
+      
+      console.log(`📊 总共获取到 ${querySnapshot.size} 个帖子，开始手动过滤...`);
+      
+      const filteredPosts: FirestorePost[] = [];
+      let matchedCount = 0;
+      let noUidCount = 0;
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        
+        // 调试每个帖子的作者信息
+        if (!data.author?.uid) {
+          noUidCount++;
+          if (noUidCount <= 5) { // 只打印前5个没有uid的帖子，避免日志过多
+            console.log(`❌ 帖子 "${data.title}" 缺少 author.uid 字段:`, {
+              title: data.title,
+              authorName: data.author?.name,
+              authorUid: data.author?.uid,
+              hasAuthor: !!data.author
+            });
+          }
+        } else if (data.author.uid === userId) {
+          matchedCount++;
+          console.log(`✅ 找到匹配帖子 "${data.title}"`);
+          
+          filteredPosts.push({
+            id: doc.id,
+            title: data.title,
+            content: data.content,
+            fullContent: data.fullContent || data.content,
+            category: data.category,
+            tags: data.tags || [],
+            image: data.image || "",
+            images: data.images || [],
+            author: data.author,
+            likes: data.likes || 0,
+            likedBy: data.likedBy || [],
+            comments: data.comments || 0,
+            createdAt: data.createdAt,
+            location: data.location,
+            school: data.school,
+            department: data.department,
+            course: data.course
+          });
+        }
+      });
+      
+      console.log(`📈 过滤结果:`);
+      console.log(`   - 总帖子数: ${querySnapshot.size}`);
+      console.log(`   - 缺少 author.uid 的帖子: ${noUidCount}`);
+      console.log(`   - 匹配的帖子: ${matchedCount}`);
+      
+      // 手动按时间排序
+      filteredPosts.sort((a, b) => {
+        const timeA = a.createdAt instanceof Date ? a.createdAt.getTime() : 
+                     a.createdAt && typeof a.createdAt === 'object' && 'toDate' in a.createdAt ? 
+                     (a.createdAt as any).toDate().getTime() : 0;
+        const timeB = b.createdAt instanceof Date ? b.createdAt.getTime() : 
+                     b.createdAt && typeof b.createdAt === 'object' && 'toDate' in b.createdAt ? 
+                     (b.createdAt as any).toDate().getTime() : 0;
+        return timeB - timeA; // 降序排列
+      });
+      
+      return filteredPosts;
+    }
   } catch (error) {
-    console.error(`获取用户${userId}的帖子失败:`, error);
+    console.error(`❌ 获取用户${userId}的帖子失败:`, error);
     return [];
   }
 } 
