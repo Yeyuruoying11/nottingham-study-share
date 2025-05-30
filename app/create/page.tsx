@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Upload, X, Plus, Eye, GripVertical } from "lucide-react";
+import { ArrowLeft, Upload, X, Plus, Eye, GripVertical, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -1059,11 +1059,17 @@ export default function CreatePostPage() {
                   
                   <div className="flex items-center justify-between pt-4 border-t">
                     <div className="flex items-center space-x-2">
-                      <img
-                        src={firestoreUserAvatar}
-                        alt={firestoreUserName}
-                        className="w-8 h-8 rounded-full object-cover"
-                      />
+                      {firestoreUserAvatar ? (
+                        <img
+                          src={firestoreUserAvatar}
+                          alt={firestoreUserName}
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                          <User className="w-4 h-4 text-gray-600" />
+                        </div>
+                      )}
                       <span className="text-sm text-gray-600 font-medium">
                         {firestoreUserName}
                       </span>
