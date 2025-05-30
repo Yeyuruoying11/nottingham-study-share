@@ -31,7 +31,7 @@ export default function GoogleMapsEmbedTutorial({ onEmbedCodeChange, embedCode }
     },
     {
       title: "获取嵌入代码",
-      content: "在街景模式下，点击屏幕右上角的分享按钮，选择"嵌入地图"，复制完整的 HTML 代码",
+      content: "在街景模式下，点击屏幕右上角的分享按钮，选择\"嵌入地图\"，复制完整的 HTML 代码",
       image: "📋"
     }
   ];
