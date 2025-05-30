@@ -183,7 +183,7 @@ export default function LocationPicker({
     
     // 设置地图准备状态
     const timer = setTimeout(() => {
-      setMapReady(true);
+    setMapReady(true);
     }, 100);
 
     return () => clearTimeout(timer);
@@ -342,28 +342,28 @@ export default function LocationPicker({
 
         {/* 热门目的地 */}
         {!hidePopularDestinations && (
-          <div className="p-4 border-b border-gray-200">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">热门目的地</h3>
-            <div className="flex flex-wrap gap-2">
-              {popularDestinations.map((destination, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() => selectPopularDestination(destination)}
-                  className="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors"
-                >
-                  {destination.name}
-                </button>
-              ))}
-            </div>
+        <div className="p-4 border-b border-gray-200">
+          <h3 className="text-sm font-medium text-gray-700 mb-2">热门目的地</h3>
+          <div className="flex flex-wrap gap-2">
+            {popularDestinations.map((destination, index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={() => selectPopularDestination(destination)}
+                className="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors"
+              >
+                {destination.name}
+              </button>
+            ))}
           </div>
+        </div>
         )}
 
         {/* 地图显示 */}
         <div className="h-64 relative">
           {mapReady ? (
             <CompactLeafletMap
-              center={mapCenter}
+            center={mapCenter}
               selectedLocation={selectedLocation}
               onLocationSelect={handleLocationSelect}
             />

@@ -734,7 +734,7 @@ export default function CreatePostPage() {
                     {formData.category === "租房" && (
                       <p className="text-xs text-gray-500 mt-1">
                         设置准确的位置，租客可以查看房屋周围环境
-                      </p>
+                    </p>
                     )}
                   </div>
                 )}
@@ -984,7 +984,7 @@ export default function CreatePostPage() {
           </div>
 
           {/* 右边区域 - 根据分类显示不同内容 */}
-          <div className="space-y-6">
+            <div className="space-y-6">
             {/* Google Maps 教程 - 仅在租房分类时显示 */}
             {formData.category === "租房" && (
               <motion.div
@@ -1014,12 +1014,12 @@ export default function CreatePostPage() {
                 {imagePreviews.length > 0 && (
                   <div className="mb-4">
                     {imagePreviews.length === 1 ? (
-                      <div className="relative h-48">
-                        <img
+                  <div className="relative h-48">
+                    <img
                           src={imagePreviews[0]}
-                          alt="预览"
+                      alt="预览"
                           className="w-full h-full object-cover rounded-lg"
-                        />
+                    />
                       </div>
                     ) : (
                       <div className="grid grid-cols-2 gap-2">
@@ -1077,11 +1077,11 @@ export default function CreatePostPage() {
                   <div className="flex items-center justify-between pt-4 border-t">
                     <div className="flex items-center space-x-2">
                       {firestoreUserAvatar ? (
-                        <img
-                          src={firestoreUserAvatar}
-                          alt={firestoreUserName}
-                          className="w-8 h-8 rounded-full object-cover"
-                        />
+                      <img
+                        src={firestoreUserAvatar}
+                        alt={firestoreUserName}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
                       ) : (
                         <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
                           <User className="w-4 h-4 text-gray-600" />
@@ -1098,7 +1098,7 @@ export default function CreatePostPage() {
                   </div>
                 </div>
               </motion.div>
-            )}
+          )}
           </div>
         </div>
       </main>

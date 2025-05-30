@@ -179,7 +179,7 @@ export default function TravelMap({ className = "" }: TravelMapProps = {}) {
 
   useEffect(() => {
     const fetchTravelPosts = async () => {
-      setLoading(true);
+        setLoading(true);
       try {
         const posts = await getPostsByCategoryFromFirestore('travel');
         setTravelPosts(posts);
@@ -225,10 +225,10 @@ export default function TravelMap({ className = "" }: TravelMapProps = {}) {
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
               <p className="text-gray-600">加载地图中...</p>
-            </div>
-          </div>
+                      </div>
+                    </div>
         )}
-      </div>
+                </div>
       
       {travelPosts.length > 0 && (
         <div className="mt-4 text-sm text-gray-600">

@@ -34,7 +34,7 @@ export default function RootLayout({
       <body className={inter.className} suppressHydrationWarning={true}>
         <AuthContextProvider>
           <div suppressHydrationWarning={true}>
-            {children}
+          {children}
           </div>
         </AuthContextProvider>
       </body>

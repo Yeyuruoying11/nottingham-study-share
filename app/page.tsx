@@ -982,12 +982,12 @@ export default function HomePage() {
                   <p>3. 登录后可初始化测试数据</p>
                 </div>
                 <div className="mt-4 space-x-4">
-                  <Link 
-                    href="/login"
-                    className="inline-block bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
-                  >
-                    立即登录
-                  </Link>
+                    <Link 
+                      href="/login"
+                      className="inline-block bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
+                    >
+                      立即登录
+                    </Link>
                   <button
                     onClick={async () => {
                       console.log('=== 详细调试信息 ===');
@@ -1027,7 +1027,7 @@ export default function HomePage() {
                   >
                     检测Firebase连接
                   </button>
-                </div>
+                  </div>
               </div>
             </div>
           </div>

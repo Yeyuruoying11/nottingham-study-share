@@ -185,11 +185,11 @@ export default function FullscreenLocationPicker({
       
       // 延迟初始化地图
       const timer = setTimeout(() => {
-        setMapReady(true);
-        if (initialLocation) {
-          setSelectedLocation(initialLocation);
-          setMapCenter([initialLocation.latitude, initialLocation.longitude]);
-        }
+      setMapReady(true);
+      if (initialLocation) {
+        setSelectedLocation(initialLocation);
+        setMapCenter([initialLocation.latitude, initialLocation.longitude]);
+      }
       }, 200);
       
       return () => clearTimeout(timer);
