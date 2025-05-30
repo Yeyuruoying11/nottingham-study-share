@@ -61,123 +61,137 @@ export default function GoogleMapsEmbedTutorial({ onEmbedCodeChange, embedCode }
   };
 
   return (
-    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-            <MapPin className="w-5 h-5 text-white" />
+    <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 w-full">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center space-x-4">
+          <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
+            <MapPin className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h3 className="font-semibold text-blue-900">房屋街景展示</h3>
-            <p className="text-sm text-blue-600">
+            <h3 className="text-lg font-semibold text-blue-900">房屋街景展示</h3>
+            <p className="text-blue-600">
               添加Google街景让租客更好了解房屋环境
             </p>
           </div>
         </div>
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 transition-colors"
+          className="flex items-center space-x-2 text-blue-600 hover:text-blue-800 transition-colors px-4 py-2 rounded-lg hover:bg-blue-100"
         >
-          <span className="text-sm font-medium">
+          <span className="font-medium">
             {isExpanded ? '收起教程' : '查看教程'}
           </span>
           {isExpanded ? (
-            <ChevronUp className="w-4 h-4" />
+            <ChevronUp className="w-5 h-5" />
           ) : (
-            <ChevronDown className="w-4 h-4" />
+            <ChevronDown className="w-5 h-5" />
           )}
         </button>
       </div>
 
       {isExpanded && (
-        <div className="mt-6 space-y-6">
+        <div className="space-y-8">
           {/* 快捷按钮 */}
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-4">
             <button
               onClick={openGoogleMaps}
-              className="flex items-center space-x-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+              className="flex items-center space-x-3 bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors text-base font-medium"
             >
-              <ExternalLink className="w-4 h-4" />
+              <ExternalLink className="w-5 h-5" />
               <span>打开Google Maps</span>
             </button>
           </div>
 
-          {/* 步骤说明 */}
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-3">
-              <h4 className="font-semibold text-gray-900 mb-3">操作步骤：</h4>
+          {/* 步骤说明 - 改为单列全宽布局 */}
+          <div className="space-y-6">
+            <h4 className="text-xl font-semibold text-gray-900 mb-4">操作步骤：</h4>
+            
+            {/* 步骤列表 - 全宽显示 */}
+            <div className="space-y-4">
               {steps.map((step, index) => (
                 <div
                   key={index}
-                  className={`flex items-start space-x-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                  className={`flex items-start space-x-4 p-5 rounded-xl cursor-pointer transition-all ${
                     currentStep === index
-                      ? 'bg-blue-100 border border-blue-300'
-                      : 'bg-white border border-gray-200 hover:bg-gray-50'
+                      ? 'bg-blue-100 border-2 border-blue-300 shadow-md'
+                      : 'bg-white border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300'
                   }`}
                   onClick={() => setCurrentStep(index)}
                 >
-                  <div className="text-2xl">{step.image}</div>
+                  <div className="text-3xl">{step.image}</div>
                   <div className="flex-1">
-                    <h5 className="font-medium text-gray-900 text-sm">
+                    <h5 className="text-lg font-semibold text-gray-900 mb-2">
                       {index + 1}. {step.title}
                     </h5>
-                    <p className="text-xs text-gray-600 mt-1">
+                    <p className="text-gray-700 leading-relaxed">
                       {step.content}
                     </p>
                   </div>
                   {currentStep === index && (
-                    <CheckCircle className="w-5 h-5 text-blue-500" />
+                    <CheckCircle className="w-6 h-6 text-blue-500" />
                   )}
                 </div>
               ))}
             </div>
 
-            {/* 示例代码 */}
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
-              <h4 className="font-semibold text-gray-900 mb-3">示例嵌入代码：</h4>
-              <div className="bg-gray-50 rounded-lg p-3 text-xs font-mono text-gray-700 overflow-x-auto">
-                <div className="text-green-600">&lt;iframe</div>
-                <div className="ml-2">src="https://www.google.com/maps/embed?pb=..."</div>
-                <div className="ml-2">width="600"</div>
-                <div className="ml-2">height="450"</div>
-                <div className="ml-2">style="border:0;"</div>
-                <div className="ml-2">allowfullscreen=""</div>
-                <div className="ml-2">loading="lazy"</div>
-                <div className="ml-2">referrerpolicy="no-referrer-when-downgrade"</div>
-                <div className="text-green-600">&gt;&lt;/iframe&gt;</div>
+            {/* 示例代码 - 全宽显示 */}
+            <div className="bg-white rounded-xl border-2 border-gray-200 p-6">
+              <h4 className="text-lg font-semibold text-gray-900 mb-4">示例嵌入代码：</h4>
+              <div className="bg-gray-900 rounded-lg p-4 text-sm font-mono text-green-400 overflow-x-auto">
+                <div className="text-blue-400">&lt;iframe</div>
+                <div className="ml-4 text-yellow-300">src="https://www.google.com/maps/embed?pb=..."</div>
+                <div className="ml-4 text-yellow-300">width="600"</div>
+                <div className="ml-4 text-yellow-300">height="450"</div>
+                <div className="ml-4 text-yellow-300">style="border:0;"</div>
+                <div className="ml-4 text-yellow-300">allowfullscreen=""</div>
+                <div className="ml-4 text-yellow-300">loading="lazy"</div>
+                <div className="ml-4 text-yellow-300">referrerpolicy="no-referrer-when-downgrade"</div>
+                <div className="text-blue-400">&gt;&lt;/iframe&gt;</div>
               </div>
               
-              <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <p className="text-xs text-yellow-800">
-                  <strong>提示：</strong> 确保复制完整的 &lt;iframe&gt; 标签，包括所有属性
+              <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-800">
+                  <strong>💡 提示：</strong> 确保复制完整的 &lt;iframe&gt; 标签，包括所有属性
                 </p>
               </div>
             </div>
           </div>
 
           {/* 重要提示 */}
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-            <h4 className="font-semibold text-amber-900 mb-2">📋 重要提示：</h4>
-            <ul className="text-sm text-amber-800 space-y-1">
-              <li>• 确保选择房屋的最佳展示角度</li>
-              <li>• 建议选择白天光线充足的街景</li>
-              <li>• 可以多次调整角度直到满意</li>
-              <li>• 嵌入代码完全免费，无需API密钥</li>
+          <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-6">
+            <h4 className="text-lg font-semibold text-amber-900 mb-3">📋 重要提示：</h4>
+            <ul className="text-amber-800 space-y-2">
+              <li className="flex items-start space-x-2">
+                <span className="text-amber-600">•</span>
+                <span>确保选择房屋的最佳展示角度</span>
+              </li>
+              <li className="flex items-start space-x-2">
+                <span className="text-amber-600">•</span>
+                <span>建议选择白天光线充足的街景</span>
+              </li>
+              <li className="flex items-start space-x-2">
+                <span className="text-amber-600">•</span>
+                <span>可以多次调整角度直到满意</span>
+              </li>
+              <li className="flex items-start space-x-2">
+                <span className="text-amber-600">•</span>
+                <span>嵌入代码完全免费，无需API密钥</span>
+              </li>
             </ul>
           </div>
         </div>
       )}
 
       {/* 嵌入代码输入框 */}
-      <div className="mt-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+      <div className="mt-6">
+        <label className="block text-lg font-medium text-gray-700 mb-3">
           Google Maps 嵌入代码 *
         </label>
         <textarea
           value={embedCode}
           onChange={handleEmbedCodeChange}
           placeholder="请粘贴从Google Maps获取的完整 <iframe> 嵌入代码..."
-          className={`w-full h-32 p-3 border rounded-lg font-mono text-sm resize-none focus:outline-none focus:ring-2 transition-colors ${
+          className={`w-full h-40 p-4 border-2 rounded-xl font-mono text-sm resize-none focus:outline-none focus:ring-2 transition-colors ${
             embedCode && isValidEmbed
               ? 'border-green-300 focus:ring-green-500 bg-green-50'
               : embedCode && !isValidEmbed
@@ -188,20 +202,20 @@ export default function GoogleMapsEmbedTutorial({ onEmbedCodeChange, embedCode }
         
         {/* 验证状态 */}
         {embedCode && (
-          <div className={`mt-2 flex items-center space-x-2 text-sm ${
+          <div className={`mt-3 flex items-center space-x-2 ${
             isValidEmbed ? 'text-green-600' : 'text-red-600'
           }`}>
             {isValidEmbed ? (
               <>
-                <CheckCircle className="w-4 h-4" />
-                <span>✓ 有效的Google Maps嵌入代码</span>
+                <CheckCircle className="w-5 h-5" />
+                <span className="font-medium">✓ 有效的Google Maps嵌入代码</span>
               </>
             ) : (
               <>
-                <div className="w-4 h-4 border-2 border-red-500 rounded-full flex items-center justify-center">
-                  <span className="text-xs">!</span>
+                <div className="w-5 h-5 border-2 border-red-500 rounded-full flex items-center justify-center">
+                  <span className="text-xs font-bold">!</span>
                 </div>
-                <span>请粘贴有效的Google Maps &lt;iframe&gt; 嵌入代码</span>
+                <span className="font-medium">请粘贴有效的Google Maps &lt;iframe&gt; 嵌入代码</span>
               </>
             )}
           </div>
@@ -209,10 +223,10 @@ export default function GoogleMapsEmbedTutorial({ onEmbedCodeChange, embedCode }
 
         {/* 预览 */}
         {embedCode && isValidEmbed && (
-          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-            <h4 className="font-medium text-gray-900 mb-2">预览效果：</h4>
+          <div className="mt-6 p-6 bg-gray-50 rounded-xl">
+            <h4 className="text-lg font-medium text-gray-900 mb-4">预览效果：</h4>
             <div 
-              className="w-full h-64 rounded-lg overflow-hidden"
+              className="w-full h-80 rounded-lg overflow-hidden border-2 border-gray-200"
               dangerouslySetInnerHTML={{ __html: embedCode }}
             />
           </div>
