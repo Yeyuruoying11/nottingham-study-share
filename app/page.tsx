@@ -676,9 +676,15 @@ export default function HomePage() {
            prevProps.index === nextProps.index; // 添加index比较
   });
 
-  // 处理搜索输入变化 - 只更新输入框的值，不触发搜索
+  // 处理搜索输入变化 - 当输入框为空时自动清除搜索
   const handleSearchInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
+    const newValue = e.target.value;
+    setSearchQuery(newValue);
+    
+    // 如果搜索框被清空，自动清除搜索结果
+    if (newValue.trim() === '') {
+      setActiveSearchQuery('');
+    }
   }, []);
 
   // 处理搜索按钮点击 - 执行搜索
