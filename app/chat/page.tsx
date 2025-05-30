@@ -253,17 +253,17 @@ export default function ChatPage() {
 
         {/* 更多选项按钮 */}
         <div className="relative delete-menu-container">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
               setShowDeleteMenu(showDeleteMenu === conversation.id ? null : (conversation.id || null));
-            }}
+          }}
             className={`p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full ml-2 transition-colors ${
               showDeleteMenu === conversation.id || isDeleting ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
             }`}
-          >
-            <MoreVertical className="w-4 h-4" />
-          </button>
+        >
+          <MoreVertical className="w-4 h-4" />
+        </button>
 
           {/* 删除菜单 */}
           {showDeleteMenu === conversation.id && (

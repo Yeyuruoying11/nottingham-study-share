@@ -25,7 +25,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { isAdminUser } from "@/lib/admin-config";
 import { ThreeDPhotoCarousel } from "@/components/ui/three-d-carousel";
 import { getOrCreateConversation } from "@/lib/chat-service";
-import Google3DMapView from "@/components/Map/Google3DMapView";
+import GoogleStreetViewEmbed from '@/components/Map/GoogleStreetViewEmbed';
 
 export default function PostDetailPage() {
   const params = useParams();
@@ -821,20 +821,20 @@ export default function PostDetailPage() {
             </div>
           </div>
 
-          {/* 租房帖子的3D地图视图 */}
+          {/* 租房帖子的街景视图 */}
           {post.category === '租房' && post.location && (
             <div className="mb-6">
               <div className="px-6 py-4 border-b">
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <MapPin className="w-5 h-5 mr-2 text-green-500" />
-                  建筑外观 - 3D视图
+                  <MapPin className="w-5 h-5 mr-2 text-blue-500" />
+                  建筑外观 - 街景视图
                 </h3>
                 <p className="text-sm text-gray-600 mt-1">
-                  拖动地图查看不同角度，鼠标悬停自动旋转
+                  360° 街景视图，拖动查看房屋周围环境
                 </p>
               </div>
               <div className="px-6 pb-6">
-                <Google3DMapView
+                <GoogleStreetViewEmbed
                   address={post.location.address}
                   latitude={post.location.latitude}
                   longitude={post.location.longitude}

@@ -503,7 +503,7 @@ export async function markMessagesAsRead(
     const conversationRef = doc(conversationsCollection, conversationId);
     batch.update(conversationRef, {
       [`unreadCount.${userId}`]: 0
-    });
+      });
     
     await batch.commit();
     

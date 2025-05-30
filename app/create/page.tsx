@@ -703,7 +703,7 @@ export default function CreatePostPage() {
                     {formData.category === "租房" && (
                       <p className="text-xs text-gray-500 mt-1">
                         设置准确的位置，租客可以在3D地图中查看建筑外观
-                      </p>
+                    </p>
                     )}
                   </div>
                 )}
