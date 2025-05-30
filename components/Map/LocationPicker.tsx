@@ -64,6 +64,7 @@ export default function LocationPicker({ onLocationSelect, initialLocation, clas
   const [toastMessage, setToastMessage] = useState("");
   const [isSelecting, setIsSelecting] = useState(false); // 防重复触发
   const [showMapHint, setShowMapHint] = useState(true); // 控制地图提示显示
+  const [mapKey, setMapKey] = useState(`map-${Date.now()}`); // 新增：地图key来强制重新渲染
 
   useEffect(() => {
     setMapReady(true);
@@ -73,6 +74,8 @@ export default function LocationPicker({ onLocationSelect, initialLocation, clas
     if (initialLocation) {
       setSelectedLocation(initialLocation);
       setMapCenter([initialLocation.latitude, initialLocation.longitude]);
+      // 强制重新渲染地图以避免初始化错误
+      setMapKey(`map-${Date.now()}`);
     }
   }, [initialLocation]);
 
@@ -252,6 +255,7 @@ export default function LocationPicker({ onLocationSelect, initialLocation, clas
             zoom={selectedLocation ? 10 : 6}
             style={{ height: '100%', width: '100%' }}
             className="z-0"
+            key={mapKey}
           >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
