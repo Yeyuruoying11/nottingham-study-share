@@ -675,14 +675,14 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pt-3">
       {/* 导航栏 */}
       <motion.header
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        className="bg-white shadow-sm border-b sticky top-0 z-50"
+        className="bg-white shadow-sm border border-gray-100 sticky top-3 z-50 mb-3 mx-4 rounded-xl"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-3">
