@@ -10,7 +10,6 @@ import Toast from '@/components/ui/Toast';
 // 修复Leaflet图标路径问题
 const fixLeafletIcons = () => {
   if (typeof window !== 'undefined') {
-    // 动态导入Leaflet并修复图标路径
     import('leaflet').then((L) => {
       delete (L.Icon.Default.prototype as any)._getIconUrl;
       L.Icon.Default.mergeOptions({
@@ -22,40 +21,12 @@ const fixLeafletIcons = () => {
   }
 };
 
-// 动态导入地图组件
-const MapContainer = dynamic(
-  () => import('react-leaflet').then((mod) => mod.MapContainer),
-  { ssr: false }
-);
-
-const TileLayer = dynamic(
-  () => import('react-leaflet').then((mod) => mod.TileLayer),
-  { ssr: false }
-);
-
-const Marker = dynamic(
-  () => import('react-leaflet').then((mod) => mod.Marker),
-  { ssr: false }
-);
-
-// 动态导入MapCenterController
-const MapCenterController = dynamic(
-  () => import('./MapCenterController'),
-  { ssr: false }
-);
-
 interface LocationPickerProps {
   onLocationSelect: (location: Location | null) => void;
   initialLocation?: Location;
   className?: string;
-  hidePopularDestinations?: boolean; // 新增：是否隐藏热门目的地
+  hidePopularDestinations?: boolean;
 }
-
-// 地图点击处理组件 - 使用动态导入包装
-const MapClickHandler = dynamic(
-  () => import('./MapClickHandler'),
-  { ssr: false }
-);
 
 // 常用旅行目的地
 const popularDestinations = [
@@ -190,6 +161,7 @@ CompactLeafletMap.displayName = 'CompactLeafletMap';
 export default function LocationPicker({ 
   onLocationSelect, 
   initialLocation,
+  className = "",
   hidePopularDestinations = false 
 }: LocationPickerProps) {
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(initialLocation || null);
@@ -348,16 +320,6 @@ export default function LocationPicker({
               <Search className="w-4 h-4" />
               <span>{isSearching ? '搜索中...' : '搜索'}</span>
             </button>
-            {/* 新增：扩大地图按钮 */}
-            <button
-              type="button"
-              onClick={() => setShowFullscreenPicker(true)}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center space-x-2"
-              title="在大地图中选择位置"
-            >
-              <Maximize2 className="w-4 h-4" />
-              <span className="hidden sm:inline">扩大地图</span>
-            </button>
           </div>
 
           {/* 当前选中的位置 */}
@@ -397,24 +359,39 @@ export default function LocationPicker({
           </div>
         )}
 
-        {/* 地图 - 暂时使用备用方案避免初始化错误 */}
+        {/* 地图显示 */}
         <div className="h-64 relative">
-          <div className="h-full w-full bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
-            <div className="text-center p-6">
-              <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-700 mb-2">位置选择</h3>
-              <p className="text-sm text-gray-500 mb-4">
-                点击下方热门目的地或使用搜索功能选择位置
-              </p>
-              {selectedLocation && (
-                <div className="bg-green-50 p-3 rounded-lg border border-green-200">
-                  <p className="text-sm text-green-800 font-medium">
-                    📍 已选择：{selectedLocation.address}
-                  </p>
-                </div>
-              )}
+          {mapReady ? (
+            <CompactLeafletMap
+              center={mapCenter}
+              selectedLocation={selectedLocation}
+              onLocationSelect={handleLocationSelect}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full bg-gray-100">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto mb-2"></div>
+                <p className="text-sm text-gray-600">加载地图中...</p>
+              </div>
             </div>
-          </div>
+          )}
+          
+          {/* 全屏按钮 */}
+          <button
+            type="button"
+            onClick={() => setShowFullscreenPicker(true)}
+            className="absolute top-3 right-3 p-2 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow z-[1000]"
+            title="全屏查看地图"
+          >
+            <Maximize2 className="w-4 h-4 text-gray-600" />
+          </button>
+
+          {/* 地图提示 */}
+          {!selectedLocation && showMapHint && (
+            <div className="absolute bottom-3 left-3 bg-white p-2 rounded-lg shadow-md text-xs text-gray-600 z-[1000] backdrop-blur-sm bg-white/95">
+              💡 点击地图选择位置或使用搜索功能
+            </div>
+          )}
         </div>
       </div>
 
