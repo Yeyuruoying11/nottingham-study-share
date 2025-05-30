@@ -79,9 +79,6 @@ export default function HomePage() {
   const { user, logout } = useAuth();
   const router = useRouter();
 
-  // 添加防抖定时器的引用
-  const searchDebounceTimer = useRef<NodeJS.Timeout>();
-
   // 加载帖子数据
   useEffect(() => {
     const loadPosts = async () => {
@@ -666,27 +663,13 @@ export default function HomePage() {
            prevProps.post.likes === nextProps.post.likes;
   });
 
-  // 处理搜索输入变化 - 添加防抖功能
+  // 处理搜索输入变化 - 只更新输入框的值，不触发搜索
   const handleSearchInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchQuery(value);
-    
-    // 清除之前的定时器
-    if (searchDebounceTimer.current) {
-      clearTimeout(searchDebounceTimer.current);
-    }
-    
-    // 设置新的定时器，延迟 300ms 执行搜索
-    searchDebounceTimer.current = setTimeout(() => {
-      setActiveSearchQuery(value.trim());
-    }, 300);
+    setSearchQuery(e.target.value);
   }, []);
 
-  // 处理搜索按钮点击 - 立即执行搜索
+  // 处理搜索按钮点击 - 执行搜索
   const handleSearch = useCallback(() => {
-    if (searchDebounceTimer.current) {
-      clearTimeout(searchDebounceTimer.current);
-    }
     setActiveSearchQuery(searchQuery.trim());
   }, [searchQuery]);
 
@@ -699,20 +682,8 @@ export default function HomePage() {
 
   // 清除搜索
   const handleClearSearch = useCallback(() => {
-    if (searchDebounceTimer.current) {
-      clearTimeout(searchDebounceTimer.current);
-    }
     setSearchQuery("");
     setActiveSearchQuery("");
-  }, []);
-
-  // 清理定时器
-  useEffect(() => {
-    return () => {
-      if (searchDebounceTimer.current) {
-        clearTimeout(searchDebounceTimer.current);
-      }
-    };
   }, []);
 
   return (
@@ -1062,18 +1033,18 @@ export default function HomePage() {
           </div>
         ) : (
           <AnimatePresence mode="wait">
-            <motion.div 
+          <motion.div 
               key={`${selectedCategory}-${activeSearchQuery}`} // 同时考虑分类和搜索词
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6"
-            >
-              {filteredPosts.map((post, index) => (
-                <PostCard key={post.id} post={post} index={index} />
-              ))}
-            </motion.div>
+            transition={{ duration: 0.3 }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6"
+          >
+            {filteredPosts.map((post, index) => (
+              <PostCard key={post.id} post={post} index={index} />
+            ))}
+          </motion.div>
           </AnimatePresence>
         )}
 
