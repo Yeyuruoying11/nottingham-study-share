@@ -31,7 +31,7 @@ export default function RootLayout({
       <head>
         <meta name="permissions-policy" content="accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()" />
       </head>
-      <body className={inter.className}>
+      <body className={inter.className} suppressHydrationWarning={true}>
         <AuthContextProvider>
           <div suppressHydrationWarning={true}>
             {children}
