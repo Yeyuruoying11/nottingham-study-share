@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Plus, Heart, MessageCircle, Share, Bookmark, User, Bell, Menu, LogOut, Trash2, MoreVertical, X, Crown, ChevronDown, Eye, MapPin } from "lucide-react";
 import { InfiniteMovingCards } from "@/components/ui/infinite-moving-cards";
@@ -148,15 +148,17 @@ export default function HomePage() {
   }, [posts]); // 当帖子数据变化时更新统计
 
   // 筛选帖子的逻辑（只处理搜索，分类筛选已经在loadPosts中处理）
-  const filteredPosts = posts.filter(post => {
-    // 使用activeSearchQuery进行搜索筛选，而不是searchQuery
-    const searchMatch = activeSearchQuery === "" || 
-      post.title.toLowerCase().includes(activeSearchQuery.toLowerCase()) ||
-      post.content.toLowerCase().includes(activeSearchQuery.toLowerCase()) ||
-      post.tags.some(tag => tag.toLowerCase().includes(activeSearchQuery.toLowerCase()));
-    
-    return searchMatch;
-  });
+  const filteredPosts = useMemo(() => {
+    return posts.filter(post => {
+      // 使用activeSearchQuery进行搜索筛选，而不是searchQuery
+      const searchMatch = activeSearchQuery === "" || 
+        post.title.toLowerCase().includes(activeSearchQuery.toLowerCase()) ||
+        post.content.toLowerCase().includes(activeSearchQuery.toLowerCase()) ||
+        post.tags.some(tag => tag.toLowerCase().includes(activeSearchQuery.toLowerCase()));
+      
+      return searchMatch;
+    });
+  }, [posts, activeSearchQuery]); // 只在posts或activeSearchQuery变化时重新计算
 
   // 计算每个分类的帖子数量
   const getCategoryCount = (categoryName: string) => {
@@ -657,22 +659,27 @@ export default function HomePage() {
   };
 
   // 处理搜索
-  const handleSearch = () => {
+  const handleSearch = useCallback(() => {
     setActiveSearchQuery(searchQuery.trim());
-  };
+  }, [searchQuery]);
 
   // 处理搜索输入框回车键
-  const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleSearchKeyPress = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleSearch();
     }
-  };
+  }, [handleSearch]);
 
   // 清除搜索
-  const handleClearSearch = () => {
+  const handleClearSearch = useCallback(() => {
     setSearchQuery("");
     setActiveSearchQuery("");
-  };
+  }, []);
+
+  // 处理搜索输入变化
+  const handleSearchInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 pt-3">
@@ -708,7 +715,7 @@ export default function HomePage() {
                 <input
                   type="text"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={handleSearchInputChange}
                   onKeyDown={handleSearchKeyPress}
                   placeholder="搜索攻略、美食、生活经验..."
                   className="w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-base"
