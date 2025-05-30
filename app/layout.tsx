@@ -16,6 +16,9 @@ export const metadata: Metadata = {
   icons: {
     icon: 'data:image/svg+xml,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 32 32\'><rect width=\'32\' height=\'32\' fill=\'%2316a34a\'/><text x=\'16\' y=\'24\' font-family=\'Arial\' font-size=\'20\' font-weight=\'bold\' text-anchor=\'middle\' fill=\'white\'>N</text></svg>',
   },
+  other: {
+    'permissions-policy': 'accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()'
+  }
 }
 
 export default function RootLayout({
@@ -25,6 +28,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh-CN">
+      <head>
+        <meta name="permissions-policy" content="accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()" />
+      </head>
       <body className={inter.className}>
         <AuthContextProvider>
           <div suppressHydrationWarning={true}>
