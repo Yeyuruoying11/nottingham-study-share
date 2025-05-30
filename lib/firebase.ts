@@ -6,34 +6,50 @@ import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
 // 🔥 FIREBASE 配置说明
-// 如果您看到 "API key not valid" 错误，请：
-// 1. 访问 https://console.firebase.google.com/
-// 2. 选择或创建项目 "guidin-db601"
-// 3. 项目设置 > 常规 > 您的应用 > Web应用 > 配置
-// 4. 复制正确的配置值替换下面的默认值
-// 5. 或创建 .env.local 文件设置环境变量
+// 请在Vercel Dashboard或.env.local中设置以下环境变量：
+// NEXT_PUBLIC_FIREBASE_API_KEY
+// NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN  
+// NEXT_PUBLIC_FIREBASE_PROJECT_ID
+// NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+// NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+// NEXT_PUBLIC_FIREBASE_APP_ID
+// NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 
 const firebaseConfig = {
-  // ✅ 用户提供的正确Firebase配置
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyBLxCAIw1BjHWoVekUW9yj7i3P6_HMWpO4",
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "guidin-db601.firebaseapp.com",
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "guidin-db601",
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "guidin-db601.firebasestorage.app",
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "831633555817",
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:831633555817:web:cf598c871c41f83a4dfdf8",
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-EHKPF1364Q"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
-// 验证配置
-if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "your_api_key_here") {
-  console.error("🚨 Firebase配置无效！请设置正确的API密钥。");
-  console.log("📝 获取配置步骤：");
-  console.log("1. 访问：https://console.firebase.google.com/");
-  console.log("2. 选择项目：guidin-db601（或创建新项目）");
-  console.log("3. 项目设置 > 常规 > 您的应用");
-  console.log("4. 复制Web应用的配置");
+// 验证必需的配置项
+const requiredConfig = {
+  'NEXT_PUBLIC_FIREBASE_API_KEY': firebaseConfig.apiKey,
+  'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN': firebaseConfig.authDomain,
+  'NEXT_PUBLIC_FIREBASE_PROJECT_ID': firebaseConfig.projectId,
+  'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET': firebaseConfig.storageBucket,
+  'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID': firebaseConfig.messagingSenderId,
+  'NEXT_PUBLIC_FIREBASE_APP_ID': firebaseConfig.appId
+};
+
+const missingVars = Object.entries(requiredConfig)
+  .filter(([key, value]) => !value)
+  .map(([key]) => key);
+
+if (missingVars.length > 0) {
+  console.error("🚨 Firebase配置错误：缺少以下环境变量：");
+  missingVars.forEach(varName => {
+    console.error(`  ❌ ${varName}`);
+  });
+  console.log("📝 请在Vercel Dashboard的Environment Variables中设置这些变量");
+  console.log("或者在本地开发时在.env.local文件中设置");
+  
+  throw new Error(`Missing Firebase environment variables: ${missingVars.join(', ')}`);
 } else {
-  console.log("✅ Firebase配置已加载");
+  console.log("✅ Firebase配置已从环境变量加载");
 }
 
 // Initialize Firebase
@@ -61,9 +77,9 @@ console.log('Storage bucket:', storage.app.options.storageBucket);
 let analytics = null;
 
 if (typeof window !== 'undefined') {
-  // 检查是否支持Analytics并且没有被CSP阻止
+  // 检查是否支持Analytics
   isSupported().then(supported => {
-    if (supported && firebaseConfig.apiKey !== "your_api_key_here" && firebaseConfig.apiKey) {
+    if (supported && firebaseConfig.measurementId) {
       try {
         analytics = getAnalytics(app);
         console.log('Firebase Analytics initialized');
@@ -72,7 +88,7 @@ if (typeof window !== 'undefined') {
         // Analytics初始化失败不应该影响其他功能
       }
     } else {
-      console.log('Firebase Analytics is not supported or configuration invalid');
+      console.log('Firebase Analytics is not supported or measurementId not provided');
     }
   }).catch(error => {
     console.warn('Error checking Analytics support:', error);
