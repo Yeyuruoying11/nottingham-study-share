@@ -848,7 +848,7 @@ export default function PostDetailPage() {
                   360° 街景视图，拖动查看房屋周围环境
                 </p>
               </div>
-              <div className="px-6 pb-6">
+              <div className="pb-6">
                 {post.embedHtml ? (
                   // 解析嵌入HTML中的iframe src
                   (() => {
@@ -863,17 +863,18 @@ export default function PostDetailPage() {
                             src={iframeSrc}
                             width="100%"
                             height="500"
-                            style={{ border: 0, borderRadius: '8px' }}
+                            style={{ border: 0 }}
                             allowFullScreen
                             loading="lazy"
                             referrerPolicy="no-referrer-when-downgrade"
                             title="Google Street View"
+                            className="w-full"
                           />
                         );
                       } else {
                         // 如果无法解析，显示错误信息
                         return (
-                          <div className="w-full h-[500px] bg-gray-100 rounded-lg flex items-center justify-center">
+                          <div className="w-full h-[500px] bg-gray-100 flex items-center justify-center">
                             <p className="text-gray-500">街景视图加载失败，请联系管理员</p>
                           </div>
                         );
@@ -881,7 +882,7 @@ export default function PostDetailPage() {
                     } catch (error) {
                       console.error('解析嵌入HTML失败:', error);
                       return (
-                        <div className="w-full h-[500px] bg-gray-100 rounded-lg flex items-center justify-center">
+                        <div className="w-full h-[500px] bg-gray-100 flex items-center justify-center">
                           <p className="text-gray-500">街景视图解析失败</p>
                         </div>
                       );
@@ -894,6 +895,7 @@ export default function PostDetailPage() {
                     latitude={post.location?.latitude}
                     longitude={post.location?.longitude}
                     height="h-[500px]"
+                    className="w-full"
                   />
                 )}
               </div>
