@@ -960,16 +960,31 @@ export default function HomePage() {
                   <p>2. 确保已登录账户</p>
                   <p>3. 登录后可初始化测试数据</p>
                 </div>
-                {!user && (
-                  <div className="mt-4">
-                    <Link 
-                      href="/login"
-                      className="inline-block bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
-                    >
-                      立即登录
-                    </Link>
-                  </div>
-                )}
+                <div className="mt-4 space-x-4">
+                  <Link 
+                    href="/login"
+                    className="inline-block bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
+                  >
+                    立即登录
+                  </Link>
+                  <button
+                    onClick={() => {
+                      console.log('=== 调试信息 ===');
+                      console.log('用户状态:', user ? '已登录' : '未登录');
+                      console.log('Firebase配置:', {
+                        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "guidin-db601",
+                        authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "guidin-db601.firebaseapp.com"
+                      });
+                      console.log('选中分类:', selectedCategory);
+                      console.log('当前帖子数量:', posts.length);
+                      console.log('加载状态:', loading);
+                      alert('调试信息已打印到控制台，请按F12查看');
+                    }}
+                    className="inline-block bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    查看调试信息
+                  </button>
+                </div>
               </div>
             </div>
           </div>
