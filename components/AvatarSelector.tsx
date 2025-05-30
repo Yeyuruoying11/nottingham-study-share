@@ -247,6 +247,24 @@ export default function AvatarSelector({ isOpen, onClose, onSelect, currentAvata
             </button>
           </div>
 
+          {/* 提示信息 */}
+          <div className="px-6 pt-4 pb-2">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-sm text-blue-800">
+                💡 <strong>温馨提示：</strong>为了更好的使用体验，建议不要从其他网站下载头像。你可以通过{' '}
+                <a 
+                  href="https://peeps.ui8.net/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 underline font-medium"
+                >
+                  peeps.ui8.net
+                </a>
+                {' '}免费定制个性化头像。
+              </p>
+            </div>
+          </div>
+
           {/* 内容 */}
           <div className="p-6">
             {selectedGender === null ? renderGenderSelection() : renderAvatarSelection()}
