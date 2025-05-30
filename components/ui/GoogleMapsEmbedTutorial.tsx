@@ -25,13 +25,13 @@ export default function GoogleMapsEmbedTutorial({ onEmbedCodeChange, embedCode }
       image: "📍"
     },
     {
-      title: "右下角切换成街景模式",
-      content: "找到右下角的街景小人图标，点击或拖拽到地图上您房源的位置",
+      title: "切换到街景模式",
+      content: "找到地图右下角的街景小人图标，点击或拖拽到地图上您房源的位置",
       image: "👤"
     },
     {
-      title: "右上角点击分享",
-      content: "在街景模式下，点击右上角的分享按钮，选择"嵌入地图"，复制完整的 HTML 代码",
+      title: "获取嵌入代码",
+      content: "在街景模式下，点击屏幕右上角的分享按钮，选择"嵌入地图"，复制完整的 HTML 代码",
       image: "📋"
     }
   ];
