@@ -729,6 +729,7 @@ export default function CreatePostPage() {
                     <LocationPicker
                       onLocationSelect={handleLocationSelect}
                       initialLocation={location || undefined}
+                      hidePopularDestinations={formData.category === "租房"}
                     />
                     {formData.category === "租房" && (
                       <p className="text-xs text-gray-500 mt-1">

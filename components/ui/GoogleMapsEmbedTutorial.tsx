@@ -15,29 +15,24 @@ export default function GoogleMapsEmbedTutorial({ onEmbedCodeChange, embedCode }
 
   const steps = [
     {
-      title: "打开Google Maps",
-      content: "访问 maps.google.com 并搜索您的房屋地址",
+      title: "打开 Google Map",
+      content: "访问 maps.google.com",
       image: "🗺️"
     },
     {
-      title: "切换到街景模式", 
-      content: "点击左下角的街景小人图标，拖拽到您想要展示的位置",
+      title: "搜索房源所在位置", 
+      content: "在搜索框中输入您的房源地址，精确定位到您的房屋位置",
+      image: "📍"
+    },
+    {
+      title: "右下角切换成街景模式",
+      content: "找到右下角的街景小人图标，点击或拖拽到地图上您房源的位置",
       image: "👤"
     },
     {
-      title: "调整最佳角度",
-      content: "在街景模式中拖动调整到最佳的房屋展示角度",
-      image: "🔄"
-    },
-    {
-      title: "获取嵌入代码",
-      content: "点击左上角菜单 → 分享或嵌入地图 → 嵌入地图",
+      title: "右上角点击分享",
+      content: "在街景模式下，点击右上角的分享按钮，选择"嵌入地图"，复制完整的 HTML 代码",
       image: "📋"
-    },
-    {
-      title: "复制HTML代码",
-      content: "复制完整的 <iframe> 代码并粘贴到下方输入框",
-      image: "✂️"
     }
   ];
 
