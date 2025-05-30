@@ -488,10 +488,7 @@ export default function HomePage() {
     }, [user, showMenu, post, isAuthor, isAdmin, canDelete]);
 
     return (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: index * 0.05 }} // 减少延迟时间从0.1秒到0.05秒
+        <div
           className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 group cursor-pointer relative"
         onClick={handleCardClick}
         >
@@ -654,13 +651,14 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
     );
   }, (prevProps, nextProps) => {
-    // 只比较关键属性，避免不必要的重新渲染
+    // 改进比较函数，比较更多属性以避免不必要的重新渲染
     return prevProps.post.id === nextProps.post.id && 
            prevProps.post.title === nextProps.post.title &&
-           prevProps.post.likes === nextProps.post.likes;
+           prevProps.post.likes === nextProps.post.likes &&
+           prevProps.index === nextProps.index; // 添加index比较
   });
 
   // 处理搜索输入变化 - 只更新输入框的值，不触发搜索
