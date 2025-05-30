@@ -900,6 +900,28 @@ export default function PostDetailPage() {
             </div>
           )}
 
+          {/* 调试信息 - 开发环境下显示 */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <h4 className="font-semibold text-yellow-900 mb-2">🔍 Street View 调试信息</h4>
+              <div className="text-sm space-y-1">
+                <p><strong>帖子分类:</strong> {post.category}</p>
+                <p><strong>是否租房分类:</strong> {post.category === '租房' ? '是' : '否'}</p>
+                <p><strong>有embedHtml:</strong> {post.embedHtml ? '是' : '否'}</p>
+                <p><strong>有location:</strong> {post.location ? '是' : '否'}</p>
+                <p><strong>显示条件满足:</strong> {(post.category === '租房' && (post.embedHtml || post.location)) ? '是' : '否'}</p>
+                {post.embedHtml && (
+                  <div className="mt-2">
+                    <p><strong>embedHtml内容预览:</strong></p>
+                    <pre className="bg-gray-100 p-2 rounded text-xs overflow-x-auto max-h-32">
+                      {post.embedHtml.substring(0, 200)}...
+                    </pre>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* 作者信息和互动 */}
           <div className="p-6 border-b">
             <div className="flex items-center justify-between">
