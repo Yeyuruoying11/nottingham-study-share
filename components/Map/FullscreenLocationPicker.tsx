@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { Location } from '@/lib/types';
 import { MapPin, Search, X, Maximize2, Check } from 'lucide-react';
@@ -10,7 +10,6 @@ import Toast from '@/components/ui/Toast';
 // 修复Leaflet图标路径问题
 const fixLeafletIcons = () => {
   if (typeof window !== 'undefined') {
-    // 动态导入Leaflet并修复图标路径
     import('leaflet').then((L) => {
       delete (L.Icon.Default.prototype as any)._getIconUrl;
       L.Icon.Default.mergeOptions({
@@ -22,28 +21,6 @@ const fixLeafletIcons = () => {
   }
 };
 
-// 动态导入地图组件
-const MapContainer = dynamic(
-  () => import('react-leaflet').then((mod) => mod.MapContainer),
-  { ssr: false }
-);
-
-const TileLayer = dynamic(
-  () => import('react-leaflet').then((mod) => mod.TileLayer),
-  { ssr: false }
-);
-
-const Marker = dynamic(
-  () => import('react-leaflet').then((mod) => mod.Marker),
-  { ssr: false }
-);
-
-// 动态导入MapCenterController
-const MapCenterController = dynamic(
-  () => import('./MapCenterController'),
-  { ssr: false }
-);
-
 interface FullscreenLocationPickerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -51,11 +28,123 @@ interface FullscreenLocationPickerProps {
   initialLocation?: Location;
 }
 
-// 地图点击处理组件 - 使用动态导入包装
-const MapClickHandler = dynamic(
-  () => import('./MapClickHandler'),
-  { ssr: false }
-);
+// 自定义地图组件，使用 ref 管理生命周期
+const CustomLeafletMap = React.memo(({ 
+  center, 
+  selectedLocation, 
+  onLocationSelect 
+}: {
+  center: [number, number];
+  selectedLocation: Location | null;
+  onLocationSelect: (location: Location) => void;
+}) => {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const markerRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // 确保之前的地图实例被清理
+    if (mapInstanceRef.current) {
+      try {
+        mapInstanceRef.current.remove();
+      } catch (error) {
+        console.warn('清理地图实例时出现警告:', error);
+      }
+      mapInstanceRef.current = null;
+    }
+
+    // 异步加载 Leaflet 并创建地图
+    const initializeMap = async () => {
+      try {
+        const L = await import('leaflet');
+        
+        // 清空容器
+        if (mapRef.current) {
+          mapRef.current.innerHTML = '';
+        }
+
+        // 创建新的地图实例
+        const map = L.map(mapRef.current!, {
+          center: center,
+          zoom: selectedLocation ? 12 : 6,
+          zoomControl: true,
+          attributionControl: true,
+        });
+
+        // 添加瓦片层
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // 添加点击事件
+        map.on('click', (e: any) => {
+          const location: Location = {
+            latitude: e.latlng.lat,
+            longitude: e.latlng.lng,
+            address: `${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`,
+            country: '',
+            city: ''
+          };
+          onLocationSelect(location);
+        });
+
+        mapInstanceRef.current = map;
+
+        // 如果有选中的位置，添加标记
+        if (selectedLocation) {
+          markerRef.current = L.marker([selectedLocation.latitude, selectedLocation.longitude]).addTo(map);
+        }
+
+      } catch (error) {
+        console.error('地图初始化失败:', error);
+      }
+    };
+
+    // 延迟初始化以避免竞态条件
+    const timer = setTimeout(initializeMap, 100);
+
+    return () => {
+      clearTimeout(timer);
+      if (mapInstanceRef.current) {
+        try {
+          mapInstanceRef.current.remove();
+        } catch (error) {
+          console.warn('清理地图实例时出现警告:', error);
+        }
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [center, onLocationSelect]);
+
+  // 更新标记位置
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+
+    const L = import('leaflet');
+    L.then((LeafletModule) => {
+      // 清除旧标记
+      if (markerRef.current) {
+        mapInstanceRef.current.removeLayer(markerRef.current);
+        markerRef.current = null;
+      }
+
+      // 添加新标记
+      if (selectedLocation) {
+        markerRef.current = LeafletModule.marker([selectedLocation.latitude, selectedLocation.longitude])
+          .addTo(mapInstanceRef.current);
+        
+        // 移动地图中心到新位置
+        mapInstanceRef.current.setView([selectedLocation.latitude, selectedLocation.longitude], 12);
+      }
+    });
+  }, [selectedLocation]);
+
+  return <div ref={mapRef} className="h-full w-full" />;
+});
+
+CustomLeafletMap.displayName = 'CustomLeafletMap';
 
 // 常用旅行目的地
 const popularDestinations = [
@@ -86,36 +175,29 @@ export default function FullscreenLocationPicker({
   const [mapCenter, setMapCenter] = useState<[number, number]>([54.9783, -1.9540]); // 诺丁汉
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
-  const [isSelecting, setIsSelecting] = useState(false); // 防重复触发
-  const [showMapHint, setShowMapHint] = useState(true); // 控制地图提示显示
-  const [mapKey, setMapKey] = useState("");
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [showMapHint, setShowMapHint] = useState(true);
 
   useEffect(() => {
     if (isOpen) {
       // 修复Leaflet图标路径
       fixLeafletIcons();
       
-      // 延迟初始化地图，确保DOM已经准备好
+      // 延迟初始化地图
       const timer = setTimeout(() => {
         setMapReady(true);
-        // 每次打开时都生成全新的map key，确保地图完全重新创建
-        setMapKey(`fullscreen-map-${Date.now()}-${Math.random()}`);
-        // 如果有初始位置，设置地图中心
         if (initialLocation) {
           setSelectedLocation(initialLocation);
           setMapCenter([initialLocation.latitude, initialLocation.longitude]);
         }
-      }, 150); // 增加延迟以确保DOM完全准备好
+      }, 200);
       
       return () => clearTimeout(timer);
     } else {
-      // 关闭时立即重置状态，为下次打开做准备
       setMapReady(false);
       setSelectedLocation(null);
       setSearchQuery("");
       setShowMapHint(true);
-      // 关闭时也生成新的key，确保下次打开时是全新的地图
-      setMapKey(`fullscreen-map-closed-${Date.now()}`);
     }
   }, [isOpen, initialLocation]);
 
@@ -126,7 +208,7 @@ export default function FullscreenLocationPicker({
 
   const handleLocationSelect = useCallback((location: Location) => {
     setSelectedLocation(location);
-    setShowMapHint(false); // 用户点击地图后隐藏提示
+    setShowMapHint(false);
   }, []);
 
   const confirmSelection = () => {
@@ -144,8 +226,19 @@ export default function FullscreenLocationPicker({
     setIsSearching(true);
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1&addressdetails=1`
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1&addressdetails=1`,
+        {
+          headers: {
+            'Accept': 'application/json',
+            'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+          },
+        }
       );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
       
       if (data && data.length > 0) {
@@ -160,7 +253,6 @@ export default function FullscreenLocationPicker({
         };
         
         handleLocationSelect(location);
-        // 搜索时也移动地图中心
         setMapCenter([location.latitude, location.longitude]);
       } else {
         showToast('未找到位置，请尝试其他搜索词');
@@ -174,7 +266,6 @@ export default function FullscreenLocationPicker({
   };
 
   const selectPopularDestination = (destination: any) => {
-    // 防止重复触发
     if (isSelecting) return;
     setIsSelecting(true);
 
@@ -186,20 +277,17 @@ export default function FullscreenLocationPicker({
       city: destination.name
     };
     
-    // 设置位置并移动地图中心
     handleLocationSelect(location);
     setMapCenter([destination.lat, destination.lng]);
     
-    // 添加提示信息
     setTimeout(() => {
       showToast(`📍 已选择${destination.name}，${destination.country}`);
-      setIsSelecting(false); // 重置防重复标识
+      setIsSelecting(false);
     }, 300);
   };
 
   const handleClose = () => {
     onClose();
-    setMapReady(false);
   };
 
   if (!isOpen) return null;
@@ -312,27 +400,11 @@ export default function FullscreenLocationPicker({
             {/* 地图区域 */}
             <div className="flex-1 relative">
               {mapReady ? (
-                <MapContainer
-                  key={mapKey}
+                <CustomLeafletMap
                   center={mapCenter}
-                  zoom={selectedLocation ? 12 : 6}
-                  style={{ height: '100%', width: '100%' }}
-                  className="z-0"
-                >
-                  <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  />
-                  
-                  {/* 添加地图中心控制器 */}
-                  <MapCenterController center={mapCenter} zoom={selectedLocation ? 12 : 8} />
-                  
-                  <MapClickHandler onLocationSelect={handleLocationSelect} />
-                  
-                  {selectedLocation && (
-                    <Marker position={[selectedLocation.latitude, selectedLocation.longitude]} />
-                  )}
-                </MapContainer>
+                  selectedLocation={selectedLocation}
+                  onLocationSelect={handleLocationSelect}
+                />
               ) : (
                 <div className="flex items-center justify-center h-full bg-gray-100">
                   <div className="text-center">

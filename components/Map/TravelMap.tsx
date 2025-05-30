@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { Post, Location } from '@/lib/types';
@@ -44,14 +44,123 @@ const Popup = dynamic(
 );
 
 interface TravelMapProps {
-  onPostSelect?: (post: FirestorePost) => void;
-  selectedPostId?: string;
   className?: string;
 }
 
-export default function TravelMap({ onPostSelect, selectedPostId, className = "" }: TravelMapProps) {
+// 旅行地图组件
+const TravelLeafletMap = React.memo(({ 
+  travelPosts, 
+  onPostClick 
+}: {
+  travelPosts: Post[];
+  onPostClick: (postId: string) => void;
+}) => {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const markersRef = useRef<any[]>([]);
+
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // 清理之前的地图实例
+    if (mapInstanceRef.current) {
+      try {
+        mapInstanceRef.current.remove();
+      } catch (error) {
+        console.warn('清理地图实例时出现警告:', error);
+      }
+      mapInstanceRef.current = null;
+    }
+
+    // 异步加载 Leaflet 并创建地图
+    const initializeMap = async () => {
+      try {
+        const L = await import('leaflet');
+        
+        // 清空容器
+        if (mapRef.current) {
+          mapRef.current.innerHTML = '';
+        }
+
+        // 创建新的地图实例
+        const map = L.map(mapRef.current!, {
+          center: [51.5074, -0.1278], // 伦敦为中心
+          zoom: 5,
+          zoomControl: true,
+          attributionControl: true,
+        });
+
+        // 添加瓦片层
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        mapInstanceRef.current = map;
+
+        // 添加旅行帖子标记
+        const markers: any[] = [];
+        travelPosts.forEach((post) => {
+          if (post.location) {
+            const marker = L.marker([post.location.latitude, post.location.longitude])
+              .addTo(map)
+              .bindPopup(`
+                <div class="p-2">
+                  <h3 class="font-bold text-sm">${post.title}</h3>
+                  <p class="text-xs text-gray-600 mt-1">${post.location.address}</p>
+                  <button 
+                    onclick="window.location.href='/post/${post.id}'" 
+                    class="mt-2 px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600"
+                  >
+                    查看详情
+                  </button>
+                </div>
+              `);
+            
+            marker.on('click', () => {
+              onPostClick(post.id);
+            });
+            
+            markers.push(marker);
+          }
+        });
+
+        markersRef.current = markers;
+
+        // 如果有标记，调整地图视图以包含所有标记
+        if (markers.length > 0) {
+          const group = new L.featureGroup(markers);
+          map.fitBounds(group.getBounds().pad(0.1));
+        }
+
+      } catch (error) {
+        console.error('地图初始化失败:', error);
+      }
+    };
+
+    // 延迟初始化以避免竞态条件
+    const timer = setTimeout(initializeMap, 100);
+
+    return () => {
+      clearTimeout(timer);
+      if (mapInstanceRef.current) {
+        try {
+          mapInstanceRef.current.remove();
+        } catch (error) {
+          console.warn('清理地图实例时出现警告:', error);
+        }
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [travelPosts, onPostClick]);
+
+  return <div ref={mapRef} className="h-full w-full" />;
+});
+
+TravelLeafletMap.displayName = 'TravelLeafletMap';
+
+export default function TravelMap({ className = "" }: TravelMapProps = {}) {
   const router = useRouter();
-  const [travelPosts, setTravelPosts] = useState<FirestorePost[]>([]);
+  const [travelPosts, setTravelPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [mapReady, setMapReady] = useState(false);
 
@@ -86,125 +195,44 @@ export default function TravelMap({ onPostSelect, selectedPostId, className = ""
     }
   }, [mapReady]);
 
-  // 处理查看详情点击
-  const handleViewDetails = (post: FirestorePost, e?: React.MouseEvent) => {
-    if (e) {
-      e.stopPropagation(); // 防止事件冒泡
-      e.preventDefault(); // 防止默认行为
-    }
-    
-    console.log('查看详情被点击，帖子ID:', post.id);
-    console.log('准备导航到:', `/post/${post.id}`);
-    
-    // 调用可选的回调函数
-    if (onPostSelect) {
-      onPostSelect(post);
-    }
-    
-    // 导航到帖子详情页面
-    if (post.id) {
-      // 使用 window.location 进行可靠的导航
-      window.location.href = `/post/${post.id}`;
-    } else {
-      console.error('帖子 ID 不存在:', post);
-    }
+  const handlePostClick = (postId: string) => {
+    router.push(`/post/${postId}`);
   };
-
-  // 处理整个 Popup 点击
-  const handlePopupClick = (post: FirestorePost) => {
-    console.log('Popup 被点击，导航到帖子:', post.id);
-    if (post.id) {
-      window.location.href = `/post/${post.id}`;
-    }
-  };
-
-  if (!mapReady) {
-    return (
-      <div className={`bg-gray-200 rounded-xl flex items-center justify-center ${className}`}>
-        <LoadingSpinner />
-      </div>
-    );
-  }
 
   if (loading) {
     return (
-      <div className={`bg-gray-200 rounded-xl flex items-center justify-center ${className}`}>
-        <LoadingSpinner />
+      <div className="flex items-center justify-center h-96">
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
 
   return (
-    <div className={`rounded-xl overflow-hidden shadow-lg ${className}`}>
-      <MapContainer
-        center={[54.9783, -1.9540]} // 诺丁汉的坐标
-        zoom={6}
-        style={{ height: '100%', width: '100%' }}
-        className="z-0"
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        
-        {travelPosts.map((post) => (
-          post.location && (
-            <Marker
-              key={post.id}
-              position={[post.location.latitude, post.location.longitude]}
-              eventHandlers={{
-                click: () => {
-                  if (onPostSelect) {
-                    onPostSelect(post);
-                  }
-                },
-              }}
-            >
-              <Popup
-                eventHandlers={{
-                  click: () => handlePopupClick(post)
-                }}
-              >
-                <div className="max-w-xs cursor-pointer" onClick={() => handlePopupClick(post)}>
-                  <div className="flex items-start space-x-3">
-                    {post.images && post.images[0] && (
-                      <img
-                        src={post.images[0]}
-                        alt={post.title}
-                        className="w-16 h-16 object-cover rounded-lg"
-                      />
-                    )}
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-sm text-gray-900 mb-1">
-                        {post.title}
-                      </h3>
-                      <p className="text-xs text-gray-600 mb-2">
-                        {post.location.address}
-                      </p>
-                      <div className="flex items-center space-x-2 text-xs text-gray-500 mb-2">
-                        <span>{post.author.name}</span>
-                        <span>•</span>
-                        <span>{post.likes} 点赞</span>
-                      </div>
-                      <div className="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 transition-colors text-center">
-                        点击查看详情
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Popup>
-            </Marker>
-          )
-        ))}
-      </MapContainer>
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="mb-4">
+        <h2 className="text-2xl font-bold text-gray-900">🗺️ 旅行地图</h2>
+        <p className="text-gray-600">探索世界各地的旅行分享</p>
+      </div>
       
-      {travelPosts.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-90 z-10">
-          <div className="text-center">
-            <div className="text-4xl mb-2">🗺️</div>
-            <p className="text-gray-600 font-medium">还没有旅行帖子</p>
-            <p className="text-sm text-gray-500">快来分享你的旅行经历吧！</p>
+      <div className="h-96 border border-gray-300 rounded-lg overflow-hidden">
+        {mapReady ? (
+          <TravelLeafletMap
+            travelPosts={travelPosts}
+            onPostClick={handlePostClick}
+          />
+        ) : (
+          <div className="flex items-center justify-center h-full bg-gray-100">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
+              <p className="text-gray-600">加载地图中...</p>
+            </div>
           </div>
+        )}
+      </div>
+      
+      {travelPosts.length > 0 && (
+        <div className="mt-4 text-sm text-gray-600">
+          📍 找到 {travelPosts.length} 个旅行分享地点
         </div>
       )}
     </div>

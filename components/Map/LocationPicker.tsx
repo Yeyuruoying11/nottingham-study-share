@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { Location } from '@/lib/types';
 import { MapPin, Search, X, Maximize2 } from 'lucide-react';
@@ -69,7 +69,129 @@ const popularDestinations = [
   { name: "苏黎世", country: "瑞士", lat: 47.3769, lng: 8.5417 },
 ];
 
-export default function LocationPicker({ onLocationSelect, initialLocation, className = "", hidePopularDestinations = false }: LocationPickerProps) {
+// 紧凑版地图组件
+const CompactLeafletMap = React.memo(({ 
+  center, 
+  selectedLocation, 
+  onLocationSelect 
+}: {
+  center: [number, number];
+  selectedLocation: Location | null;
+  onLocationSelect: (location: Location) => void;
+}) => {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const markerRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // 清理之前的地图实例
+    if (mapInstanceRef.current) {
+      try {
+        mapInstanceRef.current.remove();
+      } catch (error) {
+        console.warn('清理地图实例时出现警告:', error);
+      }
+      mapInstanceRef.current = null;
+    }
+
+    // 异步加载 Leaflet 并创建地图
+    const initializeMap = async () => {
+      try {
+        const L = await import('leaflet');
+        
+        // 清空容器
+        if (mapRef.current) {
+          mapRef.current.innerHTML = '';
+        }
+
+        // 创建新的地图实例
+        const map = L.map(mapRef.current!, {
+          center: center,
+          zoom: selectedLocation ? 10 : 6,
+          zoomControl: true,
+          attributionControl: false, // 紧凑版隐藏版权信息
+        });
+
+        // 添加瓦片层
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
+
+        // 添加点击事件
+        map.on('click', (e: any) => {
+          const location: Location = {
+            latitude: e.latlng.lat,
+            longitude: e.latlng.lng,
+            address: `${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`,
+            country: '',
+            city: ''
+          };
+          onLocationSelect(location);
+        });
+
+        mapInstanceRef.current = map;
+
+        // 如果有选中的位置，添加标记
+        if (selectedLocation) {
+          markerRef.current = L.marker([selectedLocation.latitude, selectedLocation.longitude]).addTo(map);
+        }
+
+      } catch (error) {
+        console.error('地图初始化失败:', error);
+      }
+    };
+
+    // 延迟初始化以避免竞态条件
+    const timer = setTimeout(initializeMap, 100);
+
+    return () => {
+      clearTimeout(timer);
+      if (mapInstanceRef.current) {
+        try {
+          mapInstanceRef.current.remove();
+        } catch (error) {
+          console.warn('清理地图实例时出现警告:', error);
+        }
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [center, onLocationSelect]);
+
+  // 更新标记位置
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+
+    const L = import('leaflet');
+    L.then((LeafletModule) => {
+      // 清除旧标记
+      if (markerRef.current) {
+        mapInstanceRef.current.removeLayer(markerRef.current);
+        markerRef.current = null;
+      }
+
+      // 添加新标记
+      if (selectedLocation) {
+        markerRef.current = LeafletModule.marker([selectedLocation.latitude, selectedLocation.longitude])
+          .addTo(mapInstanceRef.current);
+        
+        // 移动地图中心到新位置
+        mapInstanceRef.current.setView([selectedLocation.latitude, selectedLocation.longitude], 10);
+      }
+    });
+  }, [selectedLocation]);
+
+  return <div ref={mapRef} className="h-full w-full rounded-lg" />;
+});
+
+CompactLeafletMap.displayName = 'CompactLeafletMap';
+
+export default function LocationPicker({ 
+  onLocationSelect, 
+  initialLocation,
+  hidePopularDestinations = false 
+}: LocationPickerProps) {
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(initialLocation || null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
