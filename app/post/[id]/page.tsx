@@ -848,7 +848,7 @@ export default function PostDetailPage() {
                   360° 街景视图，拖动查看房屋周围环境
                 </p>
               </div>
-              <div className="pb-6">
+              <div>
                 {post.embedHtml ? (
                   // 解析嵌入HTML中的iframe src
                   (() => {
@@ -863,7 +863,7 @@ export default function PostDetailPage() {
                             src={iframeSrc}
                             width="100%"
                             height="500"
-                            style={{ border: 0 }}
+                            style={{ border: 0, display: 'block' }}
                             allowFullScreen
                             loading="lazy"
                             referrerPolicy="no-referrer-when-downgrade"
