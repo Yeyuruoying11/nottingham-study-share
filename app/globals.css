@@ -30,9 +30,20 @@
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-/* 修复地图标记图标 */
+/* 修复Leaflet默认图标路径问题 - Next.js兼容 */
 .leaflet-default-icon-path {
   background-image: url('https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png');
+}
+
+/* 确保Leaflet图标正确显示 */
+.leaflet-marker-icon {
+  margin-left: -12px !important;
+  margin-top: -41px !important;
+}
+
+.leaflet-marker-shadow {
+  margin-left: -12px !important;
+  margin-top: -41px !important;
 }
 
 /* 诺丁汉大学品牌色 */

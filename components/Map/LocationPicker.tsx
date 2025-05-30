@@ -7,6 +7,21 @@ import { MapPin, Search, X, Maximize2 } from 'lucide-react';
 import FullscreenLocationPicker from './FullscreenLocationPicker';
 import Toast from '@/components/ui/Toast';
 
+// 修复Leaflet图标路径问题
+const fixLeafletIcons = () => {
+  if (typeof window !== 'undefined') {
+    // 动态导入Leaflet并修复图标路径
+    import('leaflet').then((L) => {
+      delete (L.Icon.Default.prototype as any)._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+      });
+    });
+  }
+};
+
 // 动态导入地图组件
 const MapContainer = dynamic(
   () => import('react-leaflet').then((mod) => mod.MapContainer),
@@ -67,15 +82,17 @@ export default function LocationPicker({ onLocationSelect, initialLocation, clas
   const [showMapHint, setShowMapHint] = useState(true); // 控制地图提示显示
   const [mapKey, setMapKey] = useState(`map-${Date.now()}`); // 新增：地图key来强制重新渲染
 
+  // 初始化地图设置
   useEffect(() => {
-    setMapReady(true);
+    // 修复Leaflet图标路径
+    fixLeafletIcons();
     
-    // 清理函数 - 组件卸载时执行
-    return () => {
-      setMapReady(false);
-      // 清理任何可能的地图实例
-      console.log('LocationPicker component unmounting, cleaning up...');
-    };
+    // 设置地图准备状态
+    const timer = setTimeout(() => {
+      setMapReady(true);
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {

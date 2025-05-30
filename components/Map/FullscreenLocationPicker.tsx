@@ -7,6 +7,21 @@ import { MapPin, Search, X, Maximize2, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Toast from '@/components/ui/Toast';
 
+// 修复Leaflet图标路径问题
+const fixLeafletIcons = () => {
+  if (typeof window !== 'undefined') {
+    // 动态导入Leaflet并修复图标路径
+    import('leaflet').then((L) => {
+      delete (L.Icon.Default.prototype as any)._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+      });
+    });
+  }
+};
+
 // 动态导入地图组件
 const MapContainer = dynamic(
   () => import('react-leaflet').then((mod) => mod.MapContainer),
@@ -73,15 +88,34 @@ export default function FullscreenLocationPicker({
   const [toastMessage, setToastMessage] = useState("");
   const [isSelecting, setIsSelecting] = useState(false); // 防重复触发
   const [showMapHint, setShowMapHint] = useState(true); // 控制地图提示显示
+  const [mapKey, setMapKey] = useState("");
 
   useEffect(() => {
     if (isOpen) {
-      setMapReady(true);
-      // 如果有初始位置，设置地图中心
-      if (initialLocation) {
-        setSelectedLocation(initialLocation);
-        setMapCenter([initialLocation.latitude, initialLocation.longitude]);
-      }
+      // 修复Leaflet图标路径
+      fixLeafletIcons();
+      
+      // 延迟初始化地图，确保DOM已经准备好
+      const timer = setTimeout(() => {
+        setMapReady(true);
+        // 每次打开时都生成全新的map key，确保地图完全重新创建
+        setMapKey(`fullscreen-map-${Date.now()}-${Math.random()}`);
+        // 如果有初始位置，设置地图中心
+        if (initialLocation) {
+          setSelectedLocation(initialLocation);
+          setMapCenter([initialLocation.latitude, initialLocation.longitude]);
+        }
+      }, 150); // 增加延迟以确保DOM完全准备好
+      
+      return () => clearTimeout(timer);
+    } else {
+      // 关闭时立即重置状态，为下次打开做准备
+      setMapReady(false);
+      setSelectedLocation(null);
+      setSearchQuery("");
+      setShowMapHint(true);
+      // 关闭时也生成新的key，确保下次打开时是全新的地图
+      setMapKey(`fullscreen-map-closed-${Date.now()}`);
     }
   }, [isOpen, initialLocation]);
 
@@ -279,6 +313,7 @@ export default function FullscreenLocationPicker({
             <div className="flex-1 relative">
               {mapReady ? (
                 <MapContainer
+                  key={mapKey}
                   center={mapCenter}
                   zoom={selectedLocation ? 12 : 6}
                   style={{ height: '100%', width: '100%' }}

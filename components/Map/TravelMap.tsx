@@ -7,6 +7,21 @@ import { Post, Location } from '@/lib/types';
 import { getPostsByCategoryFromFirestore, type FirestorePost } from '@/lib/firestore-posts';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
+// 修复Leaflet图标路径问题
+const fixLeafletIcons = () => {
+  if (typeof window !== 'undefined') {
+    // 动态导入Leaflet并修复图标路径
+    import('leaflet').then((L) => {
+      delete (L.Icon.Default.prototype as any)._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+      });
+    });
+  }
+};
+
 // 动态导入地图组件，避免SSR问题
 const MapContainer = dynamic(
   () => import('react-leaflet').then((mod) => mod.MapContainer),
@@ -42,27 +57,34 @@ export default function TravelMap({ onPostSelect, selectedPostId, className = ""
 
   // 加载旅行帖子
   useEffect(() => {
-    const loadTravelPosts = async () => {
+    // 修复Leaflet图标路径
+    fixLeafletIcons();
+    
+    // 设置地图准备状态
+    const timer = setTimeout(() => {
+      setMapReady(true);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const fetchTravelPosts = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
-        const posts = await getPostsByCategoryFromFirestore('旅行');
-        // 只显示有位置信息的帖子
-        const postsWithLocation = posts.filter(post => post.location);
-        setTravelPosts(postsWithLocation);
+        const posts = await getPostsByCategoryFromFirestore('travel');
+        setTravelPosts(posts);
       } catch (error) {
-        console.error('加载旅行帖子失败:', error);
+        console.error('Failed to fetch travel posts:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    loadTravelPosts();
-  }, []);
-
-  // 确保客户端渲染
-  useEffect(() => {
-    setMapReady(true);
-  }, []);
+    if (mapReady) {
+      fetchTravelPosts();
+    }
+  }, [mapReady]);
 
   // 处理查看详情点击
   const handleViewDetails = (post: FirestorePost, e?: React.MouseEvent) => {
