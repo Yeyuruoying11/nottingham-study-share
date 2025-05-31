@@ -470,6 +470,15 @@ export default function TravelMap({
     setIsFullscreen(!isFullscreen);
   };
 
+  // 当全屏时禁用页面滚动
+  useEffect(() => {
+    if (isFullscreen) {
+      document.body.classList.add('overflow-hidden');
+    } else {
+      document.body.classList.remove('overflow-hidden');
+    }
+  }, [isFullscreen]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -480,11 +489,6 @@ export default function TravelMap({
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <div className="mb-4">
-        <h2 className="text-2xl font-bold text-gray-900">🗺️ 旅行地图</h2>
-        <p className="text-gray-600">探索世界各地的旅行分享</p>
-      </div>
-      
       <div
         className={`relative border border-gray-300 rounded-lg overflow-hidden ${isFullscreen ? 'fixed inset-0 z-50' : 'h-[80vh]'}`}
       >
