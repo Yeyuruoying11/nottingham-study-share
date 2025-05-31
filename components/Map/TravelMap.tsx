@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Post, Location } from '@/lib/types';
 import { getPostsByCategoryFromFirestore, type FirestorePost } from '@/lib/firestore-posts';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { Search, X } from 'lucide-react';
 
 // 修复Leaflet图标路径问题
 const fixLeafletIcons = () => {
@@ -52,15 +53,74 @@ interface TravelMapProps {
 // 旅行地图组件
 const TravelLeafletMap = React.memo(({ 
   travelPosts, 
-  onPostClick 
+  onPostClick,
+  searchLocation
 }: {
   travelPosts: FirestorePost[];
   onPostClick: (postId: string) => void;
+  searchLocation?: { lat: number; lng: number; name: string } | null;
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
+  const searchMarkerRef = useRef<any>(null);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+
+  // 处理搜索位置变化
+  useEffect(() => {
+    if (!mapInstanceRef.current || !searchLocation) return;
+
+    const initSearchMarker = async () => {
+      try {
+        const L = await import('leaflet');
+        
+        // 移除之前的搜索标记
+        if (searchMarkerRef.current) {
+          searchMarkerRef.current.remove();
+        }
+
+        // 创建自定义图标
+        const searchIcon = L.divIcon({
+          html: `
+            <div class="relative">
+              <div class="absolute -top-10 -left-10 w-20 h-20 bg-blue-500 bg-opacity-20 rounded-full animate-ping"></div>
+              <div class="absolute -top-6 -left-6 w-12 h-12 bg-blue-500 bg-opacity-30 rounded-full animate-pulse"></div>
+              <svg class="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+              </svg>
+            </div>
+          `,
+          className: 'custom-search-marker',
+          iconSize: [32, 32],
+          iconAnchor: [16, 32]
+        });
+
+        // 添加搜索标记
+        const searchMarker = L.marker([searchLocation.lat, searchLocation.lng], { icon: searchIcon })
+          .addTo(mapInstanceRef.current)
+          .bindPopup(`
+            <div class="p-3">
+              <h3 class="font-bold text-sm mb-1">搜索位置</h3>
+              <p class="text-xs text-gray-600">${searchLocation.name}</p>
+            </div>
+          `)
+          .openPopup();
+
+        searchMarkerRef.current = searchMarker;
+
+        // 平滑地移动到搜索位置
+        mapInstanceRef.current.flyTo([searchLocation.lat, searchLocation.lng], 12, {
+          duration: 2,
+          easeLinearity: 0.5
+        });
+
+      } catch (error) {
+        console.error('创建搜索标记失败:', error);
+      }
+    };
+
+    initSearchMarker();
+  }, [searchLocation]);
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -240,6 +300,27 @@ const TravelLeafletMap = React.memo(({
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
         }
+        .custom-search-marker {
+          background: transparent !important;
+          border: none !important;
+        }
+        @keyframes ping {
+          75%, 100% {
+            transform: scale(2);
+            opacity: 0;
+          }
+        }
+        @keyframes pulse {
+          50% {
+            opacity: .5;
+          }
+        }
+        .animate-ping {
+          animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+        .animate-pulse {
+          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
       `}</style>
     </>
   );
@@ -256,6 +337,9 @@ export default function TravelMap({
   const [travelPosts, setTravelPosts] = useState<FirestorePost[]>([]);
   const [loading, setLoading] = useState(true);
   const [mapReady, setMapReady] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchLocation, setSearchLocation] = useState<{ lat: number; lng: number; name: string } | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
 
   // 加载旅行帖子
   useEffect(() => {
@@ -300,6 +384,49 @@ export default function TravelMap({
     router.push(`/post/${postId}`);
   };
 
+  // 处理搜索
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+
+    setIsSearching(true);
+    try {
+      // 使用 Nominatim API 进行地理编码（免费的 OpenStreetMap 服务）
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`
+      );
+      const data = await response.json();
+
+      if (data && data.length > 0) {
+        const result = data[0];
+        setSearchLocation({
+          lat: parseFloat(result.lat),
+          lng: parseFloat(result.lon),
+          name: result.display_name
+        });
+      } else {
+        alert('未找到该地点，请尝试其他搜索词');
+      }
+    } catch (error) {
+      console.error('搜索失败:', error);
+      alert('搜索出错，请稍后重试');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // 处理键盘事件
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  // 清除搜索
+  const clearSearch = () => {
+    setSearchQuery('');
+    setSearchLocation(null);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -311,8 +438,48 @@ export default function TravelMap({
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="mb-4">
-        <h2 className="text-2xl font-bold text-gray-900">🗺️ 旅行地图</h2>
-        <p className="text-gray-600">探索世界各地的旅行分享</p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">🗺️ 旅行地图</h2>
+            <p className="text-gray-600">探索世界各地的旅行分享</p>
+          </div>
+          
+          {/* 搜索框 */}
+          <div className="relative w-80">
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="搜索地点（如：巴黎、东京、纽约）"
+                className="w-full pl-10 pr-24 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none text-sm"
+              />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              {searchQuery && (
+                <button
+                  onClick={clearSearch}
+                  className="absolute right-20 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 rounded"
+                >
+                  <X className="w-4 h-4 text-gray-500" />
+                </button>
+              )}
+              <button
+                onClick={handleSearch}
+                disabled={isSearching || !searchQuery.trim()}
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 px-4 py-1 bg-green-500 text-white text-sm rounded-md hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              >
+                {isSearching ? '搜索中...' : '搜索'}
+              </button>
+            </div>
+            {searchLocation && (
+              <div className="absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-10">
+                <p className="text-xs text-gray-600 mb-1">当前搜索位置：</p>
+                <p className="text-sm font-medium text-gray-800 line-clamp-2">{searchLocation.name}</p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
       
       <div className="h-[600px] border border-gray-300 rounded-lg overflow-hidden">
@@ -320,6 +487,7 @@ export default function TravelMap({
           <TravelLeafletMap
             travelPosts={travelPosts}
             onPostClick={handlePostClick}
+            searchLocation={searchLocation}
           />
         ) : (
           <div className="flex items-center justify-center h-full bg-gray-100">
