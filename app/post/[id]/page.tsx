@@ -865,6 +865,7 @@ export default function PostDetailPage() {
                             width="100%"
                             height="500"
                             style={{ border: 0, display: 'block' }}
+                            allow="accelerometer; gyroscope; magnetometer; camera; microphone; geolocation"
                             allowFullScreen
                             loading="lazy"
                             referrerPolicy="no-referrer-when-downgrade"
