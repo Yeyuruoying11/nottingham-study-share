@@ -104,6 +104,32 @@ const TravelLeafletMap = React.memo(({
 
         mapInstanceRef.current = map;
 
+        // 存储已经使用的位置，用于检测冲突
+        const usedPositions = new Map<string, number>();
+        
+        // 计算偏移后的坐标
+        const getOffsetPosition = (lat: number, lng: number): [number, number] => {
+          const key = `${lat.toFixed(6)},${lng.toFixed(6)}`;
+          const count = usedPositions.get(key) || 0;
+          usedPositions.set(key, count + 1);
+          
+          if (count === 0) {
+            // 第一个帖子使用原始坐标
+            return [lat, lng];
+          }
+          
+          // 使用螺旋形偏移算法
+          const offsetDistance = 0.0008 * Math.ceil(count / 8); // 约100米的初始偏移
+          const angle = (count - 1) * (Math.PI / 4); // 每45度放置一个
+          
+          const offsetLat = lat + offsetDistance * Math.sin(angle);
+          const offsetLng = lng + offsetDistance * Math.cos(angle);
+          
+          console.log(`位置冲突检测: ${key} 已有 ${count} 个标记，新标记偏移到 [${offsetLat.toFixed(6)}, ${offsetLng.toFixed(6)}]`);
+          
+          return [offsetLat, offsetLng];
+        };
+
         // 添加旅行帖子标记
         const markers: any[] = [];
         travelPosts.forEach((post) => {
@@ -117,7 +143,13 @@ const TravelLeafletMap = React.memo(({
               location: post.location
             });
             
-            const marker = L.marker([post.location.latitude, post.location.longitude])
+            // 获取可能偏移后的坐标
+            const [adjustedLat, adjustedLng] = getOffsetPosition(
+              post.location.latitude, 
+              post.location.longitude
+            );
+            
+            const marker = L.marker([adjustedLat, adjustedLng])
               .addTo(map);
             
             // 自定义弹出窗口内容
