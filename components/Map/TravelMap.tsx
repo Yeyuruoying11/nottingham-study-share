@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
+import { createPortal } from 'react-dom';
 import { Post, Location } from '@/lib/types';
 import { getPostsByCategoryFromFirestore, type FirestorePost } from '@/lib/firestore-posts';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
@@ -524,77 +525,147 @@ export default function TravelMap({
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <div
-        className={`relative border border-gray-300 rounded-lg overflow-hidden ${isFullscreen ? 'fixed inset-0 z-[9999] bg-white' : 'h-[80vh]'}`}
-      >
-        {/* 搜索框覆盖在地图顶部 */}
-        <div className="absolute top-4 right-4 z-[10000] w-80">
-          <div className="relative">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="搜索地点（如：巴黎、东京、纽约）"
-              className="w-full pl-10 pr-24 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none text-sm shadow-md"
-            />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            {searchQuery && (
+      {/* 正常模式的地图容器 */}
+      {!isFullscreen && (
+        <div className="relative border border-gray-300 rounded-lg overflow-hidden h-[80vh]">
+          {/* 搜索框覆盖在地图顶部 */}
+          <div className="absolute top-4 right-4 z-30 w-80">
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="搜索地点（如：巴黎、东京、纽约）"
+                className="w-full pl-10 pr-24 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none text-sm shadow-md"
+              />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              {searchQuery && (
+                <button
+                  onClick={clearSearch}
+                  className="absolute right-20 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 rounded"
+                >
+                  <X className="w-4 h-4 text-gray-500" />
+                </button>
+              )}
               <button
-                onClick={clearSearch}
-                className="absolute right-20 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 rounded"
+                onClick={handleSearch}
+                disabled={isSearching || !searchQuery.trim()}
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 px-4 py-1 bg-green-500 text-white text-sm rounded-md hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
               >
-                <X className="w-4 h-4 text-gray-500" />
+                {isSearching ? '搜索中...' : '搜索'}
               </button>
+            </div>
+            {searchLocation && (
+              <div className="absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-10">
+                <p className="text-xs text-gray-600 mb-1">当前搜索位置：</p>
+                <p className="text-sm font-medium text-gray-800 line-clamp-2">{searchLocation.name}</p>
+              </div>
             )}
-            <button
-              onClick={handleSearch}
-              disabled={isSearching || !searchQuery.trim()}
-              className="absolute right-1 top-1/2 transform -translate-y-1/2 px-4 py-1 bg-green-500 text-white text-sm rounded-md hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-            >
-              {isSearching ? '搜索中...' : '搜索'}
-            </button>
           </div>
-          {searchLocation && (
-            <div className="absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-10">
-              <p className="text-xs text-gray-600 mb-1">当前搜索位置：</p>
-              <p className="text-sm font-medium text-gray-800 line-clamp-2">{searchLocation.name}</p>
+
+          {/* 全屏切换按钮 */}
+          <button
+            onClick={toggleFullscreen}
+            className="absolute top-4 left-4 z-30 p-3 bg-white/90 backdrop-blur-md rounded-full shadow-md hover:bg-white"
+            title="全屏查看"
+          >
+            <Maximize2 className="w-5 h-5 text-gray-700" />
+          </button>
+
+          {mapReady ? (
+            <TravelLeafletMap
+              travelPosts={travelPosts}
+              onPostClick={handlePostClick}
+              searchLocation={searchLocation}
+              onMapReady={handleMapReady}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full bg-gray-100">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
+                <p className="text-gray-600">加载地图中...</p>
+              </div>
             </div>
           )}
         </div>
-
-        {/* 全屏切换按钮 */}
-        <button
-          onClick={toggleFullscreen}
-          className="absolute top-4 left-4 z-[10000] p-3 bg-white/90 backdrop-blur-md rounded-full shadow-md hover:bg-white"
-          title={isFullscreen ? '退出全屏' : '全屏查看'}
-        >
-          {isFullscreen ? <Minimize2 className="w-5 h-5 text-gray-700" /> : <Maximize2 className="w-5 h-5 text-gray-700" />}
-        </button>
-
-        {mapReady ? (
-          <TravelLeafletMap
-            travelPosts={travelPosts}
-            onPostClick={handlePostClick}
-            searchLocation={searchLocation}
-            onMapReady={handleMapReady}
-          />
-        ) : (
-          <div className="flex items-center justify-center h-full bg-gray-100">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
-              <p className="text-gray-600">加载地图中...</p>
+      )}
+      
+      {/* 全屏模式使用Portal渲染到body */}
+      {isFullscreen && typeof window !== 'undefined' && 
+        createPortal(
+        <div className="fixed inset-0 bg-white" style={{ zIndex: 99999 }}>
+          {/* 搜索框覆盖在地图顶部 */}
+          <div className="absolute top-4 right-4 w-80" style={{ zIndex: 100000 }}>
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="搜索地点（如：巴黎、东京、纽约）"
+                className="w-full pl-10 pr-24 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none text-sm shadow-md"
+              />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              {searchQuery && (
+                <button
+                  onClick={clearSearch}
+                  className="absolute right-20 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 rounded"
+                >
+                  <X className="w-4 h-4 text-gray-500" />
+                </button>
+              )}
+              <button
+                onClick={handleSearch}
+                disabled={isSearching || !searchQuery.trim()}
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 px-4 py-1 bg-green-500 text-white text-sm rounded-md hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              >
+                {isSearching ? '搜索中...' : '搜索'}
+              </button>
             </div>
+            {searchLocation && (
+              <div className="absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-10">
+                <p className="text-xs text-gray-600 mb-1">当前搜索位置：</p>
+                <p className="text-sm font-medium text-gray-800 line-clamp-2">{searchLocation.name}</p>
+              </div>
+            )}
           </div>
-        )}
 
-        {/* 全屏模式调试指示器 */}
-        {isFullscreen && (
-          <div className="absolute bottom-4 left-4 z-[10001] bg-red-500 text-white px-3 py-1 rounded text-sm">
+          {/* 退出全屏按钮 */}
+          <button
+            onClick={toggleFullscreen}
+            className="absolute top-4 left-4 p-3 bg-white/90 backdrop-blur-md rounded-full shadow-md hover:bg-white"
+            style={{ zIndex: 100000 }}
+            title="退出全屏"
+          >
+            <Minimize2 className="w-5 h-5 text-gray-700" />
+          </button>
+
+          {mapReady ? (
+            <TravelLeafletMap
+              travelPosts={travelPosts}
+              onPostClick={handlePostClick}
+              searchLocation={searchLocation}
+              onMapReady={handleMapReady}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full bg-gray-100">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
+                <p className="text-gray-600">加载地图中...</p>
+              </div>
+            </div>
+          )}
+          
+          {/* 全屏模式调试指示器 */}
+          <div className="absolute bottom-4 left-4 bg-red-500 text-white px-3 py-1 rounded text-sm" style={{ zIndex: 100001 }}>
             全屏模式已激活
           </div>
-        )}
-      </div>
+        </div>
+        ,
+        document.body
+        )
+      }
       
       {travelPosts.length > 0 && (
         <div className="mt-4 text-sm text-gray-600">
