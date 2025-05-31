@@ -47,7 +47,7 @@ const nextConfig = {
               img-src 'self' data: blob: https:;
               font-src 'self' fonts.gstatic.com;
               connect-src 'self' *.googleapis.com *.firebaseio.com *.cloudfunctions.net *.google-analytics.com *.analytics.google.com *.googletagmanager.com wss:;
-              frame-src 'self' *.google.com maps.google.com;
+              frame-src 'self' *.google.com maps.google.com www.google.com;
               object-src 'none';
               base-uri 'self';
               form-action 'self';
@@ -55,7 +55,7 @@ const nextConfig = {
           },
           {
             key: 'Permissions-Policy',
-            value: 'accelerometer=(self "https://*.google.com" "https://maps.google.com"), camera=(self "https://*.google.com"), geolocation=(self "https://*.google.com" "https://maps.google.com"), gyroscope=(self "https://*.google.com" "https://maps.google.com"), magnetometer=(self "https://*.google.com" "https://maps.google.com"), microphone=(self "https://*.google.com"), payment=(), usb=()'
+            value: 'accelerometer=(self "https://*.google.com" "https://maps.google.com" "https://www.google.com"), camera=(self "https://*.google.com"), geolocation=(self "https://*.google.com" "https://maps.google.com" "https://www.google.com"), gyroscope=(self "https://*.google.com" "https://maps.google.com" "https://www.google.com"), magnetometer=(self "https://*.google.com" "https://maps.google.com" "https://www.google.com"), microphone=(self "https://*.google.com"), payment=(), usb=()'
           }
         ]
       }

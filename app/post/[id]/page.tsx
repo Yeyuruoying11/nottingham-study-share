@@ -664,7 +664,7 @@ export default function PostDetailPage() {
         content: replyContent.trim(),
         author: {
           name: userName,
-          avatar: user.photoURL || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
+          avatar: firestoreUserAvatar || user.photoURL || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
           uid: user.uid
         }
       });
@@ -809,7 +809,7 @@ export default function PostDetailPage() {
               />
             ) : (
             <img
-              src={post.image}
+              src={post.image || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=300&fit=crop"}
               alt={post.title}
               className="w-full h-full object-cover"
             />
@@ -847,7 +847,7 @@ export default function PostDetailPage() {
                   title={`查看 ${post.author.name} 的资料`}
                 >
                 <img
-                  src={post.author.avatar}
+                  src={post.author.avatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"}
                   alt={post.author.name}
                     className="w-12 h-12 rounded-full object-cover border-2 border-transparent hover:border-green-300 transition-colors"
                 />
@@ -926,6 +926,20 @@ export default function PostDetailPage() {
                 <p className="text-sm text-gray-600 mt-1">
                   360° 街景视图，拖动查看房屋周围环境
                 </p>
+                {/* 添加Google Maps链接作为备用 */}
+                {post.location && (
+                  <a 
+                    href={`https://www.google.com/maps/@${post.location.latitude},${post.location.longitude},3a,75y,90t/data=!3m6!1e1!3m4!1s!2e0!7i16384!8i8192`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-800 text-sm mt-2"
+                  >
+                    <span>在 Google Maps 中查看街景</span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                )}
               </div>
               {/* 全宽的Street View容器，使用负边距突破padding限制 */}
               <div className="relative -mx-6 sm:-mx-6 lg:-mx-6">
@@ -944,7 +958,7 @@ export default function PostDetailPage() {
                             width="100%"
                             height="500"
                             style={{ border: 0, display: 'block' }}
-                            allow="accelerometer; gyroscope; magnetometer; camera; microphone; geolocation"
+                            allow="fullscreen"
                             allowFullScreen
                             loading="lazy"
                             referrerPolicy="no-referrer-when-downgrade"
@@ -991,6 +1005,14 @@ export default function PostDetailPage() {
                     <p><strong>有embedHtml:</strong> {post.embedHtml ? '是' : '否'}</p>
                     <p><strong>有location:</strong> {post.location ? '是' : '否'}</p>
                     <p><strong>显示条件满足:</strong> {(post.category === '租房' && (post.embedHtml || post.location)) ? '是' : '否'}</p>
+                    {post.location && (
+                      <div className="mt-2">
+                        <p><strong>位置信息:</strong></p>
+                        <p className="pl-4">地址: {post.location.address || '无'}</p>
+                        <p className="pl-4">纬度: {post.location.latitude || '无'}</p>
+                        <p className="pl-4">经度: {post.location.longitude || '无'}</p>
+                      </div>
+                    )}
                     {post.embedHtml && (
                       <div className="mt-2">
                         <p><strong>embedHtml内容预览:</strong></p>
@@ -1034,7 +1056,7 @@ export default function PostDetailPage() {
                 <form onSubmit={handleSubmitComment} className="mb-6">
                   <div className="flex space-x-4">
                     <img
-                      src={firestoreUserAvatar}
+                      src={firestoreUserAvatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"}
                       alt="Your avatar"
                       className="w-10 h-10 rounded-full object-cover"
                     />
@@ -1164,7 +1186,7 @@ function CommentItem({
     >
       <div className="flex space-x-4">
         <img
-          src={comment.author.avatar}
+          src={comment.author.avatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"}
           alt={comment.author.name}
           className="w-10 h-10 rounded-full object-cover"
         />
@@ -1211,7 +1233,7 @@ function CommentItem({
             <div className="mt-4 p-4 bg-gray-50 rounded-lg">
               <div className="flex space-x-3">
                 <img
-                  src={currentUserAvatar}
+                  src={currentUserAvatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"}
                   alt="Your avatar"
                   className="w-8 h-8 rounded-full object-cover"
                 />

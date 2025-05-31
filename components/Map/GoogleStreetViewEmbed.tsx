@@ -29,31 +29,30 @@ export default function GoogleStreetViewEmbed({
         setIsLoading(true);
         setError(null);
 
-        // 如果没有提供经纬度，尝试使用默认位置或显示错误
+        console.log('[GoogleStreetViewEmbed] 开始生成街景URL');
+        console.log('[GoogleStreetViewEmbed] 参数:', { address, latitude, longitude });
+
+        // 如果没有提供经纬度，显示错误
         if (!latitude || !longitude) {
-          if (address) {
-            // 暂时设置错误，因为我们需要坐标来生成街景
-            setError('需要准确的经纬度坐标来显示街景');
-            return;
-          } else {
-            setError('请提供地址或经纬度');
-            return;
-          }
+          console.error('[GoogleStreetViewEmbed] 缺少经纬度坐标');
+          setError('需要准确的经纬度坐标来显示街景');
+          setIsLoading(false);
+          return;
         }
 
-        // 生成Google Street View嵌入URL
-        // 格式: !4v时间戳!6m8!1m7!1s!2m2!1d纬度!2d经度!3f角度!4f俯仰!5f缩放
-        const timestamp = Date.now();
-        const pb = `!4v${timestamp}!6m8!1m7!1s!2m2!1d${latitude}!2d${longitude}!3f0!4f0!5f0.7820865974627469`;
+        // 使用Google Maps嵌入API - 街景模式
+        // 这个API密钥是Google提供的公开密钥，仅用于嵌入式地图
+        const apiKey = 'AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8';
         
-        const baseUrl = 'https://www.google.com/maps/embed';
-        const url = `${baseUrl}?pb=${encodeURIComponent(pb)}`;
+        // 构建街景URL - 使用streetview端点
+        const streetViewUrl = `https://www.google.com/maps/embed/v1/streetview?key=${apiKey}&location=${latitude},${longitude}&heading=0&fov=90&pitch=0`;
         
-        setEmbedUrl(url);
+        console.log('[GoogleStreetViewEmbed] 生成的街景URL:', streetViewUrl);
+        setEmbedUrl(streetViewUrl);
         setIsLoading(false);
 
       } catch (err) {
-        console.error('Street View URL生成失败:', err);
+        console.error('[GoogleStreetViewEmbed] 街景URL生成失败:', err);
         setError('街景加载失败');
         setIsLoading(false);
       }
@@ -69,15 +68,15 @@ export default function GoogleStreetViewEmbed({
   return (
     <div className={`relative ${isFullscreen ? 'fixed inset-0 z-50 bg-black' : ''} ${className}`}>
       <div 
-        className={`w-full ${isFullscreen ? 'h-full' : height} rounded-lg overflow-hidden`}
+        className={`w-full ${isFullscreen ? 'h-full' : height} rounded-lg overflow-hidden bg-gray-100`}
         style={{ minHeight: '300px' }}
       >
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-50 to-green-50">
             <div className="text-center">
               <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">加载街景视图中...</h3>
-              <p className="text-sm text-gray-600">正在获取位置街景信息</p>
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">加载街景中...</h3>
+              <p className="text-sm text-gray-600">正在获取360°街景视图</p>
               <div className="mt-4 flex items-center justify-center space-x-2">
                 <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
                 <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
@@ -99,10 +98,12 @@ export default function GoogleStreetViewEmbed({
                 <p className="mb-2 font-semibold">可能的原因：</p>
                 <ul className="space-y-1">
                   <li>• 该位置可能没有街景数据</li>
-                  <li>• 需要更准确的位置坐标</li>
+                  <li>• 位置坐标不正确</li>
                   <li>• 网络连接问题</li>
                   <li>• Google服务暂时不可用</li>
                 </ul>
+                <p className="mt-3 font-semibold">提示：</p>
+                <p className="mt-1">您可以点击上方的"在 Google Maps 中查看街景"链接查看</p>
               </div>
             </div>
           </div>

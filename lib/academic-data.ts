@@ -396,72 +396,474 @@ export const departments: Department[] = [
 
 // 课程数据（每个专业的主要课程）
 export const courses: Course[] = [
-  // 诺丁汉大学计算机科学课程
+  // 诺丁汉大学计算机科学课程 - 第一年
   {
     id: 'comp1001',
-    name: '计算机科学基础',
-    nameEn: 'Fundamentals of Computer Science',
+    name: '计算机科学家数学1',
+    nameEn: 'Mathematics for Computer Scientists 1',
     code: 'COMP1001',
     departmentId: 'uon-computer-science',
     level: 'undergraduate',
     year: 1,
     credits: 20,
-    description: '编程基础、算法入门、计算机系统概述'
+    description: '计算机科学相关的数学基础，包括离散数学、逻辑和证明'
+  },
+  {
+    id: 'comp1043',
+    name: '计算机科学家数学2',
+    nameEn: 'Mathematics for Computer Scientists 2',
+    code: 'COMP1043',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 1,
+    credits: 20,
+    description: '线性代数、概率论和统计学在计算机科学中的应用'
   },
   {
     id: 'comp1002',
-    name: '程序设计与数据结构',
-    nameEn: 'Programming and Data Structures',
+    name: '计算机科学第一年辅导',
+    nameEn: 'Computer Science First Year Tutorial',
     code: 'COMP1002',
     departmentId: 'uon-computer-science',
     level: 'undergraduate',
     year: 1,
     credits: 20,
-    description: 'Java/Python编程、数据结构、算法设计'
+    description: '计算机科学学习方法、学术写作和职业发展指导'
   },
   {
+    id: 'comp1004',
+    name: '数据库与界面',
+    nameEn: 'Databases and Interfaces',
+    code: 'COMP1004',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 1,
+    credits: 20,
+    description: '数据库设计、SQL、用户界面设计原理'
+  },
+  {
+    id: 'comp1008',
+    name: '人工智能基础',
+    nameEn: 'Fundamentals of Artificial Intelligence',
+    code: 'COMP1008',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 1,
+    credits: 20,
+    description: 'AI基本概念、搜索算法、知识表示'
+  },
+  {
+    id: 'comp1005',
+    name: '编程与算法',
+    nameEn: 'Programming and Algorithms',
+    code: 'COMP1005',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 1,
+    credits: 20,
+    description: '编程基础、算法设计与分析、数据结构入门'
+  },
+  {
+    id: 'comp1009',
+    name: '编程范式',
+    nameEn: 'Programming Paradigms',
+    code: 'COMP1009',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 1,
+    credits: 20,
+    description: '面向对象编程、函数式编程、编程语言概念'
+  },
+  {
+    id: 'comp1003',
+    name: '软件工程导论',
+    nameEn: 'Introduction to Software Engineering',
+    code: 'COMP1003',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 1,
+    credits: 20,
+    description: '软件开发过程、需求分析、测试基础'
+  },
+  {
+    id: 'comp1054',
+    name: '汇编语言编程',
+    nameEn: 'Assembly Language Programming',
+    code: 'COMP1054',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 1,
+    credits: 20,
+    description: '计算机组织、汇编语言、低级编程技术'
+  },
+  {
+    id: 'comp1055',
+    name: '网络',
+    nameEn: 'Networks',
+    code: 'COMP1055',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 1,
+    credits: 20,
+    description: '计算机网络基础、OSI模型、TCP/IP协议'
+  },
+  {
+    id: 'comp1056',
+    name: '计算机体系结构',
+    nameEn: 'Computer Architecture',
+    code: 'COMP1056',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 1,
+    credits: 20,
+    description: '计算机硬件组成、处理器设计、存储系统'
+  },
+  
+  // 诺丁汉大学计算机科学课程 - 第二年
+  {
     id: 'comp2001',
-    name: '软件工程',
-    nameEn: 'Software Engineering',
+    name: '人工智能方法',
+    nameEn: 'Artificial Intelligence Methods',
     code: 'COMP2001',
     departmentId: 'uon-computer-science',
     level: 'undergraduate',
     year: 2,
     credits: 20,
-    description: '软件开发生命周期、设计模式、团队项目'
+    description: '机器学习算法、神经网络、深度学习基础'
+  },
+  {
+    id: 'comp2065',
+    name: '形式化推理导论',
+    nameEn: 'Introduction to Formal Reasoning',
+    code: 'COMP2065',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 2,
+    credits: 20,
+    description: '形式逻辑、程序验证、形式化规范'
+  },
+  {
+    id: 'comp2054',
+    name: '算法、数据结构与效率',
+    nameEn: 'Algorithms Data Structures and Efficiency',
+    code: 'COMP2054',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 2,
+    credits: 20,
+    description: '高级数据结构、算法复杂度分析、优化技术'
+  },
+  {
+    id: 'comp2013',
+    name: '开发可维护软件',
+    nameEn: 'Developing Maintainable Software',
+    code: 'COMP2013',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 2,
+    credits: 20,
+    description: '软件设计模式、重构、代码质量管理'
+  },
+  {
+    id: 'comp2012',
+    name: '语言与计算',
+    nameEn: 'Languages and Computation',
+    code: 'COMP2012',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 2,
+    credits: 20,
+    description: '形式语言理论、自动机、编译原理基础'
+  },
+  {
+    id: 'comp2007',
+    name: '操作系统与并发',
+    nameEn: 'Operating Systems & Concurrency',
+    code: 'COMP2007',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 2,
+    credits: 20,
+    description: '操作系统原理、进程管理、并发编程'
   },
   {
     id: 'comp2002',
-    name: '数据库系统',
-    nameEn: 'Database Systems',
+    name: '软件工程团队项目',
+    nameEn: 'Software Engineering Group Project',
     code: 'COMP2002',
     departmentId: 'uon-computer-science',
     level: 'undergraduate',
     year: 2,
     credits: 20,
-    description: 'SQL、数据库设计、事务处理'
+    description: '团队软件开发、项目管理、敏捷方法'
   },
   {
-    id: 'comp3001',
-    name: '人工智能',
-    nameEn: 'Artificial Intelligence',
-    code: 'COMP3001',
+    id: 'comp2005',
+    name: '图像处理导论',
+    nameEn: 'Introduction to Image Processing',
+    code: 'COMP2005',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 2,
+    credits: 20,
+    description: '数字图像处理、计算机视觉基础、图像分析'
+  },
+  {
+    id: 'comp2004',
+    name: '人机交互导论',
+    nameEn: 'Introduction to Human Computer Interaction',
+    code: 'COMP2004',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 2,
+    credits: 20,
+    description: '用户界面设计、可用性测试、交互设计原则'
+  },
+  {
+    id: 'comp2003',
+    name: '高级函数式编程',
+    nameEn: 'Advanced Functional Programming',
+    code: 'COMP2003',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 2,
+    credits: 20,
+    description: 'Haskell编程、函数式编程高级概念、类型系统'
+  },
+  {
+    id: 'comp2006',
+    name: 'C++编程',
+    nameEn: 'C++ Programming',
+    code: 'COMP2006',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 2,
+    credits: 20,
+    description: 'C++语言特性、面向对象设计、STL使用'
+  },
+  {
+    id: 'comp2014',
+    name: '分布式系统',
+    nameEn: 'Distributed Systems',
+    code: 'COMP2014',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 2,
+    credits: 20,
+    description: '分布式计算原理、网络编程、云计算基础'
+  },
+  {
+    id: 'comp2010',
+    name: '软件规范',
+    nameEn: 'Software Specification',
+    code: 'COMP2010',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 2,
+    credits: 20,
+    description: '需求工程、形式化规范、建模语言'
+  },
+  {
+    id: 'comp2064',
+    name: '智能物联网与机器人导论',
+    nameEn: 'Introduction to Smart Things and Robotics',
+    code: 'COMP2064',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 2,
+    credits: 20,
+    description: '物联网技术、嵌入式系统、机器人编程基础'
+  },
+  
+  // 诺丁汉大学计算机科学课程 - 第三年
+  {
+    id: 'comp3003',
+    name: '本科项目',
+    nameEn: 'Undergraduate Projects',
+    code: 'COMP3003',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 3,
+    credits: 40,
+    description: '独立研究项目、论文撰写、项目展示'
+  },
+  {
+    id: 'comp3015',
+    name: '产业实习与学校体验',
+    nameEn: 'Development, Industrial and Schools Experience',
+    code: 'COMP3015',
     departmentId: 'uon-computer-science',
     level: 'undergraduate',
     year: 3,
     credits: 20,
-    description: '机器学习、神经网络、知识表示'
+    description: '行业实习、教学体验、职业发展'
   },
   {
-    id: 'comp3002',
-    name: '计算机网络',
-    nameEn: 'Computer Networks',
-    code: 'COMP3002',
+    id: 'comp3009',
+    name: '机器学习',
+    nameEn: 'Machine Learning',
+    code: 'COMP3009',
     departmentId: 'uon-computer-science',
     level: 'undergraduate',
     year: 3,
     credits: 20,
-    description: '网络协议、网络安全、分布式系统'
+    description: '监督学习、无监督学习、深度学习应用'
+  },
+  {
+    id: 'comp3021',
+    name: '数据可视化',
+    nameEn: 'Data Visualisation',
+    code: 'COMP3021',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 3,
+    credits: 20,
+    description: '数据可视化原理、交互式可视化、可视化工具'
+  },
+  {
+    id: 'comp3006',
+    name: '计算机安全',
+    nameEn: 'Computer Security',
+    code: 'COMP3006',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 3,
+    credits: 20,
+    description: '网络安全、加密技术、安全协议'
+  },
+  {
+    id: 'comp3022',
+    name: '数据可视化项目',
+    nameEn: 'Data Visualisation Project',
+    code: 'COMP3022',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 3,
+    credits: 20,
+    description: '可视化项目实践、大数据可视化、用户研究'
+  },
+  {
+    id: 'comp3018',
+    name: '移动设备编程',
+    nameEn: 'Mobile Device Programming',
+    code: 'COMP3018',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 3,
+    credits: 20,
+    description: 'Android/iOS开发、移动应用设计、跨平台开发'
+  },
+  {
+    id: 'comp3012',
+    name: '编译器',
+    nameEn: 'Compilers',
+    code: 'COMP3012',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 3,
+    credits: 20,
+    description: '编译器设计、语法分析、代码生成'
+  },
+  {
+    id: 'comp3020',
+    name: '计算机专业伦理',
+    nameEn: 'Professional Ethics in Computing',
+    code: 'COMP3020',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 3,
+    credits: 20,
+    description: '技术伦理、数据隐私、社会责任'
+  },
+  {
+    id: 'comp3077',
+    name: '密码学',
+    nameEn: 'Cryptography',
+    code: 'COMP3077',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 3,
+    credits: 20,
+    description: '加密算法、密码协议、区块链技术'
+  },
+  {
+    id: 'comp3074',
+    name: '人机智能交互',
+    nameEn: 'Human-AI Interaction',
+    code: 'COMP3074',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 3,
+    credits: 20,
+    description: 'AI系统的用户体验、可解释AI、人机协作'
+  },
+  {
+    id: 'comp3007',
+    name: '计算机视觉',
+    nameEn: 'Computer Vision',
+    code: 'COMP3007',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 3,
+    credits: 20,
+    description: '图像识别、目标检测、深度学习在视觉中的应用'
+  },
+  {
+    id: 'comp3008',
+    name: '符号人工智能',
+    nameEn: 'Symbolic Artificial Intelligence',
+    code: 'COMP3008',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 3,
+    credits: 20,
+    description: '知识表示、推理系统、专家系统'
+  },
+  {
+    id: 'comp3013',
+    name: '软件与社会',
+    nameEn: 'Software in Society',
+    code: 'COMP3013',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 3,
+    credits: 20,
+    description: '软件的社会影响、技术与社会互动、数字包容'
+  },
+  {
+    id: 'comp3011',
+    name: '计算机图形学',
+    nameEn: 'Computer Graphics',
+    code: 'COMP3011',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 3,
+    credits: 20,
+    description: '3D图形渲染、着色器编程、图形管线'
+  },
+  {
+    id: 'comp3010',
+    name: '协作与通信技术',
+    nameEn: 'Collaboration and Communication Technologies',
+    code: 'COMP3010',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 3,
+    credits: 20,
+    description: '协同软件、实时通信系统、社交计算'
+  },
+  
+  // 诺丁汉大学计算机科学 - 可选年份
+  {
+    id: 'comp-placement',
+    name: '工业实习年',
+    nameEn: 'Year in Industry - Placement Year',
+    code: 'COMP-IND',
+    departmentId: 'uon-computer-science',
+    level: 'undergraduate',
+    year: 3,
+    credits: 120,
+    description: '在相关行业进行为期一年的全职工作实习，获得实际工作经验'
   },
   
   // 诺丁汉大学商科课程

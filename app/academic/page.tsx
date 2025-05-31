@@ -19,6 +19,27 @@ export default function AcademicPage() {
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
   const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
 
+  // 调试信息
+  console.log('=== 学术数据调试 ===');
+  console.log('大学数量:', universities.length);
+  console.log('学院数量:', schools.length);
+  console.log('专业数量:', departments.length);
+  
+  if (selectedUniversity) {
+    const universitySchools = getSchoolsByUniversity(selectedUniversity.id);
+    console.log(`${selectedUniversity.name} 的学院数量:`, universitySchools.length);
+    
+    if (selectedSchool) {
+      const schoolDepts = getDepartmentsBySchool(selectedSchool.id);
+      console.log(`${selectedSchool.name} 的专业数量:`, schoolDepts.length);
+      
+      if (selectedDepartment) {
+        const deptCourses = getCoursesByDepartment(selectedDepartment.id);
+        console.log(`${selectedDepartment.name} 的课程数量:`, deptCourses.length);
+      }
+    }
+  }
+
   const schoolColors = {
     // 诺丁汉大学学院颜色
     'uon-arts': 'bg-purple-100 text-purple-800 border-purple-200',
@@ -132,6 +153,25 @@ export default function AcademicPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* 调试面板 */}
+        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <h3 className="text-sm font-semibold text-yellow-800 mb-2">🐛 调试信息</h3>
+          <div className="text-xs text-yellow-700 space-y-1">
+            <div>大学数量: {universities.length}</div>
+            <div>学院数量: {schools.length}</div>
+            <div>专业数量: {departments.length}</div>
+            {selectedUniversity && (
+              <div>当前大学学院数: {getSchoolsByUniversity(selectedUniversity.id).length}</div>
+            )}
+            {selectedSchool && (
+              <div>当前学院专业数: {getDepartmentsBySchool(selectedSchool.id).length}</div>
+            )}
+            {selectedDepartment && (
+              <div>当前专业课程数: {getCoursesByDepartment(selectedDepartment.id).length}</div>
+            )}
+          </div>
+        </div>
+
         {!selectedUniversity ? (
           // 大学选择视图
           <div>
