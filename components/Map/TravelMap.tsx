@@ -467,16 +467,26 @@ export default function TravelMap({
   };
 
   const toggleFullscreen = () => {
+    console.log('全屏切换:', !isFullscreen ? '进入全屏' : '退出全屏');
     setIsFullscreen(!isFullscreen);
   };
 
   // 当全屏时禁用页面滚动
   useEffect(() => {
     if (isFullscreen) {
+      console.log('进入全屏模式，禁用页面滚动');
       document.body.classList.add('overflow-hidden');
     } else {
+      console.log('退出全屏模式，恢复页面滚动');
       document.body.classList.remove('overflow-hidden');
     }
+    
+    // 清理函数，确保组件卸载时恢复滚动
+    return () => {
+      if (isFullscreen) {
+        document.body.classList.remove('overflow-hidden');
+      }
+    };
   }, [isFullscreen]);
 
   // 切换全屏后让 Leaflet 重新计算尺寸，避免出现空白
@@ -515,10 +525,10 @@ export default function TravelMap({
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div
-        className={`relative border border-gray-300 rounded-lg overflow-hidden ${isFullscreen ? 'fixed inset-0 z-50 bg-white' : 'h-[80vh]'}`}
+        className={`relative border border-gray-300 rounded-lg overflow-hidden ${isFullscreen ? 'fixed inset-0 z-[9999] bg-white' : 'h-[80vh]'}`}
       >
         {/* 搜索框覆盖在地图顶部 */}
-        <div className="absolute top-4 right-4 z-30 w-80">
+        <div className="absolute top-4 right-4 z-[10000] w-80">
           <div className="relative">
             <input
               type="text"
@@ -556,7 +566,7 @@ export default function TravelMap({
         {/* 全屏切换按钮 */}
         <button
           onClick={toggleFullscreen}
-          className="absolute top-4 left-4 z-30 p-3 bg-white/90 backdrop-blur-md rounded-full shadow-md hover:bg-white"
+          className="absolute top-4 left-4 z-[10000] p-3 bg-white/90 backdrop-blur-md rounded-full shadow-md hover:bg-white"
           title={isFullscreen ? '退出全屏' : '全屏查看'}
         >
           {isFullscreen ? <Minimize2 className="w-5 h-5 text-gray-700" /> : <Maximize2 className="w-5 h-5 text-gray-700" />}
@@ -575,6 +585,13 @@ export default function TravelMap({
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
               <p className="text-gray-600">加载地图中...</p>
             </div>
+          </div>
+        )}
+
+        {/* 全屏模式调试指示器 */}
+        {isFullscreen && (
+          <div className="absolute bottom-4 left-4 z-[10001] bg-red-500 text-white px-3 py-1 rounded text-sm">
+            全屏模式已激活
           </div>
         )}
       </div>
