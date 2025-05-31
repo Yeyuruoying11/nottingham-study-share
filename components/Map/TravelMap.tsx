@@ -479,6 +479,19 @@ export default function TravelMap({
     }
   }, [isFullscreen]);
 
+  // 切换全屏后让 Leaflet 重新计算尺寸，避免出现空白
+  useEffect(() => {
+    if (mapInstanceRef.current) {
+      setTimeout(() => {
+        try {
+          mapInstanceRef.current.invalidateSize();
+        } catch (e) {
+          console.warn('invalidateSize 调用失败', e);
+        }
+      }, 350); // 等待过渡动画完成
+    }
+  }, [isFullscreen]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
