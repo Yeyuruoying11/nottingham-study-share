@@ -482,13 +482,25 @@ export default function TravelMap({
   // 切换全屏后让 Leaflet 重新计算尺寸，避免出现空白
   useEffect(() => {
     if (mapInstanceRef.current) {
-      setTimeout(() => {
+      // 立即调用
+      requestAnimationFrame(() => {
         try {
           mapInstanceRef.current.invalidateSize();
+          console.log('第一次 invalidateSize 调用');
         } catch (e) {
           console.warn('invalidateSize 调用失败', e);
         }
-      }, 350); // 等待过渡动画完成
+      });
+      
+      // 延迟再调用一次确保渲染完成
+      setTimeout(() => {
+        try {
+          mapInstanceRef.current.invalidateSize();
+          console.log('第二次 invalidateSize 调用');
+        } catch (e) {
+          console.warn('第二次 invalidateSize 调用失败', e);
+        }
+      }, 300);
     }
   }, [isFullscreen]);
 
@@ -503,7 +515,7 @@ export default function TravelMap({
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div
-        className={`relative border border-gray-300 rounded-lg overflow-hidden ${isFullscreen ? 'fixed inset-0 z-50' : 'h-[80vh]'}`}
+        className={`relative border border-gray-300 rounded-lg overflow-hidden ${isFullscreen ? 'fixed inset-0 z-50 bg-white' : 'h-[80vh]'}`}
       >
         {/* 搜索框覆盖在地图顶部 */}
         <div className="absolute top-4 right-4 z-30 w-80">
