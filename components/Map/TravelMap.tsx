@@ -60,6 +60,7 @@ const TravelLeafletMap = React.memo(({
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -84,17 +85,21 @@ const TravelLeafletMap = React.memo(({
           mapRef.current.innerHTML = '';
         }
 
-        // 创建新的地图实例
+        // 创建新的地图实例，显示世界地图全景
         const map = L.map(mapRef.current!, {
-          center: [51.5074, -0.1278], // 伦敦为中心
-          zoom: 5,
+          center: [20, 0], // 世界中心
+          zoom: 2, // 缩放级别调整为显示世界地图
+          minZoom: 2, // 最小缩放级别
+          maxZoom: 18, // 最大缩放级别
           zoomControl: true,
           attributionControl: true,
+          worldCopyJump: true, // 允许世界地图复制
         });
 
         // 添加瓦片层
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          noWrap: false // 允许地图水平环绕
         }).addTo(map);
 
         mapInstanceRef.current = map;
@@ -103,23 +108,58 @@ const TravelLeafletMap = React.memo(({
         const markers: any[] = [];
         travelPosts.forEach((post) => {
           if (post.location && post.id) {
-            const marker = L.marker([post.location.latitude, post.location.longitude])
-              .addTo(map)
-              .bindPopup(`
-                <div class="p-2">
-                  <h3 class="font-bold text-sm">${post.title}</h3>
-                  <p class="text-xs text-gray-600 mt-1">${post.location.address}</p>
-                  <button 
-                    onclick="window.location.href='/post/${post.id}'" 
-                    class="mt-2 px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600"
-                  >
-                    查看详情
-                  </button>
-                </div>
-              `);
+            // 调试日志
+            console.log('创建标记，帖子数据:', {
+              id: post.id,
+              title: post.title,
+              image: post.image,
+              content: post.content,
+              location: post.location
+            });
             
-            marker.on('click', () => {
-              onPostClick(post.id!);
+            const marker = L.marker([post.location.latitude, post.location.longitude])
+              .addTo(map);
+            
+            // 自定义弹出窗口内容
+            const popupContent = `
+              <div class="p-3 min-w-[250px]">
+                ${post.image ? `
+                  <img src="${post.image}" alt="${post.title}" class="w-full h-32 object-cover rounded-lg mb-3">
+                ` : ''}
+                <h3 class="font-bold text-base mb-2">${post.title}</h3>
+                <p class="text-sm text-gray-600 mb-2 line-clamp-2">${post.content || '暂无简介'}</p>
+                <div class="flex items-center text-xs text-gray-500 mb-3">
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  </svg>
+                  <span>${post.location.address}</span>
+                </div>
+                <button 
+                  id="view-detail-${post.id}"
+                  class="w-full px-4 py-2 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600 transition-colors"
+                >
+                  查看详情
+                </button>
+              </div>
+            `;
+            
+            marker.bindPopup(popupContent, {
+              maxWidth: 300,
+              className: 'custom-popup'
+            });
+            
+            // 监听弹出窗口打开事件
+            marker.on('popupopen', () => {
+              // 延迟添加事件监听器，确保DOM已经渲染
+              setTimeout(() => {
+                const button = document.getElementById(`view-detail-${post.id}`);
+                if (button) {
+                  button.addEventListener('click', () => {
+                    onPostClick(post.id!);
+                  });
+                }
+              }, 100);
             });
             
             markers.push(marker);
@@ -128,11 +168,7 @@ const TravelLeafletMap = React.memo(({
 
         markersRef.current = markers;
 
-        // 如果有标记，调整地图视图以包含所有标记
-        if (markers.length > 0) {
-          const group = L.featureGroup(markers);
-          map.fitBounds(group.getBounds().pad(0.1));
-        }
+        // 不再自动调整视图以适应所有标记，保持世界地图视图
 
       } catch (error) {
         console.error('地图初始化失败:', error);
@@ -155,7 +191,26 @@ const TravelLeafletMap = React.memo(({
     };
   }, [travelPosts, onPostClick]);
 
-  return <div ref={mapRef} className="h-full w-full" />;
+  return (
+    <>
+      <div ref={mapRef} className="h-full w-full" />
+      <style jsx global>{`
+        .custom-popup .leaflet-popup-content-wrapper {
+          border-radius: 12px;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .custom-popup .leaflet-popup-tip {
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .line-clamp-2 {
+          overflow: hidden;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+        }
+      `}</style>
+    </>
+  );
 });
 
 TravelLeafletMap.displayName = 'TravelLeafletMap';
@@ -209,7 +264,7 @@ export default function TravelMap({
         onPostSelect(selectedPost);
       }
     }
-    // 同时导航到帖子页面
+    // 导航到帖子页面
     router.push(`/post/${postId}`);
   };
 
@@ -228,7 +283,7 @@ export default function TravelMap({
         <p className="text-gray-600">探索世界各地的旅行分享</p>
       </div>
       
-      <div className="h-96 border border-gray-300 rounded-lg overflow-hidden">
+      <div className="h-[600px] border border-gray-300 rounded-lg overflow-hidden">
         {mapReady ? (
           <TravelLeafletMap
             travelPosts={travelPosts}
@@ -239,10 +294,10 @@ export default function TravelMap({
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
               <p className="text-gray-600">加载地图中...</p>
-                      </div>
-                    </div>
+            </div>
+          </div>
         )}
-                </div>
+      </div>
       
       {travelPosts.length > 0 && (
         <div className="mt-4 text-sm text-gray-600">
