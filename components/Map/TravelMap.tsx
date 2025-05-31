@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { Post, Location } from '@/lib/types';
@@ -131,7 +131,13 @@ const TravelLeafletMap = React.memo(({
       }
     };
 
-    updateSearchMarker();
+    // 在地图初始化后，如果已经有搜索位置，立即更新
+    if (searchLocation) {
+      // 使用微任务队列确保地图完全就绪
+      Promise.resolve().then(() => {
+        updateSearchMarker();
+      });
+    }
   }, [searchLocation]);
 
   useEffect(() => {
@@ -342,13 +348,9 @@ const TravelLeafletMap = React.memo(({
     </>
   );
 }, (prevProps, nextProps) => {
-  // 自定义比较函数，只有在真正需要时才重新渲染
   const postsEqual = prevProps.travelPosts === nextProps.travelPosts;
-  const callbackEqual = prevProps.onPostClick === nextProps.onPostClick;
   const searchEqual = JSON.stringify(prevProps.searchLocation) === JSON.stringify(nextProps.searchLocation);
-  const mapReadyEqual = prevProps.onMapReady === nextProps.onMapReady;
-  
-  return postsEqual && callbackEqual && searchEqual && mapReadyEqual;
+  return postsEqual && searchEqual; // ignore callback compare to avoid false positives
 });
 
 TravelLeafletMap.displayName = 'TravelLeafletMap';
@@ -404,17 +406,15 @@ export default function TravelMap({
     }
   }, [mapReady]);
 
-  const handlePostClick = (postId: string) => {
-    // 如果提供了onPostSelect回调，使用它
+  const handlePostClick = useCallback((postId: string) => {
     if (onPostSelect) {
       const selectedPost = travelPosts.find(post => post.id === postId);
       if (selectedPost) {
         onPostSelect(selectedPost);
       }
     }
-    // 导航到帖子页面
     router.push(`/post/${postId}`);
-  };
+  }, [onPostSelect, travelPosts, router]);
 
   // 处理搜索
   const handleSearch = async () => {
