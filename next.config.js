@@ -47,7 +47,7 @@ const nextConfig = {
               img-src 'self' data: blob: https:;
               font-src 'self' fonts.gstatic.com;
               connect-src 'self' *.googleapis.com *.firebaseio.com *.cloudfunctions.net *.google-analytics.com *.analytics.google.com *.googletagmanager.com wss:;
-              frame-src 'self' *.google.com maps.google.com www.google.com;
+              frame-src 'self' *.google.com maps.google.com www.google.com https://www.google.com/maps/embed maps.googleapis.com *.maps.google.com;
               object-src 'none';
               base-uri 'self';
               form-action 'self';

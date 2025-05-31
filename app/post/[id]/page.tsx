@@ -958,12 +958,16 @@ export default function PostDetailPage() {
                             width="100%"
                             height="500"
                             style={{ border: 0, display: 'block' }}
-                            allow="fullscreen"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
                             allowFullScreen
                             loading="lazy"
                             referrerPolicy="no-referrer-when-downgrade"
                             title="Google Street View"
                             className="w-full"
+                            onError={(e) => {
+                              console.error('iframe加载失败:', e);
+                              console.error('iframe src:', iframeSrc);
+                            }}
                           />
                         );
                       } else {
@@ -1018,6 +1022,13 @@ export default function PostDetailPage() {
                         <p><strong>embedHtml内容预览:</strong></p>
                         <pre className="bg-gray-100 p-2 rounded text-xs overflow-x-auto max-h-32">
                           {post.embedHtml.substring(0, 200)}...
+                        </pre>
+                        <p className="mt-2"><strong>解析的iframe src:</strong></p>
+                        <pre className="bg-gray-100 p-2 rounded text-xs overflow-x-auto">
+                          {(() => {
+                            const srcMatch = post.embedHtml.match(/src="([^"]+)"/);
+                            return srcMatch ? srcMatch[1] : '无法解析';
+                          })()}
                         </pre>
                       </div>
                     )}
