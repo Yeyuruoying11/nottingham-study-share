@@ -838,7 +838,7 @@ export default function PostDetailPage() {
 
           {/* 租房帖子的街景视图 */}
           {post.category === '租房' && (post.embedHtml || post.location) && (
-            <div className="mb-6">
+            <>
               <div className="px-6 py-4 border-b">
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center">
                   <MapPin className="w-5 h-5 mr-2 text-blue-500" />
@@ -848,7 +848,8 @@ export default function PostDetailPage() {
                   360° 街景视图，拖动查看房屋周围环境
                 </p>
               </div>
-              <div>
+              {/* 完全突破容器限制，让Street View占据整个屏幕宽度 */}
+              <div className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen">
                 {post.embedHtml ? (
                   // 解析嵌入HTML中的iframe src
                   (() => {
@@ -899,7 +900,8 @@ export default function PostDetailPage() {
                   />
                 )}
               </div>
-            </div>
+              <div className="mb-6"></div>
+            </>
           )}
 
           {/* 调试信息 - 开发环境下显示 */}
