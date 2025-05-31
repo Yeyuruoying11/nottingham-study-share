@@ -40,12 +40,14 @@ export default function GoogleStreetViewEmbed({
           return;
         }
 
-        // 使用Google Maps嵌入API - 街景模式
-        // 这个API密钥是Google提供的公开密钥，仅用于嵌入式地图
-        const apiKey = 'AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8';
-        
-        // 构建街景URL - 使用streetview端点
-        const streetViewUrl = `https://www.google.com/maps/embed/v1/streetview?key=${apiKey}&location=${latitude},${longitude}&heading=0&fov=90&pitch=0`;
+        let streetViewUrl = '';
+
+        const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+        if (apiKey) {
+          streetViewUrl = `https://www.google.com/maps/embed/v1/streetview?key=${apiKey}&location=${latitude},${longitude}&heading=0&fov=90&pitch=0`;
+        } else {
+          streetViewUrl = `https://www.google.com/maps/embed?pb=!6m8!1m7!1s!2m2!1d${latitude}!2d${longitude}!3f0!4f0!5f0.7820865974627469`;
+        }
         
         console.log('[GoogleStreetViewEmbed] 生成的街景URL:', streetViewUrl);
         setEmbedUrl(streetViewUrl);
