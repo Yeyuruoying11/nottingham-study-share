@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Post, Location } from '@/lib/types';
 import { getPostsByCategoryFromFirestore, type FirestorePost } from '@/lib/firestore-posts';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { Search, X } from 'lucide-react';
+import { Search, X, Maximize2, Minimize2 } from 'lucide-react';
 
 // 修复Leaflet图标路径问题
 const fixLeafletIcons = () => {
@@ -169,7 +169,7 @@ const TravelLeafletMap = React.memo(({
           zoom: 2, // 缩放级别调整为显示世界地图
           minZoom: 2, // 最小缩放级别
           maxZoom: 18, // 最大缩放级别
-          zoomControl: true,
+          zoomControl: false,
           attributionControl: true,
           worldCopyJump: true, // 允许世界地图复制
         });
@@ -367,6 +367,7 @@ export default function TravelMap({
   const [searchQuery, setSearchQuery] = useState('');
   const [searchLocation, setSearchLocation] = useState<{ lat: number; lng: number; name: string } | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const mapInstanceRef = useRef<any>(null);
 
   // 保存地图实例
@@ -465,6 +466,10 @@ export default function TravelMap({
     setSearchLocation(null);
   };
 
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -476,51 +481,58 @@ export default function TravelMap({
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="mb-4">
-        <div className="flex justify-between items-start">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">🗺️ 旅行地图</h2>
-            <p className="text-gray-600">探索世界各地的旅行分享</p>
-          </div>
-          
-          {/* 搜索框 */}
-          <div className="relative w-80">
-            <div className="relative">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="搜索地点（如：巴黎、东京、纽约）"
-                className="w-full pl-10 pr-24 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none text-sm"
-              />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              {searchQuery && (
-                <button
-                  onClick={clearSearch}
-                  className="absolute right-20 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 rounded"
-                >
-                  <X className="w-4 h-4 text-gray-500" />
-                </button>
-              )}
-              <button
-                onClick={handleSearch}
-                disabled={isSearching || !searchQuery.trim()}
-                className="absolute right-1 top-1/2 transform -translate-y-1/2 px-4 py-1 bg-green-500 text-white text-sm rounded-md hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-              >
-                {isSearching ? '搜索中...' : '搜索'}
-              </button>
-            </div>
-            {searchLocation && (
-              <div className="absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-10">
-                <p className="text-xs text-gray-600 mb-1">当前搜索位置：</p>
-                <p className="text-sm font-medium text-gray-800 line-clamp-2">{searchLocation.name}</p>
-              </div>
-            )}
-          </div>
-        </div>
+        <h2 className="text-2xl font-bold text-gray-900">🗺️ 旅行地图</h2>
+        <p className="text-gray-600">探索世界各地的旅行分享</p>
       </div>
       
-      <div className="h-[600px] border border-gray-300 rounded-lg overflow-hidden">
+      <div
+        className={`relative border border-gray-300 rounded-lg overflow-hidden ${isFullscreen ? 'fixed inset-0 z-50' : 'h-[80vh]'}`}
+      >
+        {/* 搜索框覆盖在地图顶部 */}
+        <div className="absolute top-4 right-4 z-30 w-80">
+          <div className="relative">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="搜索地点（如：巴黎、东京、纽约）"
+              className="w-full pl-10 pr-24 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none text-sm shadow-md"
+            />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            {searchQuery && (
+              <button
+                onClick={clearSearch}
+                className="absolute right-20 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 rounded"
+              >
+                <X className="w-4 h-4 text-gray-500" />
+              </button>
+            )}
+            <button
+              onClick={handleSearch}
+              disabled={isSearching || !searchQuery.trim()}
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 px-4 py-1 bg-green-500 text-white text-sm rounded-md hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            >
+              {isSearching ? '搜索中...' : '搜索'}
+            </button>
+          </div>
+          {searchLocation && (
+            <div className="absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-10">
+              <p className="text-xs text-gray-600 mb-1">当前搜索位置：</p>
+              <p className="text-sm font-medium text-gray-800 line-clamp-2">{searchLocation.name}</p>
+            </div>
+          )}
+        </div>
+
+        {/* 全屏切换按钮 */}
+        <button
+          onClick={toggleFullscreen}
+          className="absolute top-4 left-4 z-30 p-3 bg-white/90 backdrop-blur-md rounded-full shadow-md hover:bg-white"
+          title={isFullscreen ? '退出全屏' : '全屏查看'}
+        >
+          {isFullscreen ? <Minimize2 className="w-5 h-5 text-gray-700" /> : <Maximize2 className="w-5 h-5 text-gray-700" />}
+        </button>
+
         {mapReady ? (
           <TravelLeafletMap
             travelPosts={travelPosts}
