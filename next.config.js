@@ -46,7 +46,7 @@ const nextConfig = {
               style-src 'self' 'unsafe-inline' fonts.googleapis.com;
               img-src 'self' data: blob: https:;
               font-src 'self' fonts.gstatic.com;
-              connect-src 'self' *.googleapis.com *.firebaseio.com *.cloudfunctions.net *.google-analytics.com *.analytics.google.com *.googletagmanager.com wss:;
+              connect-src 'self' *.googleapis.com *.firebaseio.com *.cloudfunctions.net *.google-analytics.com *.analytics.google.com *.googletagmanager.com nominatim.openstreetmap.org wss:;
               frame-src 'self' *.google.com maps.google.com www.google.com https://www.google.com/maps/embed maps.googleapis.com *.maps.google.com;
               object-src 'none';
               base-uri 'self';
