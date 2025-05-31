@@ -54,11 +54,13 @@ interface TravelMapProps {
 const TravelLeafletMap = React.memo(({ 
   travelPosts, 
   onPostClick,
-  searchLocation
+  searchLocation,
+  onMapReady
 }: {
   travelPosts: FirestorePost[];
   onPostClick: (postId: string) => void;
   searchLocation?: { lat: number; lng: number; name: string } | null;
+  onMapReady?: (map: any) => void;
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
@@ -66,17 +68,20 @@ const TravelLeafletMap = React.memo(({
   const searchMarkerRef = useRef<any>(null);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
-  // 处理搜索位置变化
+  // 处理搜索位置变化 - 独立的 effect，不会重建地图
   useEffect(() => {
     if (!mapInstanceRef.current || !searchLocation) return;
 
-    const initSearchMarker = async () => {
+    const updateSearchMarker = async () => {
       try {
         const L = await import('leaflet');
         
+        console.log('搜索位置跳转:', searchLocation);
+        
         // 移除之前的搜索标记
         if (searchMarkerRef.current) {
-          searchMarkerRef.current.remove();
+          mapInstanceRef.current.removeLayer(searchMarkerRef.current);
+          searchMarkerRef.current = null;
         }
 
         // 创建自定义图标
@@ -95,6 +100,13 @@ const TravelLeafletMap = React.memo(({
           iconAnchor: [16, 32]
         });
 
+        // 跳转视角
+        console.log('执行地图跳转到:', [searchLocation.lat, searchLocation.lng]);
+        mapInstanceRef.current.flyTo([searchLocation.lat, searchLocation.lng], 13, {
+          duration: 1.5,
+          easeLinearity: 0.5
+        });
+
         // 添加搜索标记
         const searchMarker = L.marker([searchLocation.lat, searchLocation.lng], { icon: searchIcon })
           .addTo(mapInstanceRef.current)
@@ -103,27 +115,27 @@ const TravelLeafletMap = React.memo(({
               <h3 class="font-bold text-sm mb-1">搜索位置</h3>
               <p class="text-xs text-gray-600">${searchLocation.name}</p>
             </div>
-          `)
-          .openPopup();
+          `);
+
+        // 延迟打开弹窗
+        setTimeout(() => {
+          if (searchMarker && mapInstanceRef.current.hasLayer(searchMarker)) {
+            searchMarker.openPopup();
+          }
+        }, 1600);
 
         searchMarkerRef.current = searchMarker;
 
-        // 平滑地移动到搜索位置
-        mapInstanceRef.current.flyTo([searchLocation.lat, searchLocation.lng], 12, {
-          duration: 2,
-          easeLinearity: 0.5
-        });
-
       } catch (error) {
-        console.error('创建搜索标记失败:', error);
+        console.error('更新搜索标记失败:', error);
       }
     };
 
-    initSearchMarker();
+    updateSearchMarker();
   }, [searchLocation]);
 
   useEffect(() => {
-    if (!mapRef.current) return;
+    if (!mapRef.current || mapInstanceRef.current) return;
 
     // 清理之前的地图实例
     if (mapInstanceRef.current) {
@@ -163,6 +175,11 @@ const TravelLeafletMap = React.memo(({
         }).addTo(map);
 
         mapInstanceRef.current = map;
+        
+        // 通知父组件地图已准备好
+        if (onMapReady) {
+          onMapReady(map);
+        }
 
         // 存储已经使用的位置，用于检测冲突
         const usedPositions = new Map<string, number>();
@@ -324,6 +341,14 @@ const TravelLeafletMap = React.memo(({
       `}</style>
     </>
   );
+}, (prevProps, nextProps) => {
+  // 自定义比较函数，只有在真正需要时才重新渲染
+  const postsEqual = prevProps.travelPosts === nextProps.travelPosts;
+  const callbackEqual = prevProps.onPostClick === nextProps.onPostClick;
+  const searchEqual = JSON.stringify(prevProps.searchLocation) === JSON.stringify(nextProps.searchLocation);
+  const mapReadyEqual = prevProps.onMapReady === nextProps.onMapReady;
+  
+  return postsEqual && callbackEqual && searchEqual && mapReadyEqual;
 });
 
 TravelLeafletMap.displayName = 'TravelLeafletMap';
@@ -340,6 +365,13 @@ export default function TravelMap({
   const [searchQuery, setSearchQuery] = useState('');
   const [searchLocation, setSearchLocation] = useState<{ lat: number; lng: number; name: string } | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const mapInstanceRef = useRef<any>(null);
+
+  // 保存地图实例
+  const handleMapReady = (map: any) => {
+    mapInstanceRef.current = map;
+    console.log('地图实例已保存');
+  };
 
   // 加载旅行帖子
   useEffect(() => {
@@ -392,12 +424,18 @@ export default function TravelMap({
     try {
       // 使用 Nominatim API 进行地理编码（免费的 OpenStreetMap 服务）
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`,
+        {
+          headers: {
+            'User-Agent': 'StudyShareWebsite/1.0'
+          }
+        }
       );
       const data = await response.json();
 
       if (data && data.length > 0) {
         const result = data[0];
+        console.log('搜索结果:', result);
         setSearchLocation({
           lat: parseFloat(result.lat),
           lng: parseFloat(result.lon),
@@ -488,6 +526,7 @@ export default function TravelMap({
             travelPosts={travelPosts}
             onPostClick={handlePostClick}
             searchLocation={searchLocation}
+            onMapReady={handleMapReady}
           />
         ) : (
           <div className="flex items-center justify-center h-full bg-gray-100">
