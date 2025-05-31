@@ -915,6 +915,96 @@ export default function PostDetailPage() {
             </div>
           </div>
 
+          {/* 租房帖子的街景视图 - 在作者信息后、内容前 */}
+          {post.category === '租房' && (post.embedHtml || post.location) && (
+            <div className="border-b">
+              <div className="px-6 py-4">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <MapPin className="w-5 h-5 mr-2 text-blue-500" />
+                  建筑外观 - 街景视图
+                </h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  360° 街景视图，拖动查看房屋周围环境
+                </p>
+              </div>
+              {/* 全宽的Street View容器，使用负边距突破padding限制 */}
+              <div className="relative -mx-6 sm:-mx-6 lg:-mx-6">
+                {post.embedHtml ? (
+                  // 解析嵌入HTML中的iframe src
+                  (() => {
+                    try {
+                      // 从HTML字符串中提取iframe的src属性
+                      const srcMatch = post.embedHtml.match(/src="([^"]+)"/);
+                      const iframeSrc = srcMatch ? srcMatch[1] : null;
+                      
+                      if (iframeSrc) {
+                        return (
+                          <iframe
+                            src={iframeSrc}
+                            width="100%"
+                            height="500"
+                            style={{ border: 0, display: 'block' }}
+                            allow="accelerometer; gyroscope; magnetometer; camera; microphone; geolocation"
+                            allowFullScreen
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
+                            title="Google Street View"
+                            className="w-full"
+                          />
+                        );
+                      } else {
+                        // 如果无法解析，显示错误信息
+                        return (
+                          <div className="w-full h-[500px] bg-gray-100 flex items-center justify-center">
+                            <p className="text-gray-500">街景视图加载失败，请联系管理员</p>
+                          </div>
+                        );
+                      }
+                    } catch (error) {
+                      console.error('解析嵌入HTML失败:', error);
+                      return (
+                        <div className="w-full h-[500px] bg-gray-100 flex items-center justify-center">
+                          <p className="text-gray-500">街景视图解析失败</p>
+                        </div>
+                      );
+                    }
+                  })()
+                ) : (
+                  // 备用方案：使用之前的组件（兼容旧数据）
+                  <GoogleStreetViewEmbed
+                    address={post.location?.address}
+                    latitude={post.location?.latitude}
+                    longitude={post.location?.longitude}
+                    height="h-[500px]"
+                    className="w-full"
+                  />
+                )}
+              </div>
+              
+              {/* 调试信息 - 开发环境下显示 */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="mx-6 mt-4 mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <h4 className="font-semibold text-yellow-900 mb-2">🔍 Street View 调试信息</h4>
+                  <div className="text-sm space-y-1">
+                    <p><strong>帖子分类:</strong> {post.category}</p>
+                    <p><strong>是否租房分类:</strong> {post.category === '租房' ? '是' : '否'}</p>
+                    <p><strong>有embedHtml:</strong> {post.embedHtml ? '是' : '否'}</p>
+                    <p><strong>有location:</strong> {post.location ? '是' : '否'}</p>
+                    <p><strong>显示条件满足:</strong> {(post.category === '租房' && (post.embedHtml || post.location)) ? '是' : '否'}</p>
+                    {post.embedHtml && (
+                      <div className="mt-2">
+                        <p><strong>embedHtml内容预览:</strong></p>
+                        <pre className="bg-gray-100 p-2 rounded text-xs overflow-x-auto max-h-32">
+                          {post.embedHtml.substring(0, 200)}...
+                        </pre>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* 帖子内容 */}
           <div className="p-6">
             <div className="prose prose-lg max-w-none">
@@ -924,101 +1014,6 @@ export default function PostDetailPage() {
             </div>
           </div>
         </motion.article>
-
-        {/* 租房帖子的街景视图 - 独立的全宽组件 */}
-        {post.category === '租房' && (post.embedHtml || post.location) && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="mt-8 bg-white shadow-lg overflow-hidden"
-          >
-            <div className="px-6 py-4 border-b">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                <MapPin className="w-5 h-5 mr-2 text-blue-500" />
-                建筑外观 - 街景视图
-              </h3>
-              <p className="text-sm text-gray-600 mt-1">
-                360° 街景视图，拖动查看房屋周围环境
-              </p>
-            </div>
-            {/* 完全全宽的Street View，突破所有容器限制 */}
-            <div className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen">
-              {post.embedHtml ? (
-                // 解析嵌入HTML中的iframe src
-                (() => {
-                  try {
-                    // 从HTML字符串中提取iframe的src属性
-                    const srcMatch = post.embedHtml.match(/src="([^"]+)"/);
-                    const iframeSrc = srcMatch ? srcMatch[1] : null;
-                    
-                    if (iframeSrc) {
-                      return (
-                        <iframe
-                          src={iframeSrc}
-                          width="100%"
-                          height="500"
-                          style={{ border: 0, display: 'block' }}
-                          allow="accelerometer; gyroscope; magnetometer; camera; microphone; geolocation"
-                          allowFullScreen
-                          loading="lazy"
-                          referrerPolicy="no-referrer-when-downgrade"
-                          title="Google Street View"
-                          className="w-full"
-                        />
-                      );
-                    } else {
-                      // 如果无法解析，显示错误信息
-                      return (
-                        <div className="w-full h-[500px] bg-gray-100 flex items-center justify-center">
-                          <p className="text-gray-500">街景视图加载失败，请联系管理员</p>
-                        </div>
-                      );
-                    }
-                  } catch (error) {
-                    console.error('解析嵌入HTML失败:', error);
-                    return (
-                      <div className="w-full h-[500px] bg-gray-100 flex items-center justify-center">
-                        <p className="text-gray-500">街景视图解析失败</p>
-                      </div>
-                    );
-                  }
-                })()
-              ) : (
-                // 备用方案：使用之前的组件（兼容旧数据）
-                <GoogleStreetViewEmbed
-                  address={post.location?.address}
-                  latitude={post.location?.latitude}
-                  longitude={post.location?.longitude}
-                  height="h-[500px]"
-                  className="w-full"
-                />
-              )}
-            </div>
-            
-            {/* 调试信息 - 开发环境下显示 */}
-            {process.env.NODE_ENV === 'development' && (
-              <div className="mx-6 mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <h4 className="font-semibold text-yellow-900 mb-2">🔍 Street View 调试信息</h4>
-                <div className="text-sm space-y-1">
-                  <p><strong>帖子分类:</strong> {post.category}</p>
-                  <p><strong>是否租房分类:</strong> {post.category === '租房' ? '是' : '否'}</p>
-                  <p><strong>有embedHtml:</strong> {post.embedHtml ? '是' : '否'}</p>
-                  <p><strong>有location:</strong> {post.location ? '是' : '否'}</p>
-                  <p><strong>显示条件满足:</strong> {(post.category === '租房' && (post.embedHtml || post.location)) ? '是' : '否'}</p>
-                  {post.embedHtml && (
-                    <div className="mt-2">
-                      <p><strong>embedHtml内容预览:</strong></p>
-                      <pre className="bg-gray-100 p-2 rounded text-xs overflow-x-auto max-h-32">
-                        {post.embedHtml.substring(0, 200)}...
-                      </pre>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </motion.div>
-        )}
 
         {/* 评论区 */}
         {showComments && (
