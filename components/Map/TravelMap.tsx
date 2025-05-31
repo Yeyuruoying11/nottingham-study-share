@@ -102,7 +102,7 @@ const TravelLeafletMap = React.memo(({
 
         // 跳转视角
         console.log('执行地图跳转到:', [searchLocation.lat, searchLocation.lng]);
-        mapInstanceRef.current.flyTo([searchLocation.lat, searchLocation.lng], 13, {
+        mapInstanceRef.current.flyTo([searchLocation.lat, searchLocation.lng], 10, {
           duration: 1.5,
           easeLinearity: 0.5
         });
