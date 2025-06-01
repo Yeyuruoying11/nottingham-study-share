@@ -4,7 +4,7 @@ import { School, Department, Course, University } from './types';
 export const universities: University[] = [
   {
     id: 'uon',
-    name: 'University of Nottingham',
+    name: '诺丁汉大学',
     nameEn: 'University of Nottingham',
     description: '英国顶尖研究型大学，罗素大学集团成员',
     logo: '🎓',
@@ -12,7 +12,7 @@ export const universities: University[] = [
   },
   {
     id: 'ntu',
-    name: 'Nottingham Trent University',
+    name: '诺丁汉特伦特大学',
     nameEn: 'Nottingham Trent University',
     description: '以实践教学和就业导向著称的现代化大学',
     logo: '🏛️',
@@ -25,107 +25,109 @@ export const schools: School[] = [
   // 诺丁汉大学学院
   {
     id: 'uon-arts',
-    name: 'Faculty of Arts',
+    name: '人文学院',
     nameEn: 'Faculty of Arts',
     description: '包含语言、文学、历史、哲学等人文学科',
     universityId: 'uon'
   },
   {
     id: 'uon-engineering',
-    name: 'Faculty of Engineering',
+    name: '工程学院',
     nameEn: 'Faculty of Engineering',
     description: '涵盖各类工程学科，注重实践与创新',
     universityId: 'uon'
   },
   {
     id: 'uon-medicine',
-    name: 'Faculty of Medicine & Health Sciences',
+    name: '医学院',
     nameEn: 'Faculty of Medicine & Health Sciences',
     description: '医学、护理、兽医学等健康科学专业',
     universityId: 'uon'
   },
   {
     id: 'uon-science',
-    name: 'Faculty of Science',
+    name: '理学院',
     nameEn: 'Faculty of Science',
     description: '数学、物理、化学、生物等基础科学',
     universityId: 'uon'
   },
   {
     id: 'uon-social-sciences',
-    name: 'Faculty of Social Sciences',
+    name: '社会科学院',
     nameEn: 'Faculty of Social Sciences',
     description: '心理学、教育学、政治学、经济学等',
     universityId: 'uon'
   },
   {
     id: 'uon-business',
-    name: 'Nottingham University Business School',
+    name: '商学院',
     nameEn: 'Nottingham University Business School',
     description: '商业管理、金融、会计、市场营销等商科专业',
     universityId: 'uon'
   },
+  
   // 诺丁汉特伦特大学学院
   {
     id: 'ntu-art-design',
-    name: 'School of Art & Design',
+    name: '艺术与设计学院',
     nameEn: 'School of Art & Design',
     description: '创意设计、视觉艺术、时装设计等创意学科',
     universityId: 'ntu'
   },
   {
     id: 'ntu-business',
-    name: 'Nottingham Business School',
+    name: '商学院',
     nameEn: 'Nottingham Business School',
     description: '实践导向的商业教育，与业界联系紧密',
     universityId: 'ntu'
   },
   {
     id: 'ntu-science-technology',
-    name: 'School of Science and Technology',
+    name: '科学技术学院',
     nameEn: 'School of Science and Technology',
     description: '计算机科学、工程技术、生物科学等',
     universityId: 'ntu'
   },
   {
     id: 'ntu-social-sciences',
-    name: 'School of Social Sciences',
+    name: '社会科学学院',
     nameEn: 'School of Social Sciences',
     description: '心理学、社会工作、犯罪学、政治学等',
     universityId: 'ntu'
   },
   {
     id: 'ntu-education',
-    name: 'School of Education',
+    name: '教育学院',
     nameEn: 'School of Education',
     description: '教师培训、教育研究、早期教育等',
     universityId: 'ntu'
   },
   {
     id: 'ntu-law',
-    name: 'Nottingham Law School',
+    name: '法学院',
     nameEn: 'Nottingham Law School',
     description: '法律实务、法学理论、国际法等',
     universityId: 'ntu'
   },
+  
   // 宁波诺丁汉大学学院（UNNC）
   {
     id: 'unnc-humanities-social-sciences',
-    name: 'School of Humanities and Social Sciences',
+    name: '人文社会科学学院',
     nameEn: 'School of Humanities and Social Sciences',
     description: '经济学、国际事务、政治学、英语等人文社科专业',
     universityId: 'uon'
   },
   {
     id: 'unnc-science-engineering',
-    name: 'Faculty of Science and Engineering',
+    name: '理工学院', 
     nameEn: 'Faculty of Science and Engineering',
     description: '工程技术、数学科学、计算机科学等理工科专业',
     universityId: 'uon'
   },
   {
     id: 'unnc-business',
-    name: 'Nottingham University Business School China',
+    name: '商学院',
     nameEn: 'Nottingham University Business School China',
     description: '国际商务、管理、金融等商科专业',
     universityId: 'uon'
@@ -138,301 +140,314 @@ export const departments: Department[] = [
   // 计算机科学类
   {
     id: 'uon-computer-science',
-    name: 'Computer Science',
+    name: '计算机科学',
     nameEn: 'Computer Science',
     school: 'uon-science',
     description: '软件开发、算法、人工智能、数据科学等'
   },
   {
     id: 'uon-software-engineering',
-    name: 'Software Engineering',
+    name: '软件工程',
     nameEn: 'Software Engineering',
     school: 'uon-science',
     description: '软件开发生命周期、项目管理、系统设计'
   },
+  
   // 商科类
   {
     id: 'uon-business-management',
-    name: 'Business Management',
+    name: '商业管理',
     nameEn: 'Business Management',
     school: 'uon-business',
     description: '企业管理、战略规划、领导力发展'
   },
   {
     id: 'uon-finance',
-    name: 'Finance',
+    name: '金融学',
     nameEn: 'Finance',
     school: 'uon-business',
     description: '投资分析、风险管理、金融市场'
   },
   {
     id: 'uon-accounting',
-    name: 'Accounting',
+    name: '会计学',
     nameEn: 'Accounting',
     school: 'uon-business',
     description: '财务会计、管理会计、审计'
   },
   {
     id: 'uon-marketing',
-    name: 'Marketing',
+    name: '市场营销',
     nameEn: 'Marketing',
     school: 'uon-business',
     description: '品牌管理、数字营销、消费者行为'
   },
+  
   // 工程类
   {
     id: 'uon-mechanical-engineering',
-    name: 'Mechanical Engineering',
+    name: '机械工程',
     nameEn: 'Mechanical Engineering',
     school: 'uon-engineering',
     description: '机械设计、制造工程、热力学'
   },
   {
     id: 'uon-electrical-engineering',
-    name: 'Electrical Engineering',
+    name: '电气工程',
     nameEn: 'Electrical Engineering',
     school: 'uon-engineering',
     description: '电路设计、信号处理、电力系统'
   },
   {
     id: 'uon-civil-engineering',
-    name: 'Civil Engineering',
+    name: '土木工程',
     nameEn: 'Civil Engineering',
     school: 'uon-engineering',
     description: '结构设计、建筑工程、基础设施'
   },
+  
   // 文科类
   {
     id: 'uon-english',
-    name: 'English Language and Literature',
+    name: '英语语言文学',
     nameEn: 'English Language and Literature',
     school: 'uon-arts',
     description: '文学分析、语言学、创意写作'
   },
   {
     id: 'uon-history',
-    name: 'History',
+    name: '历史学',
     nameEn: 'History',
     school: 'uon-arts',
     description: '世界史、英国史、史学研究方法'
   },
   {
     id: 'uon-philosophy',
-    name: 'Philosophy',
+    name: '哲学',
     nameEn: 'Philosophy',
     school: 'uon-arts',
     description: '逻辑学、伦理学、形而上学'
   },
+  
   // 社会科学类
   {
     id: 'uon-psychology',
-    name: 'Psychology',
+    name: '心理学',
     nameEn: 'Psychology',
     school: 'uon-social-sciences',
     description: '认知心理学、社会心理学、临床心理学'
   },
   {
     id: 'uon-economics',
-    name: 'Economics',
+    name: '经济学',
     nameEn: 'Economics',
     school: 'uon-social-sciences',
     description: '微观经济学、宏观经济学、计量经济学'
   },
   {
     id: 'uon-education',
-    name: 'Education',
+    name: '教育学',
     nameEn: 'Education',
     school: 'uon-social-sciences',
     description: '教育理论、课程设计、教学方法'
   },
+  
   // 理科类
   {
     id: 'uon-mathematics',
-    name: 'Mathematics',
+    name: '数学',
     nameEn: 'Mathematics',
     school: 'uon-science',
     description: '纯数学、应用数学、统计学'
   },
   {
     id: 'uon-physics',
-    name: 'Physics',
+    name: '物理学',
     nameEn: 'Physics',
     school: 'uon-science',
     description: '理论物理、实验物理、天体物理'
   },
   {
     id: 'uon-chemistry',
-    name: 'Chemistry',
+    name: '化学',
     nameEn: 'Chemistry',
     school: 'uon-science',
     description: '有机化学、无机化学、物理化学'
   },
   {
     id: 'uon-biology',
-    name: 'Biology',
+    name: '生物学',
     nameEn: 'Biology',
     school: 'uon-science',
     description: '分子生物学、生态学、进化生物学'
   },
+  
   // 医学类
   {
     id: 'uon-medicine',
-    name: 'Medicine',
+    name: '医学',
     nameEn: 'Medicine',
     school: 'uon-medicine',
     description: '临床医学、基础医学、医学研究'
   },
   {
     id: 'uon-nursing',
-    name: 'Nursing',
+    name: '护理学',
     nameEn: 'Nursing',
     school: 'uon-medicine',
     description: '临床护理、社区护理、护理管理'
   },
+
   // 诺丁汉特伦特大学专业
   // 艺术与设计类
   {
     id: 'ntu-graphic-design',
-    name: 'Graphic Design',
+    name: '平面设计',
     nameEn: 'Graphic Design',
     school: 'ntu-art-design',
     description: '视觉传达、品牌设计、数字媒体设计'
   },
   {
     id: 'ntu-fashion-design',
-    name: 'Fashion Design',
+    name: '时装设计',
     nameEn: 'Fashion Design',
     school: 'ntu-art-design',
     description: '服装设计、时尚营销、纺织创新'
   },
   {
     id: 'ntu-fine-art',
-    name: 'Fine Art',
+    name: '美术',
     nameEn: 'Fine Art',
     school: 'ntu-art-design',
     description: '绘画、雕塑、装置艺术、当代艺术'
   },
+  
   // 商科类
   {
     id: 'ntu-business-management',
-    name: 'Business Management',
+    name: '商业管理',
     nameEn: 'Business Management',
     school: 'ntu-business',
     description: '企业管理、创业、国际商务'
   },
   {
     id: 'ntu-accounting',
-    name: 'Accounting and Finance',
+    name: '会计与金融',
     nameEn: 'Accounting and Finance',
     school: 'ntu-business',
     description: '财务管理、投资分析、企业金融'
   },
   {
     id: 'ntu-marketing',
-    name: 'Marketing',
+    name: '市场营销',
     nameEn: 'Marketing',
     school: 'ntu-business',
     description: '数字营销、品牌管理、消费者心理学'
   },
+  
   // 科学技术类
   {
     id: 'ntu-computer-science',
-    name: 'Computer Science',
+    name: '计算机科学',
     nameEn: 'Computer Science',
     school: 'ntu-science-technology',
     description: '软件开发、网络安全、人工智能'
   },
   {
     id: 'ntu-engineering',
-    name: 'Engineering',
+    name: '工程学',
     nameEn: 'Engineering',
     school: 'ntu-science-technology',
     description: '机械工程、电子工程、可持续工程'
   },
   {
     id: 'ntu-biosciences',
-    name: 'Biosciences',
+    name: '生物科学',
     nameEn: 'Biosciences',
     school: 'ntu-science-technology',
     description: '生物技术、微生物学、生物医学'
   },
+  
   // 社会科学类
   {
     id: 'ntu-psychology',
-    name: 'Psychology',
+    name: '心理学',
     nameEn: 'Psychology',
     school: 'ntu-social-sciences',
     description: '应用心理学、犯罪心理学、健康心理学'
   },
   {
     id: 'ntu-criminology',
-    name: 'Criminology',
+    name: '犯罪学',
     nameEn: 'Criminology',
     school: 'ntu-social-sciences',
     description: '犯罪分析、刑事司法、社会政策'
   },
   {
     id: 'ntu-social-work',
-    name: 'Social Work',
+    name: '社会工作',
     nameEn: 'Social Work',
     school: 'ntu-social-sciences',
     description: '社区工作、儿童保护、心理健康支持'
   },
+  
   // 教育类
   {
     id: 'ntu-primary-education',
-    name: 'Primary Education',
+    name: '小学教育',
     nameEn: 'Primary Education',
     school: 'ntu-education',
     description: '儿童发展、教学方法、课程设计'
   },
   {
     id: 'ntu-secondary-education',
-    name: 'Secondary Education',
+    name: '中学教育',
     nameEn: 'Secondary Education',
     school: 'ntu-education',
     description: '学科教学、青少年心理学、教育技术'
   },
+  
   // 法学类
   {
     id: 'ntu-law',
-    name: 'Law',
+    name: '法学',
     nameEn: 'Law',
     school: 'ntu-law',
     description: '英国法、国际法、商业法、人权法'
   },
+  
   // 宁波诺丁汉大学专业（UNNC）
   {
     id: 'unnc-economics',
-    name: 'Economics',
+    name: '经济学',
     nameEn: 'Economics',
     school: 'unnc-humanities-social-sciences',
     description: '微观经济学、宏观经济学、计量经济学、行为经济学等'
   },
   {
     id: 'unnc-aerospace-engineering',
-    name: 'Aerospace Engineering',
+    name: '航空航天工程',
     nameEn: 'Aerospace Engineering',
     school: 'unnc-science-engineering',
     description: '空气动力学、航空器设计、推进系统、飞行动力学等'
   },
   {
     id: 'unnc-mathematics',
-    name: 'Mathematical Sciences',
+    name: '数学科学',
     nameEn: 'Mathematical Sciences',
     school: 'unnc-science-engineering',
     description: '应用数学、统计学、数学建模、科学计算等'
   },
   {
     id: 'unnc-computer-science',
-    name: 'Computer Science',
+    name: '计算机科学',
     nameEn: 'Computer Science',
     school: 'unnc-science-engineering',
     description: '软件开发、人工智能、机器学习、数据科学、网络安全等'
   },
   {
     id: 'unnc-electrical-electronic-engineering',
-    name: 'Electrical and Electronic Engineering',
+    name: '电子电气工程',
     nameEn: 'Electrical and Electronic Engineering',
     school: 'unnc-science-engineering',
     description: '电子系统、电力工程、信号处理、嵌入式系统、物联网等'
@@ -444,7 +459,7 @@ export const courses: Course[] = [
   // 诺丁汉大学计算机科学课程 - 第一年
   {
     id: 'comp1001',
-    name: 'Mathematics for Computer Scientists 1',
+    name: '计算机科学家数学1',
     nameEn: 'Mathematics for Computer Scientists 1',
     code: 'COMP1001',
     departmentId: 'uon-computer-science',
@@ -455,7 +470,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp1043',
-    name: 'Mathematics for Computer Scientists 2',
+    name: '计算机科学家数学2',
     nameEn: 'Mathematics for Computer Scientists 2',
     code: 'COMP1043',
     departmentId: 'uon-computer-science',
@@ -466,7 +481,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp1002',
-    name: 'Computer Science First Year Tutorial',
+    name: '计算机科学第一年辅导',
     nameEn: 'Computer Science First Year Tutorial',
     code: 'COMP1002',
     departmentId: 'uon-computer-science',
@@ -477,7 +492,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp1004',
-    name: 'Databases and Interfaces',
+    name: '数据库与界面',
     nameEn: 'Databases and Interfaces',
     code: 'COMP1004',
     departmentId: 'uon-computer-science',
@@ -488,7 +503,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp1008',
-    name: 'Fundamentals of Artificial Intelligence',
+    name: '人工智能基础',
     nameEn: 'Fundamentals of Artificial Intelligence',
     code: 'COMP1008',
     departmentId: 'uon-computer-science',
@@ -499,7 +514,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp1005',
-    name: 'Programming and Algorithms',
+    name: '编程与算法',
     nameEn: 'Programming and Algorithms',
     code: 'COMP1005',
     departmentId: 'uon-computer-science',
@@ -510,7 +525,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp1009',
-    name: 'Programming Paradigms',
+    name: '编程范式',
     nameEn: 'Programming Paradigms',
     code: 'COMP1009',
     departmentId: 'uon-computer-science',
@@ -521,7 +536,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp1003',
-    name: 'Introduction to Software Engineering',
+    name: '软件工程导论',
     nameEn: 'Introduction to Software Engineering',
     code: 'COMP1003',
     departmentId: 'uon-computer-science',
@@ -532,7 +547,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp1054',
-    name: 'Assembly Language Programming',
+    name: '汇编语言编程',
     nameEn: 'Assembly Language Programming',
     code: 'COMP1054',
     departmentId: 'uon-computer-science',
@@ -543,7 +558,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp1055',
-    name: 'Networks',
+    name: '网络',
     nameEn: 'Networks',
     code: 'COMP1055',
     departmentId: 'uon-computer-science',
@@ -554,7 +569,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp1056',
-    name: 'Computer Architecture',
+    name: '计算机体系结构',
     nameEn: 'Computer Architecture',
     code: 'COMP1056',
     departmentId: 'uon-computer-science',
@@ -563,10 +578,11 @@ export const courses: Course[] = [
     credits: 20,
     description: '计算机硬件组成、处理器设计、存储系统'
   },
+  
   // 诺丁汉大学计算机科学课程 - 第二年
   {
     id: 'comp2001',
-    name: 'Artificial Intelligence Methods',
+    name: '人工智能方法',
     nameEn: 'Artificial Intelligence Methods',
     code: 'COMP2001',
     departmentId: 'uon-computer-science',
@@ -577,7 +593,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp2065',
-    name: 'Introduction to Formal Reasoning',
+    name: '形式化推理导论',
     nameEn: 'Introduction to Formal Reasoning',
     code: 'COMP2065',
     departmentId: 'uon-computer-science',
@@ -588,7 +604,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp2054',
-    name: 'Algorithms Data Structures and Efficiency',
+    name: '算法、数据结构与效率',
     nameEn: 'Algorithms Data Structures and Efficiency',
     code: 'COMP2054',
     departmentId: 'uon-computer-science',
@@ -599,7 +615,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp2013',
-    name: 'Developing Maintainable Software',
+    name: '开发可维护软件',
     nameEn: 'Developing Maintainable Software',
     code: 'COMP2013',
     departmentId: 'uon-computer-science',
@@ -610,7 +626,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp2012',
-    name: 'Languages and Computation',
+    name: '语言与计算',
     nameEn: 'Languages and Computation',
     code: 'COMP2012',
     departmentId: 'uon-computer-science',
@@ -621,7 +637,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp2007',
-    name: 'Operating Systems & Concurrency',
+    name: '操作系统与并发',
     nameEn: 'Operating Systems & Concurrency',
     code: 'COMP2007',
     departmentId: 'uon-computer-science',
@@ -632,7 +648,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp2002',
-    name: 'Software Engineering Group Project',
+    name: '软件工程团队项目',
     nameEn: 'Software Engineering Group Project',
     code: 'COMP2002',
     departmentId: 'uon-computer-science',
@@ -643,7 +659,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp2005',
-    name: 'Introduction to Image Processing',
+    name: '图像处理导论',
     nameEn: 'Introduction to Image Processing',
     code: 'COMP2005',
     departmentId: 'uon-computer-science',
@@ -654,7 +670,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp2004',
-    name: 'Introduction to Human Computer Interaction',
+    name: '人机交互导论',
     nameEn: 'Introduction to Human Computer Interaction',
     code: 'COMP2004',
     departmentId: 'uon-computer-science',
@@ -665,7 +681,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp2003',
-    name: 'Advanced Functional Programming',
+    name: '高级函数式编程',
     nameEn: 'Advanced Functional Programming',
     code: 'COMP2003',
     departmentId: 'uon-computer-science',
@@ -676,7 +692,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp2006',
-    name: 'C++ Programming',
+    name: 'C++编程',
     nameEn: 'C++ Programming',
     code: 'COMP2006',
     departmentId: 'uon-computer-science',
@@ -687,7 +703,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp2014',
-    name: 'Distributed Systems',
+    name: '分布式系统',
     nameEn: 'Distributed Systems',
     code: 'COMP2014',
     departmentId: 'uon-computer-science',
@@ -698,7 +714,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp2010',
-    name: 'Software Specification',
+    name: '软件规范',
     nameEn: 'Software Specification',
     code: 'COMP2010',
     departmentId: 'uon-computer-science',
@@ -709,7 +725,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp2064',
-    name: 'Introduction to Smart Things and Robotics',
+    name: '智能物联网与机器人导论',
     nameEn: 'Introduction to Smart Things and Robotics',
     code: 'COMP2064',
     departmentId: 'uon-computer-science',
@@ -718,10 +734,11 @@ export const courses: Course[] = [
     credits: 20,
     description: '物联网技术、嵌入式系统、机器人编程基础'
   },
+  
   // 诺丁汉大学计算机科学课程 - 第三年
   {
     id: 'comp3003',
-    name: 'Undergraduate Projects',
+    name: '本科项目',
     nameEn: 'Undergraduate Projects',
     code: 'COMP3003',
     departmentId: 'uon-computer-science',
@@ -732,7 +749,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp3015',
-    name: 'Development, Industrial and Schools Experience',
+    name: '产业实习与学校体验',
     nameEn: 'Development, Industrial and Schools Experience',
     code: 'COMP3015',
     departmentId: 'uon-computer-science',
@@ -743,7 +760,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp3009',
-    name: 'Machine Learning',
+    name: '机器学习',
     nameEn: 'Machine Learning',
     code: 'COMP3009',
     departmentId: 'uon-computer-science',
@@ -754,7 +771,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp3021',
-    name: 'Data Visualisation',
+    name: '数据可视化',
     nameEn: 'Data Visualisation',
     code: 'COMP3021',
     departmentId: 'uon-computer-science',
@@ -765,7 +782,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp3006',
-    name: 'Computer Security',
+    name: '计算机安全',
     nameEn: 'Computer Security',
     code: 'COMP3006',
     departmentId: 'uon-computer-science',
@@ -776,7 +793,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp3022',
-    name: 'Data Visualisation Project',
+    name: '数据可视化项目',
     nameEn: 'Data Visualisation Project',
     code: 'COMP3022',
     departmentId: 'uon-computer-science',
@@ -787,7 +804,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp3018',
-    name: 'Mobile Device Programming',
+    name: '移动设备编程',
     nameEn: 'Mobile Device Programming',
     code: 'COMP3018',
     departmentId: 'uon-computer-science',
@@ -798,7 +815,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp3012',
-    name: 'Compilers',
+    name: '编译器',
     nameEn: 'Compilers',
     code: 'COMP3012',
     departmentId: 'uon-computer-science',
@@ -809,7 +826,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp3020',
-    name: 'Professional Ethics in Computing',
+    name: '计算机专业伦理',
     nameEn: 'Professional Ethics in Computing',
     code: 'COMP3020',
     departmentId: 'uon-computer-science',
@@ -820,7 +837,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp3077',
-    name: 'Cryptography',
+    name: '密码学',
     nameEn: 'Cryptography',
     code: 'COMP3077',
     departmentId: 'uon-computer-science',
@@ -831,7 +848,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp3074',
-    name: 'Human-AI Interaction',
+    name: '人机智能交互',
     nameEn: 'Human-AI Interaction',
     code: 'COMP3074',
     departmentId: 'uon-computer-science',
@@ -842,7 +859,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp3007',
-    name: 'Computer Vision',
+    name: '计算机视觉',
     nameEn: 'Computer Vision',
     code: 'COMP3007',
     departmentId: 'uon-computer-science',
@@ -853,7 +870,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp3008',
-    name: 'Symbolic Artificial Intelligence',
+    name: '符号人工智能',
     nameEn: 'Symbolic Artificial Intelligence',
     code: 'COMP3008',
     departmentId: 'uon-computer-science',
@@ -864,7 +881,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp3013',
-    name: 'Software in Society',
+    name: '软件与社会',
     nameEn: 'Software in Society',
     code: 'COMP3013',
     departmentId: 'uon-computer-science',
@@ -875,7 +892,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp3011',
-    name: 'Computer Graphics',
+    name: '计算机图形学',
     nameEn: 'Computer Graphics',
     code: 'COMP3011',
     departmentId: 'uon-computer-science',
@@ -886,7 +903,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp3010',
-    name: 'Collaboration and Communication Technologies',
+    name: '协作与通信技术',
     nameEn: 'Collaboration and Communication Technologies',
     code: 'COMP3010',
     departmentId: 'uon-computer-science',
@@ -895,10 +912,11 @@ export const courses: Course[] = [
     credits: 20,
     description: '协同软件、实时通信系统、社交计算'
   },
+  
   // 诺丁汉大学计算机科学 - 可选年份
   {
     id: 'comp-placement',
-    name: 'Year in Industry - Placement Year',
+    name: '工业实习年',
     nameEn: 'Year in Industry - Placement Year',
     code: 'COMP-IND',
     departmentId: 'uon-computer-science',
@@ -907,10 +925,11 @@ export const courses: Course[] = [
     credits: 120,
     description: '在相关行业进行为期一年的全职工作实习，获得实际工作经验'
   },
+  
   // 诺丁汉大学商科课程
   {
     id: 'bus1001',
-    name: 'Principles of Management',
+    name: '管理学原理',
     nameEn: 'Principles of Management',
     code: 'BUS1001',
     departmentId: 'uon-business-management',
@@ -921,7 +940,7 @@ export const courses: Course[] = [
   },
   {
     id: 'bus1002',
-    name: 'Introduction to Accounting',
+    name: '会计学基础',
     nameEn: 'Introduction to Accounting',
     code: 'BUS1002',
     departmentId: 'uon-accounting',
@@ -932,7 +951,7 @@ export const courses: Course[] = [
   },
   {
     id: 'fin2001',
-    name: 'Corporate Finance',
+    name: '企业金融',
     nameEn: 'Corporate Finance',
     code: 'FIN2001',
     departmentId: 'uon-finance',
@@ -943,7 +962,7 @@ export const courses: Course[] = [
   },
   {
     id: 'mkt2001',
-    name: 'Principles of Marketing',
+    name: '市场营销原理',
     nameEn: 'Principles of Marketing',
     code: 'MKT2001',
     departmentId: 'uon-marketing',
@@ -952,10 +971,11 @@ export const courses: Course[] = [
     credits: 20,
     description: '市场分析、消费者行为、营销策略'
   },
+  
   // 诺丁汉大学工程课程
   {
     id: 'mech1001',
-    name: 'Engineering Mathematics',
+    name: '工程数学',
     nameEn: 'Engineering Mathematics',
     code: 'MECH1001',
     departmentId: 'uon-mechanical-engineering',
@@ -966,7 +986,7 @@ export const courses: Course[] = [
   },
   {
     id: 'mech1002',
-    name: 'Materials Science',
+    name: '材料科学',
     nameEn: 'Materials Science',
     code: 'MECH1002',
     departmentId: 'uon-mechanical-engineering',
@@ -977,7 +997,7 @@ export const courses: Course[] = [
   },
   {
     id: 'elec2001',
-    name: 'Circuit Analysis',
+    name: '电路分析',
     nameEn: 'Circuit Analysis',
     code: 'ELEC2001',
     departmentId: 'uon-electrical-engineering',
@@ -986,10 +1006,11 @@ export const courses: Course[] = [
     credits: 20,
     description: '直流电路、交流电路、网络定理'
   },
+  
   // 诺丁汉大学数学课程
   {
     id: 'math1001',
-    name: 'Calculus I',
+    name: '微积分I',
     nameEn: 'Calculus I',
     code: 'MATH1001',
     departmentId: 'uon-mathematics',
@@ -1000,7 +1021,7 @@ export const courses: Course[] = [
   },
   {
     id: 'math1002',
-    name: 'Linear Algebra',
+    name: '线性代数',
     nameEn: 'Linear Algebra',
     code: 'MATH1002',
     departmentId: 'uon-mathematics',
@@ -1011,7 +1032,7 @@ export const courses: Course[] = [
   },
   {
     id: 'math2001',
-    name: 'Probability and Statistics',
+    name: '概率与统计',
     nameEn: 'Probability and Statistics',
     code: 'MATH2001',
     departmentId: 'uon-mathematics',
@@ -1020,10 +1041,11 @@ export const courses: Course[] = [
     credits: 20,
     description: '概率论、统计推断、假设检验'
   },
+  
   // 诺丁汉大学心理学课程
   {
     id: 'psyc1001',
-    name: 'Introduction to Psychology',
+    name: '心理学概论',
     nameEn: 'Introduction to Psychology',
     code: 'PSYC1001',
     departmentId: 'uon-psychology',
@@ -1034,7 +1056,7 @@ export const courses: Course[] = [
   },
   {
     id: 'psyc2001',
-    name: 'Cognitive Psychology',
+    name: '认知心理学',
     nameEn: 'Cognitive Psychology',
     code: 'PSYC2001',
     departmentId: 'uon-psychology',
@@ -1043,11 +1065,12 @@ export const courses: Course[] = [
     credits: 20,
     description: '记忆、注意、思维、语言认知过程'
   },
+
   // 诺丁汉特伦特大学课程
   // 艺术设计课程
   {
     id: 'ntu-gd1001',
-    name: 'Design Fundamentals',
+    name: '设计基础',
     nameEn: 'Design Fundamentals',
     code: 'GD1001',
     departmentId: 'ntu-graphic-design',
@@ -1058,7 +1081,7 @@ export const courses: Course[] = [
   },
   {
     id: 'ntu-fd1001',
-    name: 'Fashion Illustration',
+    name: '时装制图',
     nameEn: 'Fashion Illustration',
     code: 'FD1001',
     departmentId: 'ntu-fashion-design',
@@ -1067,10 +1090,11 @@ export const courses: Course[] = [
     credits: 20,
     description: '服装绘制、人体比例、面料表现'
   },
+  
   // 商科课程
   {
     id: 'ntu-bm1001',
-    name: 'Business Environment',
+    name: '商业环境',
     nameEn: 'Business Environment',
     code: 'BM1001',
     departmentId: 'ntu-business-management',
@@ -1081,7 +1105,7 @@ export const courses: Course[] = [
   },
   {
     id: 'ntu-ac1001',
-    name: 'Financial Accounting',
+    name: '财务会计',
     nameEn: 'Financial Accounting',
     code: 'AC1001',
     departmentId: 'ntu-accounting',
@@ -1090,10 +1114,11 @@ export const courses: Course[] = [
     credits: 20,
     description: '会计基础、财务报表、会计准则'
   },
+  
   // 计算机科学课程
   {
     id: 'ntu-cs1001',
-    name: 'Introduction to Programming',
+    name: '编程入门',
     nameEn: 'Introduction to Programming',
     code: 'CS1001',
     departmentId: 'ntu-computer-science',
@@ -1104,7 +1129,7 @@ export const courses: Course[] = [
   },
   {
     id: 'ntu-cs2001',
-    name: 'Cybersecurity',
+    name: '网络安全',
     nameEn: 'Cybersecurity',
     code: 'CS2001',
     departmentId: 'ntu-computer-science',
@@ -1113,10 +1138,11 @@ export const courses: Course[] = [
     credits: 20,
     description: '信息安全、网络防护、风险评估'
   },
+
   // 宁波诺丁汉大学经济学课程（UNNC）
   {
     id: 'econ-phd-macro',
-    name: 'Macroeconomics PhD',
+    name: '宏观经济学博士',
     nameEn: 'Macroeconomics PhD',
     code: 'ECON-PHD',
     departmentId: 'unnc-economics',
@@ -1126,7 +1152,7 @@ export const courses: Course[] = [
   },
   {
     id: 'econ3093',
-    name: 'Advanced Industrial Economics',
+    name: '高级产业经济学',
     nameEn: 'Advanced Industrial Economics',
     code: 'ECON3093',
     departmentId: 'unnc-economics',
@@ -1137,7 +1163,7 @@ export const courses: Course[] = [
   },
   {
     id: 'econ1055',
-    name: 'Game Theory',
+    name: '博弈论',
     nameEn: 'Game Theory',
     code: 'ECON1055',
     departmentId: 'unnc-economics',
@@ -1148,7 +1174,7 @@ export const courses: Course[] = [
   },
   {
     id: 'econ4054',
-    name: 'Financial and Macroeconometrics',
+    name: '金融与宏观计量经济学',
     nameEn: 'Financial and Macroeconometrics',
     code: 'ECON4054',
     departmentId: 'unnc-economics',
@@ -1158,7 +1184,7 @@ export const courses: Course[] = [
   },
   {
     id: 'econ2052',
-    name: 'Econometric Theory II',
+    name: '计量经济学理论 II',
     nameEn: 'Econometric Theory II',
     code: 'ECON2052',
     departmentId: 'unnc-economics',
@@ -1169,7 +1195,7 @@ export const courses: Course[] = [
   },
   {
     id: 'econ4062',
-    name: 'Healthcare Markets and Health Policy',
+    name: '医疗保健市场与卫生政策',
     nameEn: 'Healthcare Markets and Health Policy',
     code: 'ECON4062',
     departmentId: 'unnc-economics',
@@ -1179,7 +1205,7 @@ export const courses: Course[] = [
   },
   {
     id: 'econ2051',
-    name: 'Econometric Theory I',
+    name: '计量经济学理论 I',
     nameEn: 'Econometric Theory I',
     code: 'ECON2051',
     departmentId: 'unnc-economics',
@@ -1190,7 +1216,7 @@ export const courses: Course[] = [
   },
   {
     id: 'econ4047',
-    name: 'Economic Research Methodology',
+    name: '经济研究方法论',
     nameEn: 'Economic Research Methodology',
     code: 'ECON4047',
     departmentId: 'unnc-economics',
@@ -1200,7 +1226,7 @@ export const courses: Course[] = [
   },
   {
     id: 'econ1040',
-    name: 'Current Economic Issues',
+    name: '当前经济问题',
     nameEn: 'Current Economic Issues',
     code: 'ECON1040',
     departmentId: 'unnc-economics',
@@ -1211,7 +1237,7 @@ export const courses: Course[] = [
   },
   {
     id: 'econ4049',
-    name: 'Macroprudential Policy and Financial Behaviour',
+    name: '宏观审慎政策与金融行为',
     nameEn: 'Macroprudential Policy and Financial Behaviour',
     code: 'ECON4049',
     departmentId: 'unnc-economics',
@@ -1221,7 +1247,7 @@ export const courses: Course[] = [
   },
   {
     id: 'econ3079',
-    name: 'Advanced Experimental and Behavioural Economics',
+    name: '高级实验与行为经济学',
     nameEn: 'Advanced Experimental and Behavioural Economics',
     code: 'ECON3079',
     departmentId: 'unnc-economics',
@@ -1232,7 +1258,7 @@ export const courses: Course[] = [
   },
   {
     id: 'econ2028',
-    name: 'Microeconomic Theory',
+    name: '微观经济理论',
     nameEn: 'Microeconomic Theory',
     code: 'ECON2028',
     departmentId: 'unnc-economics',
@@ -1243,7 +1269,7 @@ export const courses: Course[] = [
   },
   {
     id: 'econ2037',
-    name: 'Development Economics',
+    name: '发展经济学',
     nameEn: 'Development Economics',
     code: 'ECON2037',
     departmentId: 'unnc-economics',
@@ -1254,7 +1280,7 @@ export const courses: Course[] = [
   },
   {
     id: 'econ4045',
-    name: 'Macroeconomics: Cycles, Frictions and Policy',
+    name: '宏观经济学：经济周期、摩擦与政策',
     nameEn: 'Macroeconomics: Cycles, Frictions and Policy',
     code: 'ECON4045',
     departmentId: 'unnc-economics',
@@ -1264,7 +1290,7 @@ export const courses: Course[] = [
   },
   {
     id: 'econ4048',
-    name: 'Monetary Theory and Practice',
+    name: '货币理论与实践',
     nameEn: 'Monetary Theory and Practice',
     code: 'ECON4048',
     departmentId: 'unnc-economics',
@@ -1274,7 +1300,7 @@ export const courses: Course[] = [
   },
   {
     id: 'econ1036',
-    name: 'Economic Integration II',
+    name: '经济一体化 II',
     nameEn: 'Economic Integration II',
     code: 'ECON1036',
     departmentId: 'unnc-economics',
@@ -1285,7 +1311,7 @@ export const courses: Course[] = [
   },
   {
     id: 'econ2032',
-    name: 'Applied Econometrics I',
+    name: '应用计量经济学 I',
     nameEn: 'Applied Econometrics I',
     code: 'ECON2032',
     departmentId: 'unnc-economics',
@@ -1296,7 +1322,7 @@ export const courses: Course[] = [
   },
   {
     id: 'econ3074',
-    name: 'Advanced Development Economics',
+    name: '高级发展经济学',
     nameEn: 'Advanced Development Economics',
     code: 'ECON3074',
     departmentId: 'unnc-economics',
@@ -1307,7 +1333,7 @@ export const courses: Course[] = [
   },
   {
     id: 'econ1049',
-    name: 'Mathematical Economics and Econometrics',
+    name: '数理经济学与计量经济学',
     nameEn: 'Mathematical Economics and Econometrics',
     code: 'ECON1049',
     departmentId: 'unnc-economics',
@@ -1318,7 +1344,7 @@ export const courses: Course[] = [
   },
   {
     id: 'econ1041',
-    name: 'Economic Perspectives',
+    name: '经济视角',
     nameEn: 'Economic Perspectives',
     code: 'ECON1041',
     departmentId: 'unnc-economics',
@@ -1329,7 +1355,7 @@ export const courses: Course[] = [
   },
   {
     id: 'econ2030',
-    name: 'International Trade',
+    name: '国际贸易',
     nameEn: 'International Trade',
     code: 'ECON2030',
     departmentId: 'unnc-economics',
@@ -1340,7 +1366,7 @@ export const courses: Course[] = [
   },
   {
     id: 'econ3067',
-    name: 'Dissertation',
+    name: '学位论文',
     nameEn: 'Dissertation',
     code: 'ECON3067',
     departmentId: 'unnc-economics',
@@ -1351,7 +1377,7 @@ export const courses: Course[] = [
   },
   {
     id: 'econ3064',
-    name: 'Advanced Monetary Economics',
+    name: '高级货币经济学',
     nameEn: 'Advanced Monetary Economics',
     code: 'ECON3064',
     departmentId: 'unnc-economics',
@@ -1362,7 +1388,7 @@ export const courses: Course[] = [
   },
   {
     id: 'econ4051',
-    name: 'Household Finance',
+    name: '家庭金融经济学',
     nameEn: 'Household Finance',
     code: 'ECON4051',
     departmentId: 'unnc-economics',
@@ -1372,7 +1398,7 @@ export const courses: Course[] = [
   },
   {
     id: 'econ1034',
-    name: 'Introduction to Macroeconomics',
+    name: '宏观经济学导论',
     nameEn: 'Introduction to Macroeconomics',
     code: 'ECON1034',
     departmentId: 'unnc-economics',
@@ -1383,7 +1409,7 @@ export const courses: Course[] = [
   },
   {
     id: 'econ3078',
-    name: 'Advanced Public Economics',
+    name: '高级公共经济学',
     nameEn: 'Advanced Public Economics',
     code: 'ECON3078',
     departmentId: 'unnc-economics',
@@ -1394,7 +1420,7 @@ export const courses: Course[] = [
   },
   {
     id: 'econ1033',
-    name: 'Introduction to Microeconomics',
+    name: '微观经济学导论',
     nameEn: 'Introduction to Microeconomics',
     code: 'ECON1033',
     departmentId: 'unnc-economics',
@@ -1405,7 +1431,7 @@ export const courses: Course[] = [
   },
   {
     id: 'econ2048',
-    name: 'Python Programming for Economics',
+    name: 'Python 经济学编程',
     nameEn: 'Python Programming for Economics',
     code: 'ECON2048',
     departmentId: 'unnc-economics',
@@ -1414,10 +1440,11 @@ export const courses: Course[] = [
     credits: 20,
     description: 'Python基础、数据分析、经济建模'
   },
+  
   // 宁波诺丁汉大学航空航天工程课程（UNNC）
   {
     id: 'aero3007',
-    name: 'Advanced Aerodynamics',
+    name: '高级空气动力学',
     nameEn: 'Advanced Aerodynamics',
     code: 'AERO3007',
     departmentId: 'unnc-aerospace-engineering',
@@ -1428,7 +1455,7 @@ export const courses: Course[] = [
   },
   {
     id: 'aero3004',
-    name: 'Aerospace Hybrid and Electric Propulsion Systems',
+    name: '航空航天混合动力和电动动力系统',
     nameEn: 'Aerospace Hybrid and Electric Propulsion Systems',
     code: 'AERO3004',
     departmentId: 'unnc-aerospace-engineering',
@@ -1439,7 +1466,7 @@ export const courses: Course[] = [
   },
   {
     id: 'aero1005',
-    name: 'Avionics Engineering and Computing',
+    name: '航空电子工程与计算机',
     nameEn: 'Avionics Engineering and Computing',
     code: 'AERO1005',
     departmentId: 'unnc-aerospace-engineering',
@@ -1450,7 +1477,7 @@ export const courses: Course[] = [
   },
   {
     id: 'aero3005',
-    name: 'Space and Spacecraft Engineering',
+    name: '航天与航天工程',
     nameEn: 'Space and Spacecraft Engineering',
     code: 'AERO3005',
     departmentId: 'unnc-aerospace-engineering',
@@ -1461,7 +1488,7 @@ export const courses: Course[] = [
   },
   {
     id: 'aero2000',
-    name: 'Aerospace Design and Manufacturing',
+    name: '航空航天设计与制造',
     nameEn: 'Aerospace Design and Manufacturing',
     code: 'AERO2000',
     departmentId: 'unnc-aerospace-engineering',
@@ -1472,7 +1499,7 @@ export const courses: Course[] = [
   },
   {
     id: 'aero1001',
-    name: 'Aerospace Statics and Dynamics',
+    name: '航空航天静力学与动力学',
     nameEn: 'Aerospace Statics and Dynamics',
     code: 'AERO1001',
     departmentId: 'unnc-aerospace-engineering',
@@ -1483,7 +1510,7 @@ export const courses: Course[] = [
   },
   {
     id: 'aero3010',
-    name: 'BEng Individual Project',
+    name: '工学学士个人项目',
     nameEn: 'BEng Individual Project',
     code: 'AERO3010',
     departmentId: 'unnc-aerospace-engineering',
@@ -1494,7 +1521,7 @@ export const courses: Course[] = [
   },
   {
     id: 'aero1003',
-    name: 'Aircraft Design and Performance',
+    name: '飞机设计与性能',
     nameEn: 'Aircraft Design and Performance',
     code: 'AERO1003',
     departmentId: 'unnc-aerospace-engineering',
@@ -1505,7 +1532,7 @@ export const courses: Course[] = [
   },
   {
     id: 'aero2002',
-    name: 'Thermodynamics and Aerospace Propulsion',
+    name: '热力学与航空航天推进',
     nameEn: 'Thermodynamics and Aerospace Propulsion',
     code: 'AERO2002',
     departmentId: 'unnc-aerospace-engineering',
@@ -1516,7 +1543,7 @@ export const courses: Course[] = [
   },
   {
     id: 'aero2005',
-    name: 'Aerospace Electrical Engineering and Applications',
+    name: '航空电气工程及应用',
     nameEn: 'Aerospace Electrical Engineering and Applications',
     code: 'AERO2005',
     departmentId: 'unnc-aerospace-engineering',
@@ -1527,7 +1554,7 @@ export const courses: Course[] = [
   },
   {
     id: 'aero3000',
-    name: 'Management and Professional Practice',
+    name: '管理与专业实践',
     nameEn: 'Management and Professional Practice',
     code: 'AERO3000',
     departmentId: 'unnc-aerospace-engineering',
@@ -1538,7 +1565,7 @@ export const courses: Course[] = [
   },
   {
     id: 'aero1002',
-    name: 'Fluid Mechanics and Aircraft Aerodynamics',
+    name: '流体力学与飞机空气动力学',
     nameEn: 'Fluid Mechanics and Aircraft Aerodynamics',
     code: 'AERO1002',
     departmentId: 'unnc-aerospace-engineering',
@@ -1549,7 +1576,7 @@ export const courses: Course[] = [
   },
   {
     id: 'aero1000',
-    name: 'Aerospace Design and Materials',
+    name: '航空航天设计与材料',
     nameEn: 'Aerospace Design and Materials',
     code: 'AERO1000',
     departmentId: 'unnc-aerospace-engineering',
@@ -1560,7 +1587,7 @@ export const courses: Course[] = [
   },
   {
     id: 'aero2003',
-    name: 'Flight Dynamics and Control',
+    name: '飞行动力学与控制',
     nameEn: 'Flight Dynamics and Control',
     code: 'AERO2003',
     departmentId: 'unnc-aerospace-engineering',
@@ -1571,7 +1598,7 @@ export const courses: Course[] = [
   },
   {
     id: 'aero2004',
-    name: 'Integrated Project and Mathematics 2',
+    name: '综合项目与数学 2',
     nameEn: 'Integrated Project and Mathematics 2',
     code: 'AERO2004',
     departmentId: 'unnc-aerospace-engineering',
@@ -1582,7 +1609,7 @@ export const courses: Course[] = [
   },
   {
     id: 'aero2001',
-    name: 'Aerospace Structures and Dynamics',
+    name: '航空航天结构与动力学',
     nameEn: 'Aerospace Structures and Dynamics',
     code: 'AERO2001',
     departmentId: 'unnc-aerospace-engineering',
@@ -1593,7 +1620,7 @@ export const courses: Course[] = [
   },
   {
     id: 'aero1004',
-    name: 'Integrated Project and Mathematics 1',
+    name: '综合项目与数学 1',
     nameEn: 'Integrated Project and Mathematics 1',
     code: 'AERO1004',
     departmentId: 'unnc-aerospace-engineering',
@@ -1602,10 +1629,11 @@ export const courses: Course[] = [
     credits: 20,
     description: '工程数学基础、项目入门、设计思维'
   },
+  
   // 宁波诺丁汉大学数学科学课程（UNNC）
   {
     id: 'math1108',
-    name: 'Probability and Statistics 1',
+    name: '概率论与统计 1',
     nameEn: 'Probability and Statistics 1',
     code: 'MATH1108',
     departmentId: 'unnc-mathematics',
@@ -1616,7 +1644,7 @@ export const courses: Course[] = [
   },
   {
     id: 'math1109',
-    name: 'Core Mathematics',
+    name: '核心数学',
     nameEn: 'Core Mathematics',
     code: 'MATH1109',
     departmentId: 'unnc-mathematics',
@@ -1627,7 +1655,7 @@ export const courses: Course[] = [
   },
   {
     id: 'math1107',
-    name: 'Algebra',
+    name: '代数',
     nameEn: 'Algebra',
     code: 'MATH1107',
     departmentId: 'unnc-mathematics',
@@ -1638,7 +1666,7 @@ export const courses: Course[] = [
   },
   {
     id: 'math1031',
-    name: 'Mathematical Methods for Civil Engineering',
+    name: '土木工程数学方法',
     nameEn: 'Mathematical Methods for Civil Engineering',
     code: 'MATH1031',
     departmentId: 'unnc-mathematics',
@@ -1649,7 +1677,7 @@ export const courses: Course[] = [
   },
   {
     id: 'math1029',
-    name: 'Applied Mathematics',
+    name: '应用数学',
     nameEn: 'Applied Mathematics',
     code: 'MATH1029',
     departmentId: 'unnc-mathematics',
@@ -1660,7 +1688,7 @@ export const courses: Course[] = [
   },
   {
     id: 'math2034',
-    name: 'Differential Equations and Fourier Analysis',
+    name: '微分方程与傅里叶分析',
     nameEn: 'Differential Equations and Fourier Analysis',
     code: 'MATH2034',
     departmentId: 'unnc-mathematics',
@@ -1671,7 +1699,7 @@ export const courses: Course[] = [
   },
   {
     id: 'math2031',
-    name: 'Advanced Mathematical Methods for Civil Engineering',
+    name: '土木工程高等数学方法',
     nameEn: 'Advanced Mathematical Methods for Civil Engineering',
     code: 'MATH2031',
     departmentId: 'unnc-mathematics',
@@ -1682,7 +1710,7 @@ export const courses: Course[] = [
   },
   {
     id: 'math3039',
-    name: 'Stochastic Models',
+    name: '随机模型',
     nameEn: 'Stochastic Models',
     code: 'MATH3039',
     departmentId: 'unnc-mathematics',
@@ -1693,7 +1721,7 @@ export const courses: Course[] = [
   },
   {
     id: 'math2035',
-    name: 'Differential Equations Modelling',
+    name: '微分方程建模',
     nameEn: 'Differential Equations Modelling',
     code: 'MATH2035',
     departmentId: 'unnc-mathematics',
@@ -1704,7 +1732,7 @@ export const courses: Course[] = [
   },
   {
     id: 'math1046',
-    name: 'Mathematical Methods for Architecture and Environmental Engineering',
+    name: '建筑与环境工程数学方法',
     nameEn: 'Mathematical Methods for Architecture and Environmental Engineering',
     code: 'MATH1046',
     departmentId: 'unnc-mathematics',
@@ -1715,7 +1743,7 @@ export const courses: Course[] = [
   },
   {
     id: 'math3053',
-    name: 'Game Theory',
+    name: '博弈论',
     nameEn: 'Game Theory',
     code: 'MATH3053',
     departmentId: 'unnc-mathematics',
@@ -1726,7 +1754,7 @@ export const courses: Course[] = [
   },
   {
     id: 'math2032',
-    name: 'Vector Calculus',
+    name: '向量微积分',
     nameEn: 'Vector Calculus',
     code: 'MATH2032',
     departmentId: 'unnc-mathematics',
@@ -1737,7 +1765,7 @@ export const courses: Course[] = [
   },
   {
     id: 'math2033',
-    name: 'Introduction to Scientific Computing',
+    name: '科学计算导论',
     nameEn: 'Introduction to Scientific Computing',
     code: 'MATH2033',
     departmentId: 'unnc-mathematics',
@@ -1748,7 +1776,7 @@ export const courses: Course[] = [
   },
   {
     id: 'math2036',
-    name: 'Complex Functions',
+    name: '复函数',
     nameEn: 'Complex Functions',
     code: 'MATH2036',
     departmentId: 'unnc-mathematics',
@@ -1759,7 +1787,7 @@ export const courses: Course[] = [
   },
   {
     id: 'math3052',
-    name: 'Codes and Cryptography',
+    name: '编码与密码学',
     nameEn: 'Codes and Cryptography',
     code: 'MATH3052',
     departmentId: 'unnc-mathematics',
@@ -1770,7 +1798,7 @@ export const courses: Course[] = [
   },
   {
     id: 'math3054',
-    name: 'Discrete Mathematics and Graph Theory',
+    name: '离散数学与图论',
     nameEn: 'Discrete Mathematics and Graph Theory',
     code: 'MATH3054',
     departmentId: 'unnc-mathematics',
@@ -1781,7 +1809,7 @@ export const courses: Course[] = [
   },
   {
     id: 'math3051',
-    name: 'Optimization',
+    name: '优化',
     nameEn: 'Optimization',
     code: 'MATH3051',
     departmentId: 'unnc-mathematics',
@@ -1792,7 +1820,7 @@ export const courses: Course[] = [
   },
   {
     id: 'math3048',
-    name: 'Mathematical Medicine and Biology',
+    name: '数学医学与生物学',
     nameEn: 'Mathematical Medicine and Biology',
     code: 'MATH3048',
     departmentId: 'unnc-mathematics',
@@ -1803,7 +1831,7 @@ export const courses: Course[] = [
   },
   {
     id: 'math3049',
-    name: 'Scientific Computing and Numerical Analysis',
+    name: '科学计算与数值分析',
     nameEn: 'Scientific Computing and Numerical Analysis',
     code: 'MATH3049',
     departmentId: 'unnc-mathematics',
@@ -1814,7 +1842,7 @@ export const courses: Course[] = [
   },
   {
     id: 'math3040',
-    name: 'Mathematical Finance',
+    name: '数学金融',
     nameEn: 'Mathematical Finance',
     code: 'MATH3040',
     departmentId: 'unnc-mathematics',
@@ -1825,7 +1853,7 @@ export const courses: Course[] = [
   },
   {
     id: 'math2045',
-    name: 'Advanced Mathematics and Statistics for Mechanical Engineers',
+    name: '机械工程师高等数学与统计学',
     nameEn: 'Advanced Mathematics and Statistics for Mechanical Engineers',
     code: 'MATH2045',
     departmentId: 'unnc-mathematics',
@@ -1836,7 +1864,7 @@ export const courses: Course[] = [
   },
   {
     id: 'math2039',
-    name: 'Probability Models and Methods',
+    name: '概率模型与方法',
     nameEn: 'Probability Models and Methods',
     code: 'MATH2039',
     departmentId: 'unnc-mathematics',
@@ -1847,7 +1875,7 @@ export const courses: Course[] = [
   },
   {
     id: 'math2037',
-    name: 'Mathematical Analysis',
+    name: '数学分析',
     nameEn: 'Mathematical Analysis',
     code: 'MATH2037',
     departmentId: 'unnc-mathematics',
@@ -1858,7 +1886,7 @@ export const courses: Course[] = [
   },
   {
     id: 'math2025',
-    name: 'Differential Equations and Calculus for Engineers',
+    name: '工程师微分方程与微积分',
     nameEn: 'Differential Equations and Calculus for Engineers',
     code: 'MATH2025',
     departmentId: 'unnc-mathematics',
@@ -1869,7 +1897,7 @@ export const courses: Course[] = [
   },
   {
     id: 'math2038',
-    name: 'Statistical Models and Methods',
+    name: '统计模型与方法',
     nameEn: 'Statistical Models and Methods',
     code: 'MATH2038',
     departmentId: 'unnc-mathematics',
@@ -1880,7 +1908,7 @@ export const courses: Course[] = [
   },
   {
     id: 'math2052',
-    name: 'Advanced Mathematical Modelling for Process Engineers',
+    name: '面向过程工程师的高级数学建模',
     nameEn: 'Advanced Mathematical Modelling for Process Engineers',
     code: 'MATH2052',
     departmentId: 'unnc-mathematics',
@@ -1891,7 +1919,7 @@ export const courses: Course[] = [
   },
   {
     id: 'math1047',
-    name: 'Mathematical Methods for Chemical and Environmental Engineering',
+    name: '化学与环境工程数学方法',
     nameEn: 'Mathematical Methods for Chemical and Environmental Engineering',
     code: 'MATH1047',
     departmentId: 'unnc-mathematics',
@@ -1902,7 +1930,7 @@ export const courses: Course[] = [
   },
   {
     id: 'math4083',
-    name: 'Mathematics Group Project',
+    name: '数学小组项目',
     nameEn: 'Mathematics Group Project',
     code: 'MATH4083',
     departmentId: 'unnc-mathematics',
@@ -1914,7 +1942,7 @@ export const courses: Course[] = [
   // 研究生课程
   {
     id: 'comp4136-unnc',
-    name: 'Computer Science Masters Intensive Research Project',
+    name: '计算机科学硕士强化研究项目',
     nameEn: 'Computer Science Masters Intensive Research Project',
     code: 'COMP4136',
     departmentId: 'unnc-computer-science',
@@ -1924,7 +1952,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp4132-unnc',
-    name: 'Advanced Topics in Machine Learning',
+    name: '机器学习高级专题',
     nameEn: 'Advanced Topics in Machine Learning',
     code: 'COMP4132',
     departmentId: 'unnc-computer-science',
@@ -1934,7 +1962,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp4135-unnc',
-    name: 'Software Engineering Management',
+    name: '软件工程管理',
     nameEn: 'Software Engineering Management',
     code: 'COMP4135',
     departmentId: 'unnc-computer-science',
@@ -1944,7 +1972,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp4134-unnc',
-    name: 'Advanced Algorithms and Data Structures Project',
+    name: '高级算法与数据结构项目',
     nameEn: 'Advanced Algorithms and Data Structures Project',
     code: 'COMP4134',
     departmentId: 'unnc-computer-science',
@@ -1954,7 +1982,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp4131-unnc',
-    name: 'Data Modelling and Analysis',
+    name: '数据建模与分析',
     nameEn: 'Data Modelling and Analysis',
     code: 'COMP4131',
     departmentId: 'unnc-computer-science',
@@ -1964,7 +1992,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp4133-unnc',
-    name: 'Advanced Algorithms and Data Structures',
+    name: '高级算法与数据结构',
     nameEn: 'Advanced Algorithms and Data Structures',
     code: 'COMP4133',
     departmentId: 'unnc-computer-science',
@@ -1974,7 +2002,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp4125-unnc',
-    name: 'Designing Intelligent Agents',
+    name: '设计智能代理',
     nameEn: 'Designing Intelligent Agents',
     code: 'COMP4125',
     departmentId: 'unnc-computer-science',
@@ -1984,7 +2012,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp4127-unnc',
-    name: 'Programming',
+    name: '编程',
     nameEn: 'Programming',
     code: 'COMP4127',
     departmentId: 'unnc-computer-science',
@@ -1994,7 +2022,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp4130-unnc',
-    name: 'Linear and Discrete Optimization',
+    name: '线性和离散优化',
     nameEn: 'Linear and Discrete Optimization',
     code: 'COMP4130',
     departmentId: 'unnc-computer-science',
@@ -2004,7 +2032,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp4128-unnc',
-    name: 'Databases, Interfaces and Software Design Principles',
+    name: '数据库、接口和软件设计原理',
     nameEn: 'Databases, Interfaces and Software Design Principles',
     code: 'COMP4128',
     departmentId: 'unnc-computer-science',
@@ -2014,7 +2042,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp4129-unnc',
-    name: 'Systems and Networks',
+    name: '系统与网络',
     nameEn: 'Systems and Networks',
     code: 'COMP4129',
     departmentId: 'unnc-computer-science',
@@ -2024,7 +2052,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp4126-unnc',
-    name: 'Research Methods',
+    name: '研究方法',
     nameEn: 'Research Methods',
     code: 'COMP4126',
     departmentId: 'unnc-computer-science',
@@ -2034,7 +2062,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp4107-unnc',
-    name: 'Big Data',
+    name: '大数据',
     nameEn: 'Big Data',
     code: 'COMP4107',
     departmentId: 'unnc-computer-science',
@@ -2042,10 +2070,11 @@ export const courses: Course[] = [
     credits: 20,
     description: '大数据处理技术、分布式计算、数据流处理'
   },
+
   // 本科课程
   {
     id: 'comp3050-unnc',
-    name: 'Individual Dissertation Single Honours',
+    name: '个人论文单项荣誉学位',
     nameEn: 'Individual Dissertation Single Honours',
     code: 'COMP3050',
     departmentId: 'unnc-computer-science',
@@ -2056,7 +2085,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp3056-unnc',
-    name: 'Professional Ethics in Computing',
+    name: '计算机职业伦理',
     nameEn: 'Professional Ethics in Computing',
     code: 'COMP3056',
     departmentId: 'unnc-computer-science',
@@ -2067,7 +2096,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp3053-unnc',
-    name: 'Software Quality Assurance',
+    name: '软件质量保证',
     nameEn: 'Software Quality Assurance',
     code: 'COMP3053',
     departmentId: 'unnc-computer-science',
@@ -2078,7 +2107,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp3069-unnc',
-    name: 'Computer Graphics',
+    name: '计算机图形学',
     nameEn: 'Computer Graphics',
     code: 'COMP3069',
     departmentId: 'unnc-computer-science',
@@ -2089,7 +2118,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp3055-unnc',
-    name: 'Machine Learning',
+    name: '机器学习',
     nameEn: 'Machine Learning',
     code: 'COMP3055',
     departmentId: 'unnc-computer-science',
@@ -2100,7 +2129,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp3052-unnc',
-    name: 'Computer Security',
+    name: '计算机安全',
     nameEn: 'Computer Security',
     code: 'COMP3052',
     departmentId: 'unnc-computer-science',
@@ -2111,7 +2140,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp3065-unnc',
-    name: 'Computer Vision',
+    name: '计算机视觉',
     nameEn: 'Computer Vision',
     code: 'COMP3065',
     departmentId: 'unnc-computer-science',
@@ -2122,7 +2151,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp3059-unnc',
-    name: 'Mobile Device Programming',
+    name: '移动设备编程',
     nameEn: 'Mobile Device Programming',
     code: 'COMP3059',
     departmentId: 'unnc-computer-science',
@@ -2133,7 +2162,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp2069-unnc',
-    name: 'Algorithms Data Structures and Efficiency',
+    name: '算法数据结构与效率',
     nameEn: 'Algorithms Data Structures and Efficiency',
     code: 'COMP2069',
     departmentId: 'unnc-computer-science',
@@ -2144,7 +2173,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp2068-unnc',
-    name: 'Introduction to Formal Reasoning',
+    name: '形式推理导论',
     nameEn: 'Introduction to Formal Reasoning',
     code: 'COMP2068',
     departmentId: 'unnc-computer-science',
@@ -2155,7 +2184,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp2044-unnc',
-    name: 'Human Computer Interaction',
+    name: '人机交互',
     nameEn: 'Human Computer Interaction',
     code: 'COMP2044',
     departmentId: 'unnc-computer-science',
@@ -2166,7 +2195,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp2043-unnc',
-    name: 'Software Engineering Group Project',
+    name: '软件工程小组项目',
     nameEn: 'Software Engineering Group Project',
     code: 'COMP2043',
     departmentId: 'unnc-computer-science',
@@ -2177,7 +2206,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp2045-unnc',
-    name: 'C++ Programming',
+    name: 'C++ 编程',
     nameEn: 'C++ Programming',
     code: 'COMP2045',
     departmentId: 'unnc-computer-science',
@@ -2188,7 +2217,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp2047-unnc',
-    name: 'Introduction to Image Processing',
+    name: '图像处理导论',
     nameEn: 'Introduction to Image Processing',
     code: 'COMP2047',
     departmentId: 'unnc-computer-science',
@@ -2199,7 +2228,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp2051-unnc',
-    name: 'Artificial Intelligence Methods',
+    name: '人工智能方法',
     nameEn: 'Artificial Intelligence Methods',
     code: 'COMP2051',
     departmentId: 'unnc-computer-science',
@@ -2210,7 +2239,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp2059-unnc',
-    name: 'Developing Maintainable Software',
+    name: '开发可维护软件',
     nameEn: 'Developing Maintainable Software',
     code: 'COMP2059',
     departmentId: 'unnc-computer-science',
@@ -2221,7 +2250,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp2049-unnc',
-    name: 'Languages and Computation',
+    name: '语言与计算',
     nameEn: 'Languages and Computation',
     code: 'COMP2049',
     departmentId: 'unnc-computer-science',
@@ -2232,7 +2261,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp2046-unnc',
-    name: 'Operating Systems & Concurrency',
+    name: '操作系统与并发',
     nameEn: 'Operating Systems & Concurrency',
     code: 'COMP2046',
     departmentId: 'unnc-computer-science',
@@ -2241,10 +2270,11 @@ export const courses: Course[] = [
     credits: 20,
     description: '操作系统原理、进程管理、并发编程'
   },
+
   // 一年级课程
   {
     id: 'comp1047-unnc',
-    name: 'Systems and Architecture',
+    name: '系统与架构',
     nameEn: 'Systems and Architecture',
     code: 'COMP1047',
     departmentId: 'unnc-computer-science',
@@ -2255,7 +2285,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp1037-unnc',
-    name: 'Fundamentals of Artificial Intelligence',
+    name: '人工智能基础',
     nameEn: 'Fundamentals of Artificial Intelligence',
     code: 'COMP1037',
     departmentId: 'unnc-computer-science',
@@ -2266,7 +2296,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp1038-unnc',
-    name: 'Programming and Algorithms',
+    name: '编程与算法',
     nameEn: 'Programming and Algorithms',
     code: 'COMP1038',
     departmentId: 'unnc-computer-science',
@@ -2277,7 +2307,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp1048-unnc',
-    name: 'Databases and Interfaces',
+    name: '数据库和接口',
     nameEn: 'Databases and Interfaces',
     code: 'COMP1048',
     departmentId: 'unnc-computer-science',
@@ -2288,7 +2318,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp1036-unnc',
-    name: 'Computer Fundamentals',
+    name: '计算机基础',
     nameEn: 'Computer Fundamentals',
     code: 'COMP1036',
     departmentId: 'unnc-computer-science',
@@ -2299,7 +2329,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp1035-unnc',
-    name: 'Software Engineering',
+    name: '软件工程',
     nameEn: 'Software Engineering',
     code: 'COMP1035',
     departmentId: 'unnc-computer-science',
@@ -2310,7 +2340,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp1046-unnc',
-    name: 'Mathematics for Computer Scientists',
+    name: '计算机科学家数学',
     nameEn: 'Mathematics for Computer Scientists',
     code: 'COMP1046',
     departmentId: 'unnc-computer-science',
@@ -2321,7 +2351,7 @@ export const courses: Course[] = [
   },
   {
     id: 'comp1039-unnc',
-    name: 'Programming Paradigms',
+    name: '编程范式',
     nameEn: 'Programming Paradigms',
     code: 'COMP1039',
     departmentId: 'unnc-computer-science',
@@ -2330,11 +2360,12 @@ export const courses: Course[] = [
     credits: 20,
     description: '面向对象编程、函数式编程、编程语言概念'
   },
+
   // 宁波诺丁汉大学电子电气工程课程（UNNC）
   // 三年级课程
   {
     id: 'eeee3124-unnc',
-    name: 'Internet of Things (IoT)',
+    name: '物联网',
     nameEn: 'Internet of Things (IoT)',
     code: 'EEEE3124',
     departmentId: 'unnc-electrical-electronic-engineering',
@@ -2345,7 +2376,7 @@ export const courses: Course[] = [
   },
   {
     id: 'eeee3125-unnc',
-    name: 'Digital VLSI Design',
+    name: '数字VLSI设计',
     nameEn: 'Digital VLSI Design',
     code: 'EEEE3125',
     departmentId: 'unnc-electrical-electronic-engineering',
@@ -2356,7 +2387,7 @@ export const courses: Course[] = [
   },
   {
     id: 'eeee3103-unnc',
-    name: 'Power Electronic Applications and Control',
+    name: '电力电子应用与控制',
     nameEn: 'Power Electronic Applications and Control',
     code: 'EEEE3103',
     departmentId: 'unnc-electrical-electronic-engineering',
@@ -2367,7 +2398,7 @@ export const courses: Course[] = [
   },
   {
     id: 'eeee3056-unnc',
-    name: 'Third Year Project',
+    name: '三年级项目',
     nameEn: 'Third Year Project',
     code: 'EEEE3056',
     departmentId: 'unnc-electrical-electronic-engineering',
@@ -2378,7 +2409,7 @@ export const courses: Course[] = [
   },
   {
     id: 'eeee3077-unnc',
-    name: 'Artificial Intelligence System',
+    name: '人工智能系统',
     nameEn: 'Artificial Intelligence System',
     code: 'EEEE3077',
     departmentId: 'unnc-electrical-electronic-engineering',
@@ -2389,7 +2420,7 @@ export const courses: Course[] = [
   },
   {
     id: 'eeee3110-unnc',
-    name: 'Sensing Systems and Signal Processing',
+    name: '传感系统与信号处理',
     nameEn: 'Sensing Systems and Signal Processing',
     code: 'EEEE3110',
     departmentId: 'unnc-electrical-electronic-engineering',
@@ -2400,7 +2431,7 @@ export const courses: Course[] = [
   },
   {
     id: 'eeee3104-unnc',
-    name: 'Electrical Machines, Drive Systems and Applications',
+    name: '电机、驱动系统与应用',
     nameEn: 'Electrical Machines, Drive Systems and Applications',
     code: 'EEEE3104',
     departmentId: 'unnc-electrical-electronic-engineering',
@@ -2411,7 +2442,7 @@ export const courses: Course[] = [
   },
   {
     id: 'eeee3109-unnc',
-    name: 'Mobile Technologies',
+    name: '移动技术',
     nameEn: 'Mobile Technologies',
     code: 'EEEE3109',
     departmentId: 'unnc-electrical-electronic-engineering',
@@ -2422,7 +2453,7 @@ export const courses: Course[] = [
   },
   {
     id: 'eeee3102-unnc',
-    name: 'Analogue Electronics',
+    name: '模拟电子学',
     nameEn: 'Analogue Electronics',
     code: 'EEEE3102',
     departmentId: 'unnc-electrical-electronic-engineering',
@@ -2433,7 +2464,7 @@ export const courses: Course[] = [
   },
   {
     id: 'eeee3070-unnc',
-    name: 'Embedded Computing',
+    name: '嵌入式计算',
     nameEn: 'Embedded Computing',
     code: 'EEEE3070',
     departmentId: 'unnc-electrical-electronic-engineering',
@@ -2444,7 +2475,7 @@ export const courses: Course[] = [
   },
   {
     id: 'eeee3107-unnc',
-    name: 'Advanced Engineering Mathematics',
+    name: '高级工程数学',
     nameEn: 'Advanced Engineering Mathematics',
     code: 'EEEE3107',
     departmentId: 'unnc-electrical-electronic-engineering',
@@ -2455,7 +2486,7 @@ export const courses: Course[] = [
   },
   {
     id: 'eeee3101-unnc',
-    name: 'Professional Studies',
+    name: '专业学习',
     nameEn: 'Professional Studies',
     code: 'EEEE3101',
     departmentId: 'unnc-electrical-electronic-engineering',
@@ -2466,7 +2497,7 @@ export const courses: Course[] = [
   },
   {
     id: 'eeee3076-unnc',
-    name: 'Robotics, Dynamics and Control',
+    name: '机器人、动力学与控制',
     nameEn: 'Robotics, Dynamics and Control',
     code: 'EEEE3076',
     departmentId: 'unnc-electrical-electronic-engineering',
@@ -2475,10 +2506,11 @@ export const courses: Course[] = [
     credits: 20,
     description: '机器人技术、控制理论、动力学建模、自动化系统'
   },
+
   // 二年级课程
   {
     id: 'eeee2074-unnc',
-    name: 'Energy Conditioning Group Design Project',
+    name: '能量调节小组设计项目',
     nameEn: 'Energy Conditioning Group Design Project',
     code: 'EEEE2074',
     departmentId: 'unnc-electrical-electronic-engineering',
@@ -2489,7 +2521,7 @@ export const courses: Course[] = [
   },
   {
     id: 'eeee2075-unnc',
-    name: 'Electronic Systems Group Design Project',
+    name: '电子系统小组设计项目',
     nameEn: 'Electronic Systems Group Design Project',
     code: 'EEEE2075',
     departmentId: 'unnc-electrical-electronic-engineering',
@@ -2500,7 +2532,7 @@ export const courses: Course[] = [
   },
   {
     id: 'eeee2068-unnc',
-    name: 'Contemporary Engineering Themes B',
+    name: '当代工程主题B',
     nameEn: 'Contemporary Engineering Themes B',
     code: 'EEEE2068',
     departmentId: 'unnc-electrical-electronic-engineering',
@@ -2511,7 +2543,7 @@ export const courses: Course[] = [
   },
   {
     id: 'eeee2057-unnc',
-    name: 'Electronic Processing and Communications',
+    name: '电子处理与通信',
     nameEn: 'Electronic Processing and Communications',
     code: 'EEEE2057',
     departmentId: 'unnc-electrical-electronic-engineering',
@@ -2522,7 +2554,7 @@ export const courses: Course[] = [
   },
   {
     id: 'eeee2067-unnc',
-    name: 'Design and Implementation of Engineering Software',
+    name: '工程软件设计与实现',
     nameEn: 'Design and Implementation of Engineering Software',
     code: 'EEEE2067',
     departmentId: 'unnc-electrical-electronic-engineering',
@@ -2533,7 +2565,7 @@ export const courses: Course[] = [
   },
   {
     id: 'eeee2058-unnc',
-    name: 'Modelling: Methods and Tools',
+    name: '建模：方法与工具',
     nameEn: 'Modelling: Methods and Tools',
     code: 'EEEE2058',
     departmentId: 'unnc-electrical-electronic-engineering',
@@ -2544,7 +2576,7 @@ export const courses: Course[] = [
   },
   {
     id: 'eeee2056-unnc',
-    name: 'Electrical Energy Conditioning and Control',
+    name: '电能调节与控制',
     nameEn: 'Electrical Energy Conditioning and Control',
     code: 'EEEE2056',
     departmentId: 'unnc-electrical-electronic-engineering',
@@ -2553,10 +2585,11 @@ export const courses: Course[] = [
     credits: 20,
     description: '电力电子技术、电能质量、电网控制'
   },
+
   // 一年级课程
   {
     id: 'eeee1045-unnc',
-    name: 'Contemporary Engineering Themes A',
+    name: '当代工程主题A',
     nameEn: 'Contemporary Engineering Themes A',
     code: 'EEEE1045',
     departmentId: 'unnc-electrical-electronic-engineering',
@@ -2567,7 +2600,7 @@ export const courses: Course[] = [
   },
   {
     id: 'eeee1037-unnc',
-    name: 'Engineering Mathematics',
+    name: '工程数学',
     nameEn: 'Engineering Mathematics',
     code: 'EEEE1037',
     departmentId: 'unnc-electrical-electronic-engineering',
@@ -2578,7 +2611,7 @@ export const courses: Course[] = [
   },
   {
     id: 'eeee1035-unnc',
-    name: 'Power and Energy',
+    name: '电力与能源',
     nameEn: 'Power and Energy',
     code: 'EEEE1035',
     departmentId: 'unnc-electrical-electronic-engineering',
@@ -2589,7 +2622,7 @@ export const courses: Course[] = [
   },
   {
     id: 'eeee1044-unnc',
-    name: 'Introduction to Software Engineering and Programming',
+    name: '软件工程与编程导论',
     nameEn: 'Introduction to Software Engineering and Programming',
     code: 'EEEE1044',
     departmentId: 'unnc-electrical-electronic-engineering',
@@ -2600,7 +2633,7 @@ export const courses: Course[] = [
   },
   {
     id: 'eeee1039-unnc',
-    name: 'Applied Electrical and Electronic Engineering: Construction Project',
+    name: '应用电气电子工程：建设项目',
     nameEn: 'Applied Electrical and Electronic Engineering: Construction Project',
     code: 'EEEE1039',
     departmentId: 'unnc-electrical-electronic-engineering',
@@ -2611,7 +2644,7 @@ export const courses: Course[] = [
   },
   {
     id: 'eeee1036-unnc',
-    name: 'Information and Systems',
+    name: '信息与系统',
     nameEn: 'Information and Systems',
     code: 'EEEE1036',
     departmentId: 'unnc-electrical-electronic-engineering',

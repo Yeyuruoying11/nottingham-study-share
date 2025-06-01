@@ -43,6 +43,7 @@ export interface FirestorePost {
   createdAt: Timestamp | Date | FieldValue;
   category: string;
   location?: Location; // 新增：地理位置信息
+  campus?: string; // 校区，如 'uk', 'china'
   school?: string; // 学院ID
   department?: string; // 专业ID
   course?: string; // 课程ID
@@ -142,7 +143,8 @@ export async function getPostsByCategoryFromFirestore(category: string): Promise
         school: data.school,
         department: data.department,
         course: data.course,
-        embedHtml: data.embedHtml // Google Maps嵌入HTML代码
+        embedHtml: data.embedHtml, // Google Maps嵌入HTML代码
+        campus: data.campus // 新增：校区
       });
     });
     
@@ -219,6 +221,7 @@ export async function addPostToFirestore(postData: {
   image?: string;
   images?: string[]; // 新增：多图片支持
   location?: Location; // 新增：位置信息
+  campus?: string; // 新增：校区信息
   school?: string; // 新增：学院ID
   department?: string; // 新增：专业ID
   course?: string; // 新增：课程ID
@@ -259,6 +262,9 @@ export async function addPostToFirestore(postData: {
     }
     if (postData.course && postData.course !== undefined && postData.course !== '' && postData.course.trim() !== '') {
       newPost.course = postData.course;
+    }
+    if (postData.campus && postData.campus !== undefined && postData.campus !== '' && postData.campus.trim() !== '') {
+      newPost.campus = postData.campus;
     }
     // 添加embedHtml字段的处理
     if (postData.embedHtml && postData.embedHtml !== undefined && postData.embedHtml.trim() !== '') {
@@ -785,7 +791,8 @@ export async function getUserPostsFromFirestore(userId: string): Promise<Firesto
           school: data.school,
           department: data.department,
           course: data.course,
-          embedHtml: data.embedHtml // Google Maps嵌入HTML代码
+          embedHtml: data.embedHtml, // Google Maps嵌入HTML代码
+          campus: data.campus, // 新增：校区
         });
       }
     });

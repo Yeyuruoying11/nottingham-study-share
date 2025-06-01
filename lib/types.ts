@@ -40,6 +40,7 @@ export interface Post {
   };
   category: PostCategory;
   // 新增：学术分类
+  campus?: string; // 校区，如 'uk', 'china'
   department?: Department;
   course?: Course;
   tags: string[];

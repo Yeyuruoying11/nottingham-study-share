@@ -32,7 +32,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { schools, departments, courses, getDepartmentsBySchool, getCoursesByDepartment } from "@/lib/academic-data";
+import { schools, departments, courses, getDepartmentsBySchool, getCoursesByDepartment, getSchoolsByUniversityAndCampus } from "@/lib/academic-data";
 import GoogleMapsEmbedTutorial from '@/components/ui/GoogleMapsEmbedTutorial';
 
 // 可拖拽的图片项组件
@@ -134,6 +134,7 @@ export default function CreatePostPage() {
     image: "",
     images: [] as string[],
     location: null as Location | null,
+    campus: "",
     school: "",
     department: "",
     course: "",
@@ -152,6 +153,26 @@ export default function CreatePostPage() {
   const [firestoreUserAvatar, setFirestoreUserAvatar] = useState<string>('');
   const [imageIds, setImageIds] = useState<string[]>([]);
   const [location, setLocation] = useState<Location | null>(null);
+
+  // 校区定义
+  const campuses = {
+    uon: {
+      uk: {
+        id: 'uk',
+        name: '英国校区',
+        nameEn: 'UK Campus',
+        description: '位于英国诺丁汉的主校区',
+        location: '英国诺丁汉'
+      },
+      china: {
+        id: 'china',
+        name: '中国校区',
+        nameEn: 'China Campus', 
+        description: '位于中国宁波的校区',
+        location: '中国宁波'
+      }
+    }
+  };
 
   // 拖拽传感器设置
   const sensors = useSensors(
@@ -252,6 +273,7 @@ export default function CreatePostPage() {
       category: categoryName,
       // 如果不是学习分类，清除学术信息
       ...(categoryName !== "学习" && { 
+        campus: "",
         school: "",
         department: "",
         course: "",
@@ -274,6 +296,17 @@ export default function CreatePostPage() {
     setFormData(prev => ({
       ...prev,
       location: selectedLocation
+    }));
+  };
+
+  const handleCampusSelect = (campusId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      campus: campusId,
+      school: "", // 重置学院选择
+      department: "", // 重置专业选择
+      course: "", // 重置课程选择
+      customCourseId: "" // 重置自定义课程ID
     }));
   };
 
@@ -538,6 +571,9 @@ export default function CreatePostPage() {
       if (formData.location && formData.location !== undefined) {
         postData.location = formData.location;
       }
+      if (formData.campus && formData.campus !== undefined && formData.campus !== '' && formData.campus.trim() !== '') {
+        postData.campus = formData.campus;
+      }
       if (formData.school && formData.school !== undefined && formData.school !== '' && formData.school.trim() !== '') {
         postData.school = formData.school;
       }
@@ -742,6 +778,25 @@ export default function CreatePostPage() {
                 {/* 学术分类选择器 - 仅在学习分类时显示 */}
                 {formData.category === "学习" && (
                   <div className="space-y-4">
+                    {/* 校区选择 - 仅针对诺丁汉大学 */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        校区 (可选)
+                      </label>
+                      <select
+                        value={formData.campus}
+                        onChange={(e) => handleCampusSelect(e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      >
+                        <option value="">选择校区...</option>
+                        <option value="uk">🇬🇧 英国校区 - 英国诺丁汉</option>
+                        <option value="china">🇨🇳 中国校区 - 宁波诺丁汉大学</option>
+                      </select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        💡 选择你的校区，以便显示相应的学院和专业
+                      </p>
+                    </div>
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         学院 (可选)
@@ -752,12 +807,17 @@ export default function CreatePostPage() {
                         className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       >
                         <option value="">选择学院...</option>
-                        {schools.map((school) => (
+                        {(formData.campus ? getSchoolsByUniversityAndCampus('uon', formData.campus) : schools).map((school) => (
                           <option key={school.id} value={school.id}>
                             {school.name} - {school.nameEn}
                           </option>
                         ))}
                       </select>
+                      {formData.campus && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          📍 当前显示 {campuses.uon[formData.campus as keyof typeof campuses.uon]?.name} 的学院
+                        </p>
+                      )}
                     </div>
 
                     {formData.school && (
