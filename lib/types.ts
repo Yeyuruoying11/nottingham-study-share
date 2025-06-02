@@ -53,6 +53,11 @@ export interface Post {
   location?: Location;
   // Google Maps嵌入HTML代码（主要用于租房帖子）
   embedHtml?: string;
+  // 视频iframe代码（用于学习、美食、资料、生活帖子）
+  videoIframe?: string;
+  // AI生成相关字段
+  isAIGenerated?: boolean; // 是否为AI生成的帖子
+  aiCharacterId?: string; // 生成此帖子的AI角色ID
   createdAt: Date;
   updatedAt: Date;
 }
@@ -81,7 +86,7 @@ export type PostCategory =
   | "美食" 
   | "学习" 
   | "旅行" 
-  | "资源"
+  | "资料"
   | "租房";
 
 // 通知类型
@@ -179,4 +184,147 @@ export interface School {
   nameEn: string;
   description?: string;
   universityId: string; // 所属大学
+}
+
+// AI相关类型定义
+export interface AICharacter {
+  id: string;
+  name: string; // 系统内部名称
+  displayName: string; // 显示名称
+  model: 'deepseek' | 'gpt4o';
+  avatar: string;
+  description: string;
+  systemPrompt: string;
+  personality: {
+    tone: 'friendly' | 'professional' | 'casual' | 'formal' | 'humorous';
+    style: 'helpful' | 'educational' | 'entertaining' | 'supportive';
+    interests: string[];
+  };
+  settings: {
+    max_response_length: number;
+    temperature: number;
+    auto_posting: {
+      enabled: boolean;
+      interval_hours: number;
+      categories: PostCategory[];
+      post_style: 'educational' | 'casual' | 'informative' | 'entertaining';
+      max_posts_per_day: number;
+      include_images: boolean;
+    };
+    auto_chat: {
+      enabled: boolean;
+      response_delay_min: number; // 最小回复延迟（秒）
+      response_delay_max: number; // 最大回复延迟（秒）
+      active_hours: {
+        start: number; // 0-23 小时
+        end: number;   // 0-23 小时
+      };
+      auto_initiate: boolean; // 是否主动发起对话
+    };
+    news_posting: {
+      enabled: boolean;
+      interval_hours: number; // 新闻发送间隔
+      max_news_per_day: number; // 每天最大新闻发送数
+      news_sources: ('local' | 'university' | 'weather' | 'events')[]; // 新闻来源
+      post_time_range: {
+        start: number; // 发送时间开始（小时）
+        end: number;   // 发送时间结束（小时）
+      };
+      include_weather: boolean; // 是否包含天气信息
+      include_events: boolean; // 是否包含校园事件
+    };
+  };
+  virtual_user: {
+    uid: string; // Firebase Auth UID (ai_角色ID)
+    email: string; // AI角色的虚拟邮箱
+    profile: {
+      major: string;
+      year: string;
+      bio: string;
+      university: string;
+    };
+  };
+  status: 'active' | 'inactive';
+  stats: {
+    total_posts: number;
+    posts_today: number;
+    total_chats: number;
+    chats_today: number;
+    last_post?: Date;
+    last_chat?: Date;
+  };
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface AIModelConfig {
+  model_id: 'deepseek' | 'gpt4o';
+  display_name: string;
+  api_endpoint?: string;
+  api_key?: string;
+  max_tokens: number;
+  temperature: number;
+  available: boolean;
+  cost_per_token?: number;
+}
+
+// 新增：AI发帖任务类型
+export interface AIPostingTask {
+  id: string;
+  ai_character_id: string;
+  ai_character_name: string;
+  scheduled_time: Date;
+  category?: PostCategory; // 如果指定了分类
+  topic?: string; // 如果指定了主题
+  status: 'pending' | 'completed' | 'failed';
+  created_at: Date;
+  completed_at?: Date;
+  post_id?: string; // 生成的帖子ID
+  error_message?: string;
+}
+
+// 新增：AI生成的帖子内容类型
+export interface AIGeneratedPost {
+  title: string;
+  content: string;
+  category: PostCategory;
+  tags: string[];
+  excerpt: string;
+  images?: string[]; // 可选的图片URL
+}
+
+// AI聊天响应接口
+export interface AIChatResponse {
+  message: string;
+  delay?: number; // 响应延迟（毫秒）
+  emotion?: 'happy' | 'neutral' | 'excited' | 'helpful' | 'curious';
+  shouldContinue?: boolean; // 是否继续对话
+}
+
+// AI聊天任务接口
+export interface AIChatTask {
+  id: string;
+  ai_character_id: string;
+  conversation_id: string;
+  message_id: string;
+  user_message: string;
+  ai_response?: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  scheduled_time: Date;
+  completed_at?: Date;
+  error_message?: string;
+  created_at: Date;
+}
+
+// AI主动聊天任务
+export interface AIInitiatedChat {
+  id: string;
+  ai_character_id: string;
+  target_user_id: string;
+  message: string;
+  conversation_id?: string;
+  status: 'pending' | 'sent' | 'failed';
+  scheduled_time: Date;
+  sent_at?: Date;
+  created_at: Date;
 } 

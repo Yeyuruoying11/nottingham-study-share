@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, ArrowLeft, MoreVertical, Image as ImageIcon, Smile } from 'lucide-react';
+import { Send, ArrowLeft, MoreVertical, Image as ImageIcon, Smile, Bot, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   subscribeToConversationMessages, 
@@ -29,8 +29,13 @@ export default function ChatInterface({ conversation, otherUser, onBack }: ChatI
   const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [otherUserStatus, setOtherUserStatus] = useState<UserOnlineStatus | null>(null);
+  const [isAITyping, setIsAITyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // 检查是否是AI角色
+  const isAIChat = otherUser.id.startsWith('ai_');
+  const aiCharacterId = isAIChat ? otherUser.id.replace('ai_', '') : null;
 
   // 滚动到底部
   const scrollToBottom = () => {
@@ -55,9 +60,9 @@ export default function ChatInterface({ conversation, otherUser, onBack }: ChatI
     return () => unsubscribe();
   }, [conversation.id, user]);
 
-  // 实时监听对方在线状态
+  // 实时监听对方在线状态（仅真实用户）
   useEffect(() => {
-    if (!otherUser.id) return;
+    if (!otherUser.id || isAIChat) return;
 
     const unsubscribe = subscribeToUserOnlineStatus(
       otherUser.id,
@@ -67,12 +72,48 @@ export default function ChatInterface({ conversation, otherUser, onBack }: ChatI
     );
 
     return () => unsubscribe();
-  }, [otherUser.id]);
+  }, [otherUser.id, isAIChat]);
 
   // 自动滚动到底部
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // 处理AI响应
+  const triggerAIResponse = async (messageId: string, userMessage: string) => {
+    if (!aiCharacterId || !conversation.id) return;
+
+    try {
+      setIsAITyping(true);
+      
+      // 调用AI聊天响应API
+      const response = await fetch('/api/ai/chat-response', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          conversationId: conversation.id,
+          messageId: messageId,
+          userMessage: userMessage,
+          aiCharacterId: aiCharacterId
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('AI响应失败');
+      }
+
+      console.log('AI聊天任务已创建，等待响应...');
+    } catch (error) {
+      console.error('触发AI响应失败:', error);
+    } finally {
+      // AI会有延迟响应，所以我们设置一个最小的typing时间
+      setTimeout(() => {
+        setIsAITyping(false);
+      }, 2000);
+    }
+  };
 
   // 发送消息
   const handleSendMessage = async () => {
@@ -83,13 +124,18 @@ export default function ChatInterface({ conversation, otherUser, onBack }: ChatI
     setIsSending(true);
 
     try {
-      await sendMessage(
+      const messageId = await sendMessage(
         conversation.id,
         user.uid,
         user.displayName || '用户',
         user.photoURL || '',
         content
       );
+
+      // 如果是AI聊天，触发AI响应
+      if (isAIChat && messageId) {
+        await triggerAIResponse(messageId, content);
+      }
     } catch (error) {
       console.error('发送消息失败:', error);
       alert('发送失败，请重试');
@@ -123,6 +169,7 @@ export default function ChatInterface({ conversation, otherUser, onBack }: ChatI
     const showAvatar = !isOwnMessage && !isConsecutive;
     const showTime = index === messages.length - 1 || 
                     !isConsecutiveMessage(messages[index + 1], index + 1);
+    const isAIMessage = (message as any).isAIMessage || (message as any).aiCharacterId;
 
     return (
       <motion.div
@@ -135,11 +182,18 @@ export default function ChatInterface({ conversation, otherUser, onBack }: ChatI
         <div className={`flex items-end space-x-2 max-w-xs sm:max-w-md ${isOwnMessage ? 'flex-row-reverse space-x-reverse' : ''}`}>
           {/* 头像 */}
           {showAvatar && (
-            <img
-              src={message.senderAvatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face'}
-              alt={message.senderName}
-              className="w-8 h-8 rounded-full object-cover"
-            />
+            <div className="relative">
+              <img
+                src={message.senderAvatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face'}
+                alt={message.senderName}
+                className="w-8 h-8 rounded-full object-cover"
+              />
+              {isAIMessage && (
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center">
+                  <Bot className="w-1.5 h-1.5 text-white" />
+                </div>
+              )}
+            </div>
           )}
           
           {/* 占位符，保持对齐 */}
@@ -149,9 +203,17 @@ export default function ChatInterface({ conversation, otherUser, onBack }: ChatI
           <div className={`flex flex-col ${isOwnMessage ? 'items-end' : 'items-start'}`}>
             {/* 发送者名称（仅对方消息且非连续消息时显示） */}
             {!isOwnMessage && !isConsecutive && (
-              <span className="text-xs text-gray-500 mb-1 px-3">
-                {message.senderName}
-              </span>
+              <div className="flex items-center space-x-1 mb-1 px-3">
+                <span className="text-xs text-gray-500">
+                  {message.senderName}
+                </span>
+                {isAIMessage && (
+                  <div className="flex items-center space-x-1">
+                    <Sparkles className="w-2.5 h-2.5 text-blue-500" />
+                    <span className="text-xs text-blue-600 font-medium">AI</span>
+                  </div>
+                )}
+              </div>
             )}
             
             {/* 消息气泡 */}
@@ -159,6 +221,8 @@ export default function ChatInterface({ conversation, otherUser, onBack }: ChatI
               className={`px-4 py-2 rounded-2xl break-words ${
                 isOwnMessage
                   ? 'bg-green-500 text-white rounded-br-sm'
+                  : isAIMessage
+                  ? 'bg-blue-50 text-gray-900 rounded-bl-sm border border-blue-200'
                   : 'bg-gray-100 text-gray-900 rounded-bl-sm'
               } ${isConsecutive ? 'mt-1' : 'mt-0'}`}
             >
@@ -171,6 +235,38 @@ export default function ChatInterface({ conversation, otherUser, onBack }: ChatI
                 {formatMessageTime(message.timestamp)}
               </span>
             )}
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
+
+  // 渲染AI正在输入指示器
+  const renderAITyping = () => {
+    if (!isAITyping) return null;
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        className="flex justify-start mb-2"
+      >
+        <div className="flex items-end space-x-2 max-w-xs sm:max-w-md">
+          <img
+            src={otherUser.avatar || 'https://images.unsplash.com/photo-1635776062043-223faf322b1d?w=32&h=32&fit=crop&crop=face'}
+            alt={otherUser.name}
+            className="w-8 h-8 rounded-full object-cover"
+          />
+          <div className="bg-blue-50 border border-blue-200 px-4 py-2 rounded-2xl rounded-bl-sm">
+            <div className="flex items-center space-x-1">
+              <div className="flex space-x-1">
+                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              </div>
+              <span className="text-xs text-blue-600 ml-2">AI正在思考...</span>
+            </div>
           </div>
         </div>
       </motion.div>
@@ -192,20 +288,39 @@ export default function ChatInterface({ conversation, otherUser, onBack }: ChatI
           <div className="flex items-center space-x-3">
             <div className="relative">
               <img
-                src={otherUser.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face'}
+                src={otherUser.avatar || (isAIChat ? 
+                  'https://images.unsplash.com/photo-1635776062043-223faf322b1d?w=40&h=40&fit=crop&crop=face' :
+                  'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face'
+                )}
                 alt={otherUser.name}
                 className="w-10 h-10 rounded-full object-cover"
               />
-              {/* 在线状态指示器 */}
-              {otherUserStatus?.isOnline && (
+              {/* AI标识 */}
+              {isAIChat && (
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                  <Bot className="w-2.5 h-2.5 text-white" />
+                </div>
+              )}
+              {/* 在线状态指示器（仅真实用户） */}
+              {!isAIChat && otherUserStatus?.isOnline && (
                 <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
               )}
             </div>
             
             <div>
-              <h3 className="font-semibold text-gray-900">{otherUser.name}</h3>
+              <div className="flex items-center space-x-2">
+                <h3 className="font-semibold text-gray-900">{otherUser.name}</h3>
+                {isAIChat && (
+                  <div className="flex items-center space-x-1">
+                    <Sparkles className="w-3 h-3 text-blue-500" />
+                    <span className="text-xs text-blue-600 font-medium">AI助手</span>
+                  </div>
+                )}
+              </div>
               <p className="text-xs text-gray-500">
-                {otherUserStatus?.isOnline ? (
+                {isAIChat ? (
+                  <span className="text-blue-600">24小时在线 • 智能助手</span>
+                ) : otherUserStatus?.isOnline ? (
                   <span className="text-green-600">在线</span>
                 ) : otherUserStatus?.lastSeen ? (
                   `最后活跃: ${formatMessageTime(otherUserStatus.lastSeen)}`
@@ -226,13 +341,26 @@ export default function ChatInterface({ conversation, otherUser, onBack }: ChatI
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-500">
-            <div className="text-6xl mb-4">💬</div>
-            <p className="text-lg font-medium mb-2">开始你们的对话吧！</p>
-            <p className="text-sm">发送第一条消息来打破沉默</p>
+            {isAIChat ? (
+              <>
+                <div className="text-6xl mb-4">🤖</div>
+                <p className="text-lg font-medium mb-2">开始与AI助手对话！</p>
+                <p className="text-sm text-center">
+                  {otherUser.name} 是您的智能助手，可以回答问题、提供建议和进行友好的对话
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="text-6xl mb-4">💬</div>
+                <p className="text-lg font-medium mb-2">开始你们的对话吧！</p>
+                <p className="text-sm">发送第一条消息来打破沉默</p>
+              </>
+            )}
           </div>
         ) : (
           <AnimatePresence>
             {messages.map((message, index) => renderMessage(message, index))}
+            {renderAITyping()}
           </AnimatePresence>
         )}
         <div ref={messagesEndRef} />
@@ -260,7 +388,7 @@ export default function ChatInterface({ conversation, otherUser, onBack }: ChatI
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="输入消息..."
+                placeholder={isAIChat ? "向AI助手发送消息..." : "输入消息..."}
                 className="w-full px-4 py-3 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
                 disabled={isSending}
               />
@@ -270,7 +398,11 @@ export default function ChatInterface({ conversation, otherUser, onBack }: ChatI
             <button
               onClick={handleSendMessage}
               disabled={!newMessage.trim() || isSending}
-              className="p-3 bg-green-500 text-white rounded-full hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className={`p-3 text-white rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+                isAIChat
+                  ? 'bg-blue-500 hover:bg-blue-600 focus:ring-blue-500'
+                  : 'bg-green-500 hover:bg-green-600 focus:ring-green-500'
+              }`}
             >
               {isSending ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

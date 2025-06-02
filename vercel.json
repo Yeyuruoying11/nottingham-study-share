@@ -3,6 +3,13 @@
   "functions": {
     "app/**": {
       "maxDuration": 30
+    },
+    "app/api/ai/generate-content/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/ai/generate-content-gpt/route.ts": {
+      "maxDuration": 60
     }
-  }
+  },
+  "regions": ["hkg1", "sin1"]
 } 

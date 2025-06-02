@@ -43,7 +43,7 @@ async function testCategories() {
     });
     
     // 2. 测试各个分类的查询
-    const categories = ['生活', '美食', '学习', '旅行', '资源', '租房'];
+    const categories = ['生活', '美食', '学习', '旅行', '资料', '租房'];
     
     console.log('\n🔍 测试分类查询:');
     for (const cat of categories) {

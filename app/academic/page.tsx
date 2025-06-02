@@ -16,6 +16,7 @@ import {
   getCoursesByDepartment 
 } from '@/lib/academic-data';
 import { University, School, Department, Course } from '@/lib/types';
+import { getUserSettings } from '@/lib/user-settings';
 
 export default function AcademicPage() {
   const router = useRouter();
@@ -26,7 +27,103 @@ export default function AcademicPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Course[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [isAutoRedirecting, setIsAutoRedirecting] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+
+  // 新增：检查用户设置并执行自动跳转
+  useEffect(() => {
+    const checkAutoRedirect = () => {
+      const settings = getUserSettings();
+      
+      // 如果开启了自动跳转且设置了学校信息
+      if (settings.autoRedirect && settings.university && settings.university !== 'private') {
+        setIsAutoRedirecting(true);
+        
+        // 构建跳转路径
+        let redirectPath = '/academic';
+        
+        // 根据学校设置构建路径
+        if (settings.university === 'uon-uk') {
+          const uonUniversity = universities.find(u => u.id === 'uon');
+          if (uonUniversity) {
+            setSelectedUniversity(uonUniversity);
+            setSelectedCampus('uk');
+            redirectPath += '?autoRedirect=true&university=uon&campus=uk';
+            
+            // 如果设置了学院
+            if (settings.school) {
+              const school = schools.find(s => s.id === settings.school);
+              if (school) {
+                setSelectedSchool(school);
+                redirectPath += `&school=${settings.school}`;
+                
+                // 如果设置了专业
+                if (settings.department) {
+                  const department = departments.find(d => d.id === settings.department);
+                  if (department) {
+                    setSelectedDepartment(department);
+                    redirectPath += `&department=${settings.department}`;
+                  }
+                }
+              }
+            }
+          }
+        } else if (settings.university === 'uon-china') {
+          const uonUniversity = universities.find(u => u.id === 'uon');
+          if (uonUniversity) {
+            setSelectedUniversity(uonUniversity);
+            setSelectedCampus('china');
+            redirectPath += '?autoRedirect=true&university=uon&campus=china';
+            
+            if (settings.school) {
+              const school = schools.find(s => s.id === settings.school);
+              if (school) {
+                setSelectedSchool(school);
+                redirectPath += `&school=${settings.school}`;
+                
+                if (settings.department) {
+                  const department = departments.find(d => d.id === settings.department);
+                  if (department) {
+                    setSelectedDepartment(department);
+                    redirectPath += `&department=${settings.department}`;
+                  }
+                }
+              }
+            }
+          }
+        } else if (settings.university === 'ntu') {
+          const ntuUniversity = universities.find(u => u.id === 'ntu');
+          if (ntuUniversity) {
+            setSelectedUniversity(ntuUniversity);
+            redirectPath += '?autoRedirect=true&university=ntu';
+            
+            if (settings.school) {
+              const school = schools.find(s => s.id === settings.school);
+              if (school) {
+                setSelectedSchool(school);
+                redirectPath += `&school=${settings.school}`;
+                
+                if (settings.department) {
+                  const department = departments.find(d => d.id === settings.department);
+                  if (department) {
+                    setSelectedDepartment(department);
+                    redirectPath += `&department=${settings.department}`;
+                  }
+                }
+              }
+            }
+          }
+        }
+        
+        // 延迟一下显示加载状态，然后直接显示对应页面
+        setTimeout(() => {
+          setIsAutoRedirecting(false);
+        }, 1000);
+      }
+    };
+    
+    checkAutoRedirect();
+  }, []);
 
   // 点击外部区域关闭搜索结果
   useEffect(() => {
@@ -225,6 +322,39 @@ export default function AcademicPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* 自动跳转加载状态 */}
+      {isAutoRedirecting && (
+        <div className="fixed inset-0 bg-white bg-opacity-90 z-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">正在跳转到您的专业页面...</h3>
+            <p className="text-sm text-gray-600">根据您的个人资料设置自动跳转</p>
+          </div>
+        </div>
+      )}
+
+      {/* 自动跳转提示条 */}
+      {selectedUniversity && !isAutoRedirecting && (
+        <div className="bg-green-50 border-b border-green-200">
+          <div className="max-w-8xl mx-auto px-6 sm:px-8 lg:px-12 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-sm text-green-700">
+                  <span className="font-medium">智能跳转已开启</span> - 根据您的个人资料设置显示对应页面
+                </span>
+              </div>
+              <Link 
+                href="/profile" 
+                className="text-sm text-green-600 hover:text-green-800 font-medium"
+              >
+                修改设置
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 顶部导航 */}
       <header className="bg-white shadow-sm border-b sticky top-0 z-50">
         <div className="max-w-8xl mx-auto px-6 sm:px-8 lg:px-12">
@@ -256,70 +386,83 @@ export default function AcademicPage() {
               </h1>
             </div>
 
-            {/* 搜索框 */}
-            <div className="relative" ref={searchRef}>
-              <div className="flex items-center space-x-2">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <input
-                    type="text"
-                    placeholder="搜索课程名称或代码..."
-                    value={searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    className="pl-10 pr-10 py-2 w-64 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={clearSearch}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-              </div>
-              
-              {/* 搜索结果下拉框 */}
-              {showSearchResults && searchResults.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto">
-                  {searchResults.map((course, index) => {
-                    // 获取课程的层级信息
-                    const department = departments.find(d => d.id === course.departmentId);
-                    const school = schools.find(s => s.id === department?.school);
-                    const university = universities.find(u => u.id === school?.universityId);
-                    const campus = university?.id === 'uon' && school?.id.startsWith('unnc-') ? '中国校区' : 
-                                  university?.id === 'uon' ? '英国校区' : '';
-                    
-                    return (
-                      <div
-                        key={course.id}
-                        onClick={() => handleSearchResultSelect(course)}
-                        className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+            {/* 搜索框和首页按钮 */}
+            <div className="flex items-center space-x-4">
+              {/* 搜索框 */}
+              <div className="relative" ref={searchRef}>
+                <div className="flex items-center space-x-2">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <input
+                      type="text"
+                      placeholder="搜索课程名称或代码..."
+                      value={searchQuery}
+                      onChange={(e) => handleSearch(e.target.value)}
+                      className="pl-10 pr-10 py-2 w-64 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={clearSearch}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                       >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="font-medium text-gray-900">{course.name}</div>
-                            <div className="text-sm text-gray-500 mb-1">{course.code}</div>
-                            <div className="text-xs text-gray-400">
-                              {university?.name} {campus && `- ${campus}`} &gt; {school?.name} &gt; {department?.name}
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+                
+                {/* 搜索结果下拉框 */}
+                {showSearchResults && searchResults.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto">
+                    {searchResults.map((course, index) => {
+                      // 获取课程的层级信息
+                      const department = departments.find(d => d.id === course.departmentId);
+                      const school = schools.find(s => s.id === department?.school);
+                      const university = universities.find(u => u.id === school?.universityId);
+                      const campus = university?.id === 'uon' && school?.id.startsWith('unnc-') ? '中国校区' : 
+                                    university?.id === 'uon' ? '英国校区' : '';
+                      
+                      return (
+                        <div
+                          key={course.id}
+                          onClick={() => handleSearchResultSelect(course)}
+                          className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className="font-medium text-gray-900">{course.name}</div>
+                              <div className="text-sm text-gray-500 mb-1">{course.code}</div>
+                              <div className="text-xs text-gray-400">
+                                {university?.name} {campus && `- ${campus}`} &gt; {school?.name} &gt; {department?.name}
+                              </div>
+                              <div className="text-xs text-gray-400 mt-1">{course.description}</div>
                             </div>
-                            <div className="text-xs text-gray-400 mt-1">{course.description}</div>
+                            <ChevronRight className="w-4 h-4 text-gray-400" />
                           </div>
-                          <ChevronRight className="w-4 h-4 text-gray-400" />
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-              
-              {/* 无搜索结果 */}
-              {showSearchResults && searchResults.length === 0 && searchQuery.trim() !== '' && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-4 text-center">
-                  <div className="text-gray-500 text-sm">未找到相关课程</div>
-                  <div className="text-gray-400 text-xs mt-1">尝试搜索课程代码或英文名称</div>
-                </div>
-              )}
+                      );
+                    })}
+                  </div>
+                )}
+                
+                {/* 无搜索结果 */}
+                {showSearchResults && searchResults.length === 0 && searchQuery.trim() !== '' && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-4 text-center">
+                    <div className="text-gray-500 text-sm">未找到相关课程</div>
+                    <div className="text-gray-400 text-xs mt-1">尝试搜索课程代码或英文名称</div>
+                  </div>
+                )}
+              </div>
+
+              {/* 首页按钮 */}
+              <Link 
+                href="/"
+                className="flex items-center space-x-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all duration-200 shadow-md hover:shadow-lg"
+                title="回到首页"
+              >
+                <span className="text-lg">🏠</span>
+                <span className="font-medium">首页</span>
+              </Link>
             </div>
           </div>
         </div>

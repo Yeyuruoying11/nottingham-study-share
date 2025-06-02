@@ -31,7 +31,7 @@ export default function DebugCategoriesPage() {
         setAllPosts(posts);
         
         // 测试各个分类
-        const categories = ['生活', '美食', '学习', '旅行', '资源', '租房'];
+        const categories = ['生活', '美食', '学习', '旅行', '资料', '租房'];
         const categoryData: Record<string, any[]> = {};
         
         for (const category of categories) {

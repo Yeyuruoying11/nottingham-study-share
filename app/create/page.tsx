@@ -12,6 +12,7 @@ import { uploadImageSmart as uploadImageSmartCloud } from "@/lib/firebase-storag
 import { uploadImageWithCORSFix } from "@/lib/firebase-storage-cors-fix";
 import { Location } from "@/lib/types";
 import LocationPicker from "@/components/Map/LocationPicker";
+import VideoIframeInput from "@/components/ui/VideoIframeInput";
 import {
   DndContext,
   closestCenter,
@@ -117,7 +118,7 @@ const categories = [
   { name: "生活", icon: "🏠", color: "bg-green-100 text-green-800" },
   { name: "美食", icon: "🍕", color: "bg-red-100 text-red-800" },
   { name: "旅行", icon: "✈️", color: "bg-purple-100 text-purple-800" },
-  { name: "资源", icon: "📦", color: "bg-pink-100 text-pink-800" },
+  { name: "资料", icon: "📦", color: "bg-pink-100 text-pink-800" },
   { name: "租房", icon: "🏡", color: "bg-yellow-100 text-yellow-800" },
 ];
 
@@ -139,7 +140,8 @@ export default function CreatePostPage() {
     department: "",
     course: "",
     customCourseId: "",
-    embedHtml: ""
+    embedHtml: "",
+    videoIframe: ""
   });
   
   const [newTag, setNewTag] = useState("");
@@ -598,6 +600,21 @@ export default function CreatePostPage() {
         }
       }
 
+      // 添加视频iframe代码（对学习、美食、资料、生活分类）
+      if (formData.category === "学习" || formData.category === "美食" || formData.category === "资料" || formData.category === "生活") {
+        console.log('🎥 处理视频分类数据...', formData.category);
+        console.log('📹 videoIframe 值:', formData.videoIframe);
+        console.log('📹 videoIframe 是否为空:', !formData.videoIframe);
+        console.log('📹 videoIframe trim后是否为空:', !formData.videoIframe?.trim());
+        
+        if (formData.videoIframe && formData.videoIframe.trim() !== '') {
+          postData.videoIframe = formData.videoIframe.trim();
+          console.log('✅ videoIframe 已添加到 postData');
+        } else {
+          console.log('❌ videoIframe 为空，未添加到 postData');
+        }
+      }
+
       console.log('🚀 发送到 Firestore 的数据:', JSON.stringify(postData, null, 2));
 
       const postId = await addPostToFirestore(postData);
@@ -648,6 +665,19 @@ export default function CreatePostPage() {
         embedHtml: embedCode
       };
       console.log('📝 更新后的 formData.embedHtml:', newFormData.embedHtml);
+      return newFormData;
+    });
+  };
+
+  const handleVideoIframeChange = (iframeCode: string) => {
+    console.log('🎥 Video Iframe Code 更新:', iframeCode);
+    console.log('🎥 Code 长度:', iframeCode.length);
+    setFormData(prev => {
+      const newFormData = {
+        ...prev,
+        videoIframe: iframeCode
+      };
+      console.log('🎥 更新后的 formData.videoIframe:', newFormData.videoIframe);
       return newFormData;
     });
   };
@@ -1045,6 +1075,22 @@ export default function CreatePostPage() {
 
           {/* 右边区域 - 根据分类显示不同内容 */}
             <div className="space-y-6">
+            {/* 视频输入 - 在学习、美食、资料、生活分类时显示 */}
+            {(formData.category === "学习" || formData.category === "美食" || formData.category === "资料" || formData.category === "生活") && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-2xl shadow-lg overflow-hidden"
+              >
+                <div className="p-6">
+                  <VideoIframeInput
+                    onIframeChange={handleVideoIframeChange}
+                    iframe={formData.videoIframe}
+                  />
+                </div>
+              </motion.div>
+            )}
+
             {/* Google Maps 教程 - 仅在租房分类时显示 */}
             {formData.category === "租房" && (
               <motion.div
@@ -1120,6 +1166,21 @@ export default function CreatePostPage() {
                   <div className="text-gray-700 mb-4 whitespace-pre-wrap">
                     {formData.content || "内容预览..."}
                   </div>
+                  
+                  {/* 视频iframe预览 */}
+                  {formData.videoIframe && (
+                    <div className="mb-4 border border-gray-200 rounded-lg overflow-hidden">
+                      <div className="bg-gray-50 px-3 py-2 border-b">
+                        <h4 className="text-sm font-medium text-gray-900">📹 相关视频</h4>
+                      </div>
+                      <div className="p-4">
+                        <div 
+                          className="w-full"
+                          dangerouslySetInnerHTML={{ __html: formData.videoIframe }}
+                        />
+                      </div>
+                    </div>
+                  )}
                   
                   {formData.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1 mb-4">

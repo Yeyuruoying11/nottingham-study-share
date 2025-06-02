@@ -42,12 +42,12 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: `
               default-src 'self';
-              script-src 'self' 'unsafe-eval' 'unsafe-inline' *.googleapis.com *.google.com *.googletagmanager.com;
+              script-src 'self' 'unsafe-eval' 'unsafe-inline' *.googleapis.com *.google.com *.googletagmanager.com *.youtube.com;
               style-src 'self' 'unsafe-inline' fonts.googleapis.com;
               img-src 'self' data: blob: https:;
               font-src 'self' fonts.gstatic.com;
               connect-src 'self' *.googleapis.com *.firebaseio.com *.cloudfunctions.net *.google-analytics.com *.analytics.google.com *.googletagmanager.com nominatim.openstreetmap.org wss:;
-              frame-src 'self' *.google.com maps.google.com www.google.com https://www.google.com/maps/embed maps.googleapis.com *.maps.google.com;
+              frame-src 'self' *.google.com maps.google.com www.google.com https://www.google.com/maps/embed maps.googleapis.com *.maps.google.com *.youtube.com www.youtube.com youtube.com youtu.be;
               object-src 'none';
               base-uri 'self';
               form-action 'self';
@@ -55,7 +55,7 @@ const nextConfig = {
           },
           {
             key: 'Permissions-Policy',
-            value: 'accelerometer=(self "https://*.google.com" "https://maps.google.com" "https://www.google.com"), camera=(self "https://*.google.com"), geolocation=(self "https://*.google.com" "https://maps.google.com" "https://www.google.com"), gyroscope=(self "https://*.google.com" "https://maps.google.com" "https://www.google.com"), magnetometer=(self "https://*.google.com" "https://maps.google.com" "https://www.google.com"), microphone=(self "https://*.google.com"), payment=(), usb=()'
+            value: 'accelerometer=(self "https://*.google.com" "https://maps.google.com" "https://www.google.com" "https://*.youtube.com" "https://www.youtube.com"), camera=(self "https://*.google.com" "https://*.youtube.com"), geolocation=(self "https://*.google.com" "https://maps.google.com" "https://www.google.com"), gyroscope=(self "https://*.google.com" "https://maps.google.com" "https://www.google.com" "https://*.youtube.com" "https://www.youtube.com"), magnetometer=(self "https://*.google.com" "https://maps.google.com" "https://www.google.com"), microphone=(self "https://*.google.com" "https://*.youtube.com"), payment=(), usb=(), picture-in-picture=(self "https://*.youtube.com" "https://www.youtube.com"), encrypted-media=(self "https://*.youtube.com" "https://www.youtube.com"), web-share=(self "https://*.youtube.com" "https://www.youtube.com")'
           }
         ]
       }

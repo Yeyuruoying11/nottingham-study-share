@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Plus, Heart, MessageCircle, Share, Bookmark, User, Bell, Menu, LogOut, Trash2, MoreVertical, X, Crown, ChevronDown, Eye, MapPin } from "lucide-react";
+import { Search, Plus, Heart, MessageCircle, Share, Bookmark, User, Bell, Menu, LogOut, Trash2, MoreVertical, X, Crown, ChevronDown, Eye, MapPin, MoreHorizontal, FileText, Bot } from "lucide-react";
 import { InfiniteMovingCards } from "@/components/ui/infinite-moving-cards";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
@@ -59,7 +59,7 @@ const categories = [
   { name: "生活", icon: "🏠", color: "bg-green-100 text-green-800" },
   { name: "美食", icon: "🍕", color: "bg-red-100 text-red-800" },
   { name: "旅行", icon: "✈️", color: "bg-purple-100 text-purple-800" },
-  { name: "资源", icon: "📦", color: "bg-pink-100 text-pink-800" },
+  { name: "资料", icon: "📦", color: "bg-pink-100 text-pink-800" },
   { name: "租房", icon: "🏡", color: "bg-yellow-100 text-yellow-800" },
 ];
 
@@ -345,6 +345,14 @@ export default function HomePage() {
     const isAdmin = user && isAdminUser(user);
     const canDelete = isAdmin || isAuthor; // 管理员优先，可以删除任何帖子
 
+    // 确保头像和作者信息有默认值
+    const authorName = post.author?.name || post.author?.displayName || 'AI助手';
+    const authorAvatar = post.author?.avatar || 'https://images.unsplash.com/photo-1635776062043-223faf322b1d?w=40&h=40&fit=crop&crop=face';
+    const authorUid = post.author?.uid || post.authorId || 'unknown';
+    
+    // 检查是否是AI帖子
+    const isAIPost = post.isAIGenerated || post.aiCharacterId || authorUid.startsWith('ai_');
+
     // 只在组件挂载时获取一次点赞状态，避免依赖全局状态
     useEffect(() => {
       const initializeLikeStatus = async () => {
@@ -360,123 +368,94 @@ export default function HomePage() {
       };
       
       initializeLikeStatus();
-    }, [user?.uid, post.id]); // 只依赖用户ID和帖子ID
+    }, [user?.uid, post.id]);
 
-    // 处理点赞
+    // 点击外部关闭菜单
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+          setShowMenu(false);
+        }
+      };
+
+      if (showMenu) {
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+      }
+    }, [showMenu]);
+
+    // 点赞功能
     const handleLike = async (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-
+      e.stopPropagation(); // 阻止冒泡到卡片点击事件
+      
       if (!user) {
         alert('请先登录才能点赞');
         return;
       }
 
-      if (isLiking) return;
+      if (isLiking) return; // 防止重复点击
 
-      // 先更新本地状态，提供即时反馈
-      const newLiked = !localLiked;
-      const newLikes = newLiked ? localLikes + 1 : localLikes - 1;
-      
-      setLocalLiked(newLiked);
-      setLocalLikes(newLikes);
       setIsLiking(true);
       
       try {
-        const result = await toggleLike(post.id!, user.uid);
+        const newLikedState = !localLiked;
+        const newLikesCount = newLikedState ? localLikes + 1 : localLikes - 1;
         
-        // 确保本地状态与服务器状态一致
+        // 立即更新本地状态以获得即时反馈
+        setLocalLiked(newLikedState);
+        setLocalLikes(newLikesCount);
+        
+        const { toggleLike } = await import("@/lib/firestore-posts");
+        const result = await toggleLike(post.id, user.uid);
+        
+        // 使用服务器返回的准确数据更新状态
         setLocalLikes(result.likesCount);
         setLocalLiked(result.liked);
-        
-        // 完全移除全局状态更新，避免触发其他组件重新渲染
-        
       } catch (error) {
         console.error('点赞失败:', error);
-        // 如果失败，恢复原来的状态
-        setLocalLiked(!newLiked);
+        // 回滚本地状态
+        setLocalLiked(!localLiked);
         setLocalLikes(localLikes);
-        alert('点赞失败，请重试');
       } finally {
         setIsLiking(false);
       }
     };
 
-    // 点击外部关闭菜单
-    useEffect(() => {
-      function handleClickOutside(event: MouseEvent) {
-        if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-          setShowMenu(false);
-        }
-      }
-
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
-    }, []);
-
-    const handleDeletePost = async (e: React.MouseEvent) => {
-      e.preventDefault(); // 阻止Link的跳转
-      e.stopPropagation();
-
-      if (!user || !canDelete) {
-        alert("您没有权限删除此帖子");
+    const handleDelete = async (e: React.MouseEvent) => {
+      e.stopPropagation(); // 阻止冒泡
+      
+      if (!canDelete) {
+        alert('您没有权限删除此帖子');
         return;
       }
-
-      const confirmDelete = window.confirm("确定要删除这篇帖子吗？删除后无法恢复。");
-      if (!confirmDelete) {
-        setShowMenu(false);
+      
+      const confirmMessage = isAdmin && !isAuthor 
+        ? '您正在以管理员身份删除此帖子，确定要继续吗？' 
+        : '确定要删除这篇帖子吗？';
+        
+      if (!confirm(confirmMessage)) {
         return;
       }
 
       setIsDeleting(true);
-      
+      setShowMenu(false);
+
       try {
-        const success = await deletePostFromFirestore(post.id!, user.uid);
+        const { deletePostFromFirestore } = await import("@/lib/firestore-posts");
+        const result = await deletePostFromFirestore(post.id, user!.uid);
         
-        if (success) {
-          // 根据当前选中的分类重新加载帖子
-          let updatedPosts;
-          if (selectedCategory === "全部") {
-            updatedPosts = await getAllPostsFromFirestore();
-          } else {
-            updatedPosts = await getPostsByCategoryFromFirestore(selectedCategory);
-          }
-          setPosts(updatedPosts);
-          alert("帖子删除成功！");
+        if (result) {
+          // 从本地状态中移除帖子
+          setPosts(prevPosts => prevPosts.filter(p => p.id !== post.id));
+          alert('帖子删除成功');
         } else {
-          alert("删除失败，您可能没有权限删除此帖子");
+          alert('删除失败，请重试');
         }
       } catch (error) {
-        console.error("删除失败:", error);
-        alert("删除失败，请重试");
+        console.error('删除帖子失败:', error);
+        alert('删除失败，请重试');
       } finally {
         setIsDeleting(false);
-        setShowMenu(false);
-      }
-    };
-
-    const handleMenuClick = (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setShowMenu(!showMenu);
-    };
-
-    // 处理分享功能
-    const handleShare = async (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setShowMenu(false);
-      
-      try {
-        const postUrl = `${window.location.origin}/post/${post.id}`;
-        await navigator.clipboard.writeText(postUrl);
-        alert("帖子链接已复制到剪贴板");
-      } catch (error) {
-        console.error('复制链接失败:', error);
-        alert("复制失败，请手动复制链接");
       }
     };
 
@@ -491,16 +470,17 @@ export default function HomePage() {
         console.log('删除权限调试:', {
           postId: post.id,
           postTitle: post.title,
-          postAuthorName: post.author?.name,
-          postAuthorUID: post.author?.uid,
+          postAuthorName: authorName,
+          postAuthorUID: authorUid,
           currentUserUID: user.uid,
           currentUserEmail: user.email,
           isAuthor,
           isAdmin,
-          canDelete
+          canDelete,
+          isAIPost
         });
       }
-    }, [user, showMenu, post, isAuthor, isAdmin, canDelete]);
+    }, [user, showMenu, post, isAuthor, isAdmin, canDelete, authorName, authorUid, isAIPost]);
 
     return (
         <div
@@ -508,99 +488,63 @@ export default function HomePage() {
         onClick={handleCardClick}
         >
           {/* 三个点菜单按钮 */}
-          <div className="absolute top-2 right-2 z-10" ref={menuRef}>
-            <button
-              onClick={handleMenuClick}
-              className="p-2 bg-white/80 backdrop-blur-sm text-gray-600 rounded-full hover:bg-white hover:text-gray-900 transition-all opacity-0 group-hover:opacity-100 shadow-lg"
-              title="更多选项"
-            >
-              <MoreVertical className="w-4 h-4" />
-            </button>
-
-            {/* 下拉菜单 */}
-            {showMenu && (
-              <motion.div
-                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                className="absolute right-0 top-full mt-1 w-32 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
+          {user && canDelete && (
+            <div className="absolute top-4 right-4 z-10" ref={menuRef}>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowMenu(!showMenu);
+                }}
+                className="p-2 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white/90 transition-colors shadow-sm opacity-0 group-hover:opacity-100"
+                disabled={isDeleting}
               >
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setShowMenu(false);
-                    // 这里可以添加收藏功能
-                  }}
-                  className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
-                >
-                  <Bookmark className="w-4 h-4" />
-                  <span>收藏</span>
-                </button>
-                
-                <button
-                  onClick={handleShare}
-                  className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
-                >
-                  <Share className="w-4 h-4" />
-                  <span>分享</span>
-                </button>
-
-                {/* 删除选项 - 只有作者才能看到 */}
-                {canDelete && (
-                  <>
-                    <div className="border-t border-gray-100 my-1"></div>
-                    <button
-                      onClick={handleDeletePost}
-                      disabled={isDeleting}
-                      className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                      title={isAdmin ? "管理员删除" : "删除帖子"}
-                    >
-                      {isDeleting ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
-                          <span>删除中...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Trash2 className="w-4 h-4" />
-                          <span>{isAdmin && !isAuthor ? "管理员删除" : "删除"}</span>
-                        </>
-                      )}
-                    </button>
-                  </>
-                )}
-              </motion.div>
-            )}
-          </div>
+                <MoreHorizontal className="w-4 h-4 text-gray-600" />
+              </button>
+              
+              {/* 下拉菜单 */}
+              {showMenu && (
+                <div className="absolute top-full right-0 mt-1 bg-white rounded-lg shadow-lg border py-1 z-20 min-w-[100px]">
+                  <button
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                    className="w-full px-3 py-2 text-left text-red-600 hover:bg-red-50 flex items-center space-x-1.5 disabled:opacity-50 text-xs"
+                  >
+                    {isDeleting ? (
+                      <>
+                        <div className="w-3 h-3 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                        <span className="whitespace-nowrap">删除中...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="w-3 h-3 flex-shrink-0" />
+                        <span className="whitespace-nowrap">删除帖子</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
           
-          <div className="relative overflow-hidden">
-            {/* 使用简化轮播展示多张图片，更稳定可靠 */}
-            {post.images && post.images.length > 1 ? (
-              // 使用简化的轮播组件
-              <SimpleImageCarousel 
-                images={post.images} 
-                height="h-48"
-                className=""
+          {/* 图片 */}
+          <div className="h-48 bg-gradient-to-br from-green-400 to-blue-500 relative overflow-hidden">
+            {post.images && post.images.length > 0 ? (
+              <img
+                src={post.images[0]}
+                alt={post.title}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=300&fit=crop";
+                }}
               />
             ) : (
-              // 单张图片显示，确保总是有图片显示
-            <img
-                src={post.image || post.images?.[0] || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=300&fit=crop"}
-              alt={post.title}
-              className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
-                onError={(e) => {
-                  // 图片加载失败时的回退处理
-                  const target = e.target as HTMLImageElement;
-                  if (target.src !== "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=300&fit=crop") {
-                    target.src = "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=300&fit=crop";
-                  }
-                }}
-            />
-            )}
-            {/* 只在单张图片时显示渐变层 */}
-            {!(post.images && post.images.length > 1) && (
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="text-white/80 text-center">
+                  <FileText className="w-12 h-12 mx-auto mb-2" />
+                  <p className="text-sm">分享内容</p>
+                </div>
+              </div>
             )}
           </div>
           
@@ -608,6 +552,31 @@ export default function HomePage() {
             <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 text-sm leading-tight">
               {post.title}
             </h3>
+            
+            {/* 标签信息移到这里 */}
+            <div className="flex items-center gap-2 mb-2">
+              {/* 分类标签 */}
+              <span className="px-2 py-1 bg-green-500 text-white text-xs font-medium rounded-full">
+                {post.category}
+              </span>
+              
+              {/* AI标识 */}
+              {isAIPost && (
+                <span className="px-2 py-1 bg-blue-500 text-white text-xs font-medium rounded-full flex items-center gap-1">
+                  <Bot className="w-3 h-3" />
+                  <span>AI</span>
+                </span>
+              )}
+              
+              {/* 热门标识 */}
+              {localLikes > 10 && (
+                <span className="px-2 py-1 bg-red-500 text-white text-xs font-medium rounded-full flex items-center gap-1">
+                  🔥
+                  <span>热门</span>
+                </span>
+              )}
+            </div>
+            
             <p className="text-gray-600 text-xs line-clamp-3 mb-3 leading-relaxed">
               {post.content}
             </p>
@@ -625,55 +594,58 @@ export default function HomePage() {
             
             <div className="flex items-center justify-between">
             <Link 
-              href={`/user/${post.author.uid}`}
+              href={isAIPost ? `/ai-profile/${post.aiCharacterId || authorUid.replace('ai_', '')}` : `/user/${authorUid}`}
               className="flex items-center space-x-2 hover:bg-gray-50 rounded-lg p-1 -m-1 transition-colors z-10 relative"
               onClick={(e) => e.stopPropagation()}
             >
-                <img
-                  src={post.author.avatar}
-                  alt={post.author.name}
-                  className="w-6 h-6 rounded-full object-cover"
-                />
+                <div className="relative">
+                  <img
+                    src={authorAvatar}
+                    alt={authorName}
+                    className="w-6 h-6 rounded-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = isAIPost 
+                        ? 'https://images.unsplash.com/photo-1635776062043-223faf322b1d?w=40&h=40&fit=crop&crop=face'
+                        : 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face';
+                    }}
+                  />
+                  {isAIPost && (
+                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center">
+                      <Bot className="w-1.5 h-1.5 text-white" />
+                    </div>
+                  )}
+                </div>
               <span className="text-xs text-gray-600 font-medium hover:text-gray-900 transition-colors">
-                {post.author.name}
+                {authorName}
+                {isAIPost && <span className="ml-1 text-blue-600">•AI</span>}
               </span>
             </Link>
               
-              <div className="flex items-center space-x-4 text-gray-500">
-                {/* 点赞按钮 */}
-                <button
+              <div className="flex items-center space-x-3 text-xs text-gray-500">
+                <button 
                   onClick={handleLike}
+                  className={`flex items-center space-x-1 transition-colors hover:text-red-500 ${
+                    localLiked ? 'text-red-500' : ''
+                  }`}
                   disabled={isLiking}
-                className={`flex items-center space-x-1 transition-colors duration-150 z-10 relative ${
-                    localLiked 
-                      ? 'text-red-500' 
-                      : 'text-gray-500 hover:text-red-500'
-                  } ${isLiking ? 'opacity-75' : ''}`}
-                  title={localLiked ? '取消点赞' : '点赞'}
                 >
-                  <Heart 
-                    className={`w-4 h-4 transition-all duration-150 ${
-                      localLiked ? 'fill-current scale-110' : ''
-                    }`} 
-                  />
-                  <span className="text-xs font-medium">{localLikes}</span>
+                  <Heart className={`w-4 h-4 ${localLiked ? 'fill-current' : ''}`} />
+                  <span>{localLikes}</span>
                 </button>
-                
                 <div className="flex items-center space-x-1">
                   <MessageCircle className="w-4 h-4" />
-                  <span className="text-xs">{post.comments}</span>
+                  <span>{post.comments || 0}</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Eye className="w-4 h-4" />
+                  <span>{post.views || 0}</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
     );
-  }, (prevProps, nextProps) => {
-    // 改进比较函数，比较更多属性以避免不必要的重新渲染
-    return prevProps.post.id === nextProps.post.id && 
-           prevProps.post.title === nextProps.post.title &&
-           prevProps.post.likes === nextProps.post.likes &&
-           prevProps.index === nextProps.index; // 添加index比较
   });
 
   // 处理搜索输入变化 - 当输入框为空时自动清除搜索
@@ -781,7 +753,7 @@ export default function HomePage() {
                   <Link href="/notifications">
                       <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all duration-200 relative hover:scale-105 active:scale-95">
                         <Bell className="w-6 h-6" />
-                      {unreadNotificationCount > 0 && (
+                    {unreadNotificationCount > 0 && (
                         <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
                           {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
                         </span>

@@ -133,7 +133,7 @@ export default function AdminPage() {
       icon: Settings,
       href: '/admin/settings',
       color: 'bg-gray-500',
-      available: false
+      available: true
     }
   ];
 
@@ -384,7 +384,7 @@ export default function AdminPage() {
                                 post.category === '学习' ? 'bg-blue-100 text-blue-800' :
                                 post.category === '生活' ? 'bg-green-100 text-green-800' :
                                 post.category === '旅行' ? 'bg-purple-100 text-purple-800' :
-                                post.category === '资源' ? 'bg-pink-100 text-pink-800' :
+                                post.category === '资料' ? 'bg-pink-100 text-pink-800' :
                                 post.category === '租房' ? 'bg-yellow-100 text-yellow-800' :
                                 'bg-gray-100 text-gray-800'
                               }`}>

@@ -226,6 +226,7 @@ export async function addPostToFirestore(postData: {
   department?: string; // 新增：专业ID
   course?: string; // 新增：课程ID
   embedHtml?: string; // 新增：Google Maps嵌入HTML代码
+  videoIframe?: string; // 新增：视频iframe代码
   author: {
     name: string;
     avatar: string;
@@ -270,6 +271,10 @@ export async function addPostToFirestore(postData: {
     if (postData.embedHtml && postData.embedHtml !== undefined && postData.embedHtml.trim() !== '') {
       newPost.embedHtml = postData.embedHtml.trim();
       console.log('✅ embedHtml 已添加到帖子数据');
+    }
+    if (postData.videoIframe && postData.videoIframe !== undefined && postData.videoIframe.trim() !== '') {
+      newPost.videoIframe = postData.videoIframe.trim();
+      console.log('✅ videoIframe 已添加到帖子数据');
     }
     
     console.log('📝 准备添加的帖子数据:', JSON.stringify(newPost, null, 2));

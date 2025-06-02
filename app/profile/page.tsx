@@ -4,10 +4,18 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { User, Settings, Mail, Calendar, MapPin, BookOpen, ArrowLeft, Eye, Heart, MessageCircle } from 'lucide-react';
+import { User, Settings, Mail, Calendar, MapPin, BookOpen, ArrowLeft, Eye, Heart, MessageCircle, Save, ChevronDown, Info } from 'lucide-react';
 import Link from 'next/link';
 import { getUserPostsFromFirestore, FirestorePost, formatTimestamp } from '@/lib/firestore-posts';
 import { Pagination } from '@/components/ui/Pagination';
+import { 
+  getUserSettings, 
+  saveUserSettings, 
+  getUniversityOptions, 
+  getSchoolsByUniversityChoice,
+  UserAcademicSettings 
+} from '@/lib/user-settings';
+import { getDepartmentsBySchool } from '@/lib/academic-data';
 
 export default function ProfilePage() {
   const { user, loading } = useAuth();
@@ -21,9 +29,18 @@ export default function ProfilePage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [postsPerPage] = useState(3);
 
+  // 新增：学术设置状态
+  const [academicSettings, setAcademicSettings] = useState<UserAcademicSettings>({ autoRedirect: false });
+  const [availableSchools, setAvailableSchools] = useState<any[]>([]);
+  const [availableDepartments, setAvailableDepartments] = useState<any[]>([]);
+  const [savingSettings, setSavingSettings] = useState(false);
+
   // 确保组件已挂载
   useEffect(() => {
     setMounted(true);
+    // 加载用户学术设置
+    const settings = getUserSettings();
+    setAcademicSettings(settings);
   }, []);
 
   // 处理用户认证状态
@@ -147,6 +164,53 @@ export default function ProfilePage() {
     }
   }, [user]);
 
+  // 新增：更新可用学院列表
+  useEffect(() => {
+    if (academicSettings.university && academicSettings.university !== 'private') {
+      const schools = getSchoolsByUniversityChoice(academicSettings.university);
+      setAvailableSchools(schools);
+      
+      // 如果当前选择的学院不在新的学院列表中，清除学院和专业选择
+      if (academicSettings.school && !schools.find(s => s.id === academicSettings.school)) {
+        setAcademicSettings(prev => ({ ...prev, school: undefined, department: undefined }));
+      }
+    } else {
+      setAvailableSchools([]);
+      setAcademicSettings(prev => ({ ...prev, school: undefined, department: undefined }));
+    }
+  }, [academicSettings.university]);
+
+  // 新增：更新可用专业列表
+  useEffect(() => {
+    if (academicSettings.school) {
+      const departments = getDepartmentsBySchool(academicSettings.school);
+      setAvailableDepartments(departments);
+      
+      // 如果当前选择的专业不在新的专业列表中，清除专业选择
+      if (academicSettings.department && !departments.find(d => d.id === academicSettings.department)) {
+        setAcademicSettings(prev => ({ ...prev, department: undefined }));
+      }
+    } else {
+      setAvailableDepartments([]);
+      setAcademicSettings(prev => ({ ...prev, department: undefined }));
+    }
+  }, [academicSettings.school]);
+
+  // 新增：保存学术设置
+  const handleSaveAcademicSettings = async () => {
+    setSavingSettings(true);
+    try {
+      saveUserSettings(academicSettings);
+      // 显示保存成功提示
+      setTimeout(() => {
+        setSavingSettings(false);
+      }, 500);
+    } catch (error) {
+      console.error('保存设置失败:', error);
+      setSavingSettings(false);
+    }
+  };
+
   // 计算分页数据
   const totalPages = Math.ceil(userPosts.length / postsPerPage);
   const startIndex = (currentPage - 1) * postsPerPage;
@@ -220,7 +284,7 @@ export default function ProfilePage() {
                   {firestoreUserAvatar ? (
                     <img 
                       src={firestoreUserAvatar} 
-                      alt={user.displayName || user.email || "用户"} 
+                      alt={user?.displayName || user?.email || "用户"} 
                       className="w-full h-full object-cover rounded-full"
                     />
                   ) : (
@@ -234,19 +298,25 @@ export default function ProfilePage() {
                         firestoreUserName
                       )}
                   </h2>
-                <p className="text-gray-500 text-sm mt-1">诺丁汉大学学生</p>
+                <p className="text-gray-500 text-sm mt-1">
+                  {academicSettings.university === 'private' ? '诺丁汉学生' : 
+                   academicSettings.university === 'uon-uk' ? '诺丁汉大学英国校区学生' :
+                   academicSettings.university === 'uon-china' ? '诺丁汉大学中国校区学生' :
+                   academicSettings.university === 'ntu' ? '诺丁汉特伦特大学学生' :
+                   '诺丁汉大学学生'}
+                </p>
               </div>
 
               {/* 基本信息 */}
               <div className="space-y-4">
                 <div className="flex items-center space-x-3 text-gray-600">
                   <Mail className="w-4 h-4" />
-                  <span className="text-sm">{user.email}</span>
+                  <span className="text-sm">{user?.email}</span>
                 </div>
                 <div className="flex items-center space-x-3 text-gray-600">
                   <Calendar className="w-4 h-4" />
                   <span className="text-sm">
-                    加入时间: {user.metadata.creationTime ? 
+                    加入时间: {user?.metadata.creationTime ? 
                       new Date(user.metadata.creationTime).toLocaleDateString('zh-CN') : 
                       '未知'
                     }
@@ -254,7 +324,12 @@ export default function ProfilePage() {
                 </div>
                 <div className="flex items-center space-x-3 text-gray-600">
                   <MapPin className="w-4 h-4" />
-                  <span className="text-sm">英国诺丁汉</span>
+                  <span className="text-sm">
+                    {academicSettings.university === 'uon-uk' ? '英国诺丁汉' :
+                     academicSettings.university === 'uon-china' ? '中国宁波' :
+                     academicSettings.university === 'ntu' ? '英国诺丁汉' :
+                     '英国诺丁汉'}
+                  </span>
                 </div>
                 <div className="flex items-center space-x-3 text-gray-600">
                   <BookOpen className="w-4 h-4" />
@@ -276,6 +351,151 @@ export default function ProfilePage() {
                 <p className="text-gray-600 leading-relaxed">
                 这个人很懒，什么都没有留下...
                 </p>
+            </motion.div>
+
+            {/* 新增：学术设置 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="bg-white rounded-xl shadow-sm border p-6 mt-6"
+            >
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">学术设置</h3>
+              <div className="space-y-6">
+                {/* 学校选择 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    所在学校
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={academicSettings.university || ''}
+                      onChange={(e) => setAcademicSettings(prev => ({ ...prev, university: e.target.value || undefined }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none bg-white"
+                    >
+                      <option value="">请选择学校</option>
+                      {getUniversityOptions().map(option => (
+                        <option key={option.id} value={option.id}>
+                          {option.logo} {option.name}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  </div>
+                </div>
+
+                {/* 学院选择 */}
+                {availableSchools.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      所在学院
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={academicSettings.school || ''}
+                        onChange={(e) => setAcademicSettings(prev => ({ ...prev, school: e.target.value || undefined }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none bg-white"
+                      >
+                        <option value="">请选择学院</option>
+                        {availableSchools.map(school => (
+                          <option key={school.id} value={school.id}>
+                            {school.name}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                    </div>
+                  </div>
+                )}
+
+                {/* 专业选择 */}
+                {availableDepartments.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      所学专业
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={academicSettings.department || ''}
+                        onChange={(e) => setAcademicSettings(prev => ({ ...prev, department: e.target.value || undefined }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none bg-white"
+                      >
+                        <option value="">请选择专业</option>
+                        {availableDepartments.map(dept => (
+                          <option key={dept.id} value={dept.id}>
+                            {dept.name}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                    </div>
+                  </div>
+                )}
+
+                {/* 自动跳转开关 */}
+                <div className="border-t pt-4">
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <label className="flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={academicSettings.autoRedirect}
+                            onChange={(e) => setAcademicSettings(prev => ({ ...prev, autoRedirect: e.target.checked }))}
+                            className="sr-only"
+                          />
+                          <div className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                            academicSettings.autoRedirect ? 'bg-green-500' : 'bg-gray-200'
+                          }`}>
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                              academicSettings.autoRedirect ? 'translate-x-6' : 'translate-x-1'
+                            }`} />
+                          </div>
+                        </label>
+                        <span className="text-sm font-medium text-gray-700">
+                          智能跳转到我的专业
+                        </span>
+                        <div className="group relative">
+                          <Info className="w-4 h-4 text-gray-400 cursor-help" />
+                          <div className="absolute left-1/2 -translate-x-1/2 bottom-6 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                            <div className="mb-2 font-medium">功能介绍：</div>
+                            <div className="space-y-1">
+                              <div>• 开启后，点击"学习"栏目会自动跳转到您设置的学校和专业页面</div>
+                              <div>• 关闭后，会显示完整的学校选择页面</div>
+                              <div>• 需要先设置学校信息才能使用此功能</div>
+                            </div>
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        开启后，访问学习页面时会自动跳转到您的学校和专业对应页面，节省选择时间
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 保存按钮 */}
+                <div className="pt-4">
+                  <button
+                    onClick={handleSaveAcademicSettings}
+                    disabled={savingSettings}
+                    className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {savingSettings ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>保存中...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4" />
+                        <span>保存设置</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
             </motion.div>
 
             {/* 统计信息 */}

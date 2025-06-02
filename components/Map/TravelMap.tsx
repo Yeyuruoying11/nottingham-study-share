@@ -251,13 +251,13 @@ const TravelLeafletMap = React.memo(({
                   </svg>
                   <span>${post.location.address}</span>
                 </div>
-                <button 
+                  <button 
                   id="view-detail-${post.id}"
                   class="w-full px-4 py-2 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600 transition-colors"
-                >
-                  查看详情
-                </button>
-              </div>
+                  >
+                    查看详情
+                  </button>
+                </div>
             `;
             
             marker.bindPopup(popupContent, {
@@ -272,7 +272,7 @@ const TravelLeafletMap = React.memo(({
                 const button = document.getElementById(`view-detail-${post.id}`);
                 if (button) {
                   button.addEventListener('click', () => {
-                    onPostClick(post.id!);
+              onPostClick(post.id!);
                   });
                 }
               }, 100);
@@ -562,8 +562,8 @@ export default function TravelMap({
                 <p className="text-sm font-medium text-gray-800 line-clamp-2">{searchLocation.name}</p>
               </div>
             )}
-          </div>
-
+      </div>
+      
           {/* 全屏切换按钮 */}
           <button
             onClick={toggleFullscreen}
@@ -573,22 +573,22 @@ export default function TravelMap({
             <Maximize2 className="w-5 h-5 text-gray-700" />
           </button>
 
-          {mapReady ? (
-            <TravelLeafletMap
-              travelPosts={travelPosts}
-              onPostClick={handlePostClick}
+        {mapReady ? (
+          <TravelLeafletMap
+            travelPosts={travelPosts}
+            onPostClick={handlePostClick}
               searchLocation={searchLocation}
               onMapReady={handleMapReady}
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full bg-gray-100">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
-                <p className="text-gray-600">加载地图中...</p>
-              </div>
-            </div>
-          )}
-        </div>
+          />
+        ) : (
+          <div className="flex items-center justify-center h-full bg-gray-100">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
+              <p className="text-gray-600">加载地图中...</p>
+                      </div>
+                    </div>
+        )}
+                </div>
       )}
       
       {/* 全屏模式使用Portal渲染到body */}
