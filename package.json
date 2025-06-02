@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "clean": "rm -rf .next && rm -rf node_modules/.cache",
     "deploy-indexes": "node scripts/deploy-indexes.js",
     "setup-api": "node scripts/setup-api-keys.js",
     "setup-vercel": "node scripts/setup-vercel-env.js",

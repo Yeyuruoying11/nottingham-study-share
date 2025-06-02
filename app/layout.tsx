@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { AuthContextProvider } from '@/contexts/AuthContext'
-import AISchedulerProvider from '@/components/AISchedulerProvider'
+// import AISchedulerProvider from '@/components/AISchedulerProvider'
 import Head from 'next/head'
 
 const inter = Inter({ 
@@ -34,7 +34,7 @@ export default function RootLayout({
       </head>
       <body className={inter.className} suppressHydrationWarning={true}>
         <AuthContextProvider>
-          <AISchedulerProvider />
+          {/* <AISchedulerProvider /> */}
           <div suppressHydrationWarning={true}>
           {children}
           </div>
