@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { model, prompt, maxTokens = 500, temperature = 0.8 } = await request.json();
+    const { model, prompt, maxTokens = 800, temperature = 0.8 } = await request.json();
 
     // 验证prompt参数
     if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {

@@ -843,7 +843,7 @@ export class AIPostingService {
         body: JSON.stringify({
           model: character.model || 'deepseek',
           prompt: prompt,
-          maxTokens: Math.max(character.settings.max_response_length || 2000, 2000), // 确保至少2000 tokens
+          maxTokens: Math.max(character.settings.max_response_length || 3000, 3000), // 增加到至少3000 tokens
           temperature: character.settings.temperature
         })
       });
@@ -898,13 +898,19 @@ export class AIPostingService {
     prompt += `5. 包含3-5个相关标签\n`;
     prompt += `6. 提供80字以内的摘要\n\n`;
     
-    prompt += `请用JSON格式返回，包含以下字段：\n`;
+    // 对于某些角色添加特殊指令
+    if (character.displayName === '小鱼摆摆' || character.name === '小鱼摆摆') {
+      prompt += `注意：务必生成完整的内容，不要截断。确保JSON格式完整。\n\n`;
+    }
+    
+    prompt += `请严格按照以下JSON格式返回，确保格式完整，不要截断：\n`;
     prompt += `{\n`;
     prompt += `  "title": "帖子标题（吸引人且相关）",\n`;
-    prompt += `  "content": "帖子正文内容",\n`;
+    prompt += `  "content": "帖子正文内容（完整的内容，不要截断）",\n`;
     prompt += `  "excerpt": "80字以内的摘要",\n`;
     prompt += `  "tags": ["标签1", "标签2", "标签3"]\n`;
-    prompt += `}`;
+    prompt += `}\n\n`;
+    prompt += `重要：请确保返回完整的JSON格式，不要截断内容。`;
 
     return prompt;
   }
@@ -1204,7 +1210,7 @@ export class AIPostingService {
         body: JSON.stringify({
           model: character.model || 'deepseek',
           prompt: enhancedPrompt,
-          maxTokens: Math.max(character.settings.max_response_length || 2000, 2000), // 确保至少2000 tokens
+          maxTokens: Math.max(character.settings.max_response_length || 3000, 3000), // 增加到至少3000 tokens
           temperature: Math.min(character.settings.temperature + 0.2, 1.0) // 增加随机性
         })
       });

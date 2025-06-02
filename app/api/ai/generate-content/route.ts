@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { model, prompt, maxTokens = 2000, temperature = 0.7 } = await request.json();
+    const { model, prompt, maxTokens = 3000, temperature = 0.7 } = await request.json();
 
     // 验证prompt参数
     if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
@@ -159,12 +159,37 @@ export async function POST(request: NextRequest) {
       // 验证必要字段
       if (!parsedContent.title || !parsedContent.content) {
         console.warn('缺少必要字段，使用备用格式');
+        
+        // 尝试从原始内容中提取有意义的信息
+        let extractedTitle = parsedContent.title || '';
+        let extractedContent = parsedContent.content || '';
+        
+        // 如果没有title，尝试从内容中提取
+        if (!extractedTitle && cleanedContent.length > 0) {
+          // 尝试提取第一行作为标题
+          const firstLine = cleanedContent.split('\n')[0];
+          if (firstLine.includes('【') && firstLine.includes('】')) {
+            extractedTitle = firstLine;
+          } else {
+            extractedTitle = firstLine.substring(0, 50);
+          }
+        }
+        
+        // 如果没有content，使用整个清理后的内容
+        if (!extractedContent) {
+          extractedContent = cleanedContent;
+          // 移除可能的标题部分
+          if (extractedTitle && extractedContent.startsWith(extractedTitle)) {
+            extractedContent = extractedContent.substring(extractedTitle.length).trim();
+          }
+        }
+        
         return NextResponse.json({
           success: true,
           content: {
-            title: parsedContent.title || '生活分享',
-            content: parsedContent.content || cleanedContent,
-            excerpt: parsedContent.excerpt || cleanedContent.substring(0, 80) + '...',
+            title: extractedTitle || '生活分享',
+            content: extractedContent || cleanedContent,
+            excerpt: parsedContent.excerpt || extractedContent.substring(0, 80) + '...',
             tags: parsedContent.tags || ['AI生成', '内容分享']
           }
         });
@@ -220,21 +245,67 @@ function extractContentFromBrokenJSON(brokenJSON: string) {
         let endIndex = brokenJSON.length;
         
         // 查找下一个字段的开始位置
-        const nextFieldMatch = brokenJSON.substring(startIndex).match(/",\s*"/);
-        if (nextFieldMatch && nextFieldMatch.index !== undefined) {
-          endIndex = startIndex + nextFieldMatch.index;
+        const nextFieldPatterns = [
+          /",\s*"excerpt"/,
+          /",\s*"tags"/,
+          /",\s*}/,
+          /"}\s*$/
+        ];
+        
+        for (const pattern of nextFieldPatterns) {
+          const match = brokenJSON.substring(startIndex).match(pattern);
+          if (match && match.index !== undefined) {
+            endIndex = Math.min(endIndex, startIndex + match.index);
+          }
         }
         
-        extractedContent = brokenJSON.substring(startIndex, endIndex);
+        // 如果没找到结束位置，尝试找到最后一个完整的句子
+        if (endIndex === brokenJSON.length) {
+          // 查找最后一个句号、感叹号或问号
+          const lastSentenceEnd = Math.max(
+            brokenJSON.lastIndexOf('。'),
+            brokenJSON.lastIndexOf('！'),
+            brokenJSON.lastIndexOf('？'),
+            brokenJSON.lastIndexOf('.'),
+            brokenJSON.lastIndexOf('!'),
+            brokenJSON.lastIndexOf('?')
+          );
+          
+          if (lastSentenceEnd > startIndex) {
+            endIndex = lastSentenceEnd + 1;
+          }
+        }
+        
+        extractedContent = brokenJSON.substring(startIndex, endIndex)
+          .replace(/\\n/g, '\n')
+          .replace(/\\"/g, '"')
+          .replace(/\\'/g, "'")
+          .trim();
+      }
+    }
+    
+    // 提取标题，如果没有则从内容中生成
+    let extractedTitle = titleMatch ? titleMatch[1] : '';
+    if (!extractedTitle && extractedContent) {
+      // 尝试从内容的第一行生成标题
+      const firstLine = extractedContent.split('\n')[0];
+      extractedTitle = firstLine.length > 50 ? firstLine.substring(0, 50) + '...' : firstLine;
+    }
+    
+    // 清理提取的内容
+    if (extractedContent) {
+      // 移除末尾的不完整句子
+      if (extractedContent.endsWith('\\')) {
+        extractedContent = extractedContent.substring(0, extractedContent.lastIndexOf(' '));
       }
     }
     
     return {
-      title: titleMatch ? titleMatch[1] : '内容分享',
+      title: extractedTitle || '内容分享',
       content: extractedContent || brokenJSON,
       excerpt: excerptMatch ? excerptMatch[1] : extractedContent.substring(0, 80) + '...',
       tags: tagsMatch ? 
-        tagsMatch[1].split(',').map(tag => tag.trim().replace(/"/g, '').replace(/'/g, '')) : 
+        tagsMatch[1].split(',').map(tag => tag.trim().replace(/["\\']/g, '')) : 
         ['AI生成', '内容分享']
     };
   } catch (error) {
