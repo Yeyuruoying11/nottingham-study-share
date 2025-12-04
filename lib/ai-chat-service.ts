@@ -308,6 +308,11 @@ export class AIChatService {
         '嗯嗯，我觉得也是这样的',
         '对哦，确实是这样呢'
       ],
+      'formal': [
+        '感谢您的来信，我会认真考虑您的问题。',
+        '您的问题很有深度，我需要一些时间来整理回复。',
+        '非常感谢您的耐心，我会尽快给您答复。'
+      ],
       'humorous': [
         '哈哈哈，你这个想法太有趣了！',
         '我正在努力思考一个机智的回复... 🤔',
@@ -370,7 +375,7 @@ export class AIChatService {
 
   // 获取语调描述
   private static getToneDescription(tone: string): string {
-    const toneMap = {
+    const toneMap: Record<string, string> = {
       'friendly': '友好亲切',
       'professional': '专业严谨',
       'casual': '轻松随意',
@@ -382,7 +387,7 @@ export class AIChatService {
 
   // 获取风格描述
   private static getStyleDescription(style: string): string {
-    const styleMap = {
+    const styleMap: Record<string, string> = {
       'helpful': '乐于助人',
       'educational': '富有教育意义',
       'entertaining': '有趣生动',

@@ -101,8 +101,9 @@ export async function POST(request: NextRequest) {
       try {
         parsedContent = JSON.parse(cleanedContent);
         console.log('JSON解析成功:', parsedContent);
-      } catch (firstParseError) {
-        console.log('第一次JSON解析失败，尝试修复JSON格式:', firstParseError.message);
+      } catch (firstParseError: unknown) {
+        const errorMessage = firstParseError instanceof Error ? firstParseError.message : String(firstParseError);
+        console.log('第一次JSON解析失败，尝试修复JSON格式:', errorMessage);
         
         // 尝试修复常见的JSON格式问题
         let fixedContent = cleanedContent;
@@ -148,8 +149,9 @@ export async function POST(request: NextRequest) {
         try {
           parsedContent = JSON.parse(fixedContent);
           console.log('JSON解析成功:', parsedContent);
-        } catch (secondParseError) {
-          console.log('第二次JSON解析也失败，尝试智能提取:', secondParseError.message);
+        } catch (secondParseError: unknown) {
+          const errorMsg = secondParseError instanceof Error ? secondParseError.message : String(secondParseError);
+          console.log('第二次JSON解析也失败，尝试智能提取:', errorMsg);
           
           // 智能提取关键信息
           parsedContent = extractContentFromBrokenJSON(cleanedContent);

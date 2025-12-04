@@ -37,7 +37,8 @@ export async function GET(request: NextRequest) {
 
       case 'trigger':
         // 手动触发任务处理
-        await aiScheduler.triggerNow();
+        await aiScheduler.triggerChatTasks();
+        await aiScheduler.triggerPostingTasks();
         return NextResponse.json({
           success: true,
           message: '手动任务处理完成'

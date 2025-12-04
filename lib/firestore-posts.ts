@@ -48,6 +48,7 @@ export interface FirestorePost {
   department?: string; // 专业ID
   course?: string; // 课程ID
   embedHtml?: string; // Google Maps嵌入HTML代码
+  videoIframe?: string; // 视频iframe代码（用于学习、美食、资料、生活帖子）
 }
 
 export interface FirestoreComment {

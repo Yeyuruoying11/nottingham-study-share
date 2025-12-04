@@ -183,7 +183,7 @@ export class AIPostHistoryService {
       // 提取最近的关键词
       const recentPosts = history.slice(0, 10);
       const allKeywords = recentPosts.flatMap(post => post.content_keywords);
-      stats.recent_keywords = [...new Set(allKeywords)].slice(0, 20);
+      stats.recent_keywords = Array.from(new Set(allKeywords)).slice(0, 20);
 
       // 最后发帖时间
       if (history.length > 0) {
@@ -253,7 +253,7 @@ export class AIPostHistoryService {
       .filter(word => word.length > 1 && !stopWords.has(word))
       .slice(0, 15);
 
-    return [...new Set(allWords)];
+    return Array.from(new Set(allWords));
   }
 
   // 计算相似度
@@ -278,7 +278,7 @@ export class AIPostHistoryService {
 
     const set1 = new Set(keywords1);
     const set2 = new Set(keywords2);
-    const intersection = new Set([...set1].filter(x => set2.has(x)));
+    const intersection = new Set(Array.from(set1).filter(x => set2.has(x)));
     
     return intersection.size / Math.max(set1.size, set2.size);
   }
@@ -290,7 +290,7 @@ export class AIPostHistoryService {
     
     const set1 = new Set(words1);
     const set2 = new Set(words2);
-    const intersection = new Set([...set1].filter(x => set2.has(x)));
+    const intersection = new Set(Array.from(set1).filter(x => set2.has(x)));
     
     return intersection.size / Math.max(set1.size, set2.size);
   }

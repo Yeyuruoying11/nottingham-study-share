@@ -334,7 +334,7 @@ export class NewsService {
     
     const condition = conditions[Math.floor(Math.random() * conditions.length)];
     
-    const descriptions = {
+    const descriptions: Record<string, string> = {
       '晴朗': '阳光明媚，适合户外活动',
       '多云': '天空多云，温度适宜',
       '小雨': '轻微降雨，记得带伞',
