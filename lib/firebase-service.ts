@@ -20,6 +20,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
+  sendPasswordResetEmail,
   User as FirebaseUser
 } from "firebase/auth";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -117,6 +118,40 @@ export const authService = {
   // 监听认证状态
   onAuthStateChange(callback: (user: FirebaseUser | null) => void) {
     return onAuthStateChanged(auth, callback);
+  },
+
+  // 发送密码重置邮件
+  async resetPassword(email: string) {
+    try {
+      await sendPasswordResetEmail(auth, email);
+      return {
+        success: true,
+        message: "密码重置邮件已发送，请检查您的邮箱"
+      };
+    } catch (error: any) {
+      console.error("Password reset error:", error);
+      
+      let errorMessage = "发送失败，请重试";
+      
+      switch (error.code) {
+        case "auth/user-not-found":
+          errorMessage = "该邮箱未注册";
+          break;
+        case "auth/invalid-email":
+          errorMessage = "邮箱格式不正确";
+          break;
+        case "auth/too-many-requests":
+          errorMessage = "请求过于频繁，请稍后再试";
+          break;
+        default:
+          errorMessage = error.message || "发送失败，请重试";
+      }
+      
+      return {
+        success: false,
+        error: errorMessage
+      };
+    }
   }
 };
 

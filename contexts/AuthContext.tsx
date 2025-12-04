@@ -12,6 +12,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, displayName: string) => Promise<void>;
   logout: () => Promise<void>;
+  resetPassword: (email: string) => Promise<{ success: boolean; message?: string; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -77,6 +78,18 @@ export function AuthContextProvider({ children }: { children: React.ReactNode })
     }
   };
 
+  const resetPassword = async (email: string) => {
+    try {
+      const result = await authService.resetPassword(email);
+      return result;
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || "发送失败，请重试"
+      };
+    }
+  };
+
   const value = {
     user,
     userProfile,
@@ -84,6 +97,7 @@ export function AuthContextProvider({ children }: { children: React.ReactNode })
     login,
     register,
     logout,
+    resetPassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
