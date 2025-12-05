@@ -63,6 +63,328 @@ const categories = [
   { name: "租房", icon: "🏡", color: "bg-yellow-100 text-yellow-800" },
 ];
 
+// 提取PostCard组件到外部
+const PostCard = React.memo(({ post, index, onDelete }: { post: any; index: number; onDelete?: (postId: string) => void }) => {
+  const { user } = useAuth();
+  const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [isLiking, setIsLiking] = useState(false);
+  const [localLikes, setLocalLikes] = useState(post.likes || 0);
+  const [localLiked, setLocalLiked] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  
+  // 改进的作者身份验证逻辑 - 管理员可以删除任何帖子
+  const isAuthor = user && post.author.uid && user.uid === post.author.uid;
+  const isAdmin = user && isAdminUser(user);
+  const canDelete = isAdmin || isAuthor; // 管理员优先，可以删除任何帖子
+
+  // 确保头像和作者信息有默认值
+  const authorName = post.author?.name || post.author?.displayName || 'AI助手';
+  const authorAvatar = post.author?.avatar || 'https://images.unsplash.com/photo-1635776062043-223faf322b1d?w=40&h=40&fit=crop&crop=face';
+  const authorUid = post.author?.uid || post.authorId || 'unknown';
+  
+  // 检查是否是AI帖子
+  const isAIPost = post.isAIGenerated || post.aiCharacterId || authorUid.startsWith('ai_');
+
+  // 只在组件挂载时获取一次点赞状态，避免依赖全局状态
+  useEffect(() => {
+    const initializeLikeStatus = async () => {
+      if (user && post.id) {
+        try {
+          const { getUserLikeStatus } = await import("@/lib/firestore-posts");
+          const status = await getUserLikeStatus(post.id, user.uid);
+          setLocalLiked(status);
+        } catch (error) {
+          console.error('获取点赞状态失败:', error);
+        }
+      }
+    };
+    
+    initializeLikeStatus();
+  }, [user?.uid, post.id]);
+
+  // 点击外部关闭菜单
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showMenu]);
+
+  // 点赞功能
+  const handleLike = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // 阻止冒泡到卡片点击事件
+    
+    if (!user) {
+      alert('请先登录才能点赞');
+      return;
+    }
+
+    if (isLiking) return; // 防止重复点击
+
+    setIsLiking(true);
+    
+    try {
+      const newLikedState = !localLiked;
+      const newLikesCount = newLikedState ? localLikes + 1 : localLikes - 1;
+      
+      // 立即更新本地状态以获得即时反馈
+      setLocalLiked(newLikedState);
+      setLocalLikes(newLikesCount);
+      
+      const { toggleLike } = await import("@/lib/firestore-posts");
+      const result = await toggleLike(post.id, user.uid);
+      
+      // 使用服务器返回的准确数据更新状态
+      setLocalLikes(result.likesCount);
+      setLocalLiked(result.liked);
+    } catch (error) {
+      console.error('点赞失败:', error);
+      // 回滚本地状态
+      setLocalLiked(!localLiked);
+      setLocalLikes(localLikes);
+    } finally {
+      setIsLiking(false);
+    }
+  };
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // 阻止冒泡
+    
+    if (!canDelete) {
+      alert('您没有权限删除此帖子');
+      return;
+    }
+    
+    const confirmMessage = isAdmin && !isAuthor 
+      ? '您正在以管理员身份删除此帖子，确定要继续吗？' 
+      : '确定要删除这篇帖子吗？';
+      
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    setIsDeleting(true);
+    setShowMenu(false);
+
+    try {
+      const { deletePostFromFirestore } = await import("@/lib/firestore-posts");
+      const result = await deletePostFromFirestore(post.id, user!.uid);
+      
+      if (result) {
+        // 通知父组件更新列表
+        if (onDelete) {
+          onDelete(post.id);
+        }
+        alert('帖子删除成功');
+      } else {
+        alert('删除失败，请重试');
+      }
+    } catch (error) {
+      console.error('删除帖子失败:', error);
+      alert('删除失败，请重试');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // 处理卡片点击导航到帖子详情
+  const handleCardClick = () => {
+    router.push(`/post/${post.id}`);
+  };
+
+  // 调试信息（开发环境下显示）
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development' && user && showMenu) {
+      console.log('删除权限调试:', {
+        postId: post.id,
+        postTitle: post.title,
+        postAuthorName: authorName,
+        postAuthorUID: authorUid,
+        currentUserUID: user.uid,
+        currentUserEmail: user.email,
+        isAuthor,
+        isAdmin,
+        canDelete,
+        isAIPost
+      });
+    }
+  }, [user, showMenu, post, isAuthor, isAdmin, canDelete, authorName, authorUid, isAIPost]);
+
+  return (
+      <div
+        className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 group cursor-pointer relative"
+      onClick={handleCardClick}
+      >
+        {/* 三个点菜单按钮 */}
+        {user && canDelete && (
+          <div className="absolute top-4 right-4 z-10" ref={menuRef}>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowMenu(!showMenu);
+              }}
+              className="p-2 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white/90 transition-colors shadow-sm opacity-0 group-hover:opacity-100"
+              disabled={isDeleting}
+            >
+              <MoreHorizontal className="w-4 h-4 text-gray-600" />
+            </button>
+            
+            {/* 下拉菜单 */}
+            {showMenu && (
+              <div className="absolute top-full right-0 mt-1 bg-white rounded-lg shadow-lg border py-1 z-20 min-w-[100px]">
+                <button
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="w-full px-3 py-2 text-left text-red-600 hover:bg-red-50 flex items-center space-x-1.5 disabled:opacity-50 text-xs"
+                >
+                  {isDeleting ? (
+                    <>
+                      <div className="w-3 h-3 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                      <span className="whitespace-nowrap">删除中...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-3 h-3 flex-shrink-0" />
+                      <span className="whitespace-nowrap">删除帖子</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* 图片 */}
+        <div className="h-48 bg-gradient-to-br from-green-400 to-blue-500 relative overflow-hidden">
+          {post.images && post.images.length > 0 ? (
+            <img
+              src={post.images[0]}
+              alt={post.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=300&fit=crop";
+              }}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="text-white/80 text-center">
+                <FileText className="w-12 h-12 mx-auto mb-2" />
+                <p className="text-sm">分享内容</p>
+              </div>
+            </div>
+          )}
+        </div>
+        
+        <div className="p-4">
+          <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 text-sm leading-tight">
+            {post.title}
+          </h3>
+          
+          {/* 标签信息移到这里 */}
+          <div className="flex items-center gap-2 mb-2">
+            {/* 分类标签 */}
+            <span className="px-2 py-1 bg-green-500 text-white text-xs font-medium rounded-full">
+              {post.category}
+            </span>
+            
+            {/* AI标识 */}
+            {isAIPost && (
+              <span className="px-2 py-1 bg-blue-500 text-white text-xs font-medium rounded-full flex items-center gap-1">
+                <Bot className="w-3 h-3" />
+                <span>AI</span>
+              </span>
+            )}
+            
+            {/* 热门标识 */}
+            {localLikes > 10 && (
+              <span className="px-2 py-1 bg-red-500 text-white text-xs font-medium rounded-full flex items-center gap-1">
+                🔥
+                <span>热门</span>
+              </span>
+            )}
+          </div>
+          
+          <p className="text-gray-600 text-xs line-clamp-3 mb-3 leading-relaxed">
+            {post.content}
+          </p>
+          
+          <div className="flex flex-wrap gap-1 mb-3">
+            {post.tags.map((tag: string, tagIndex: number) => (
+              <span
+                key={tagIndex}
+                className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
+              >
+                #{tag}
+              </span>
+            ))}
+          </div>
+          
+          <div className="flex items-center justify-between">
+          <Link 
+            href={isAIPost ? `/ai-profile/${post.aiCharacterId || authorUid.replace('ai_', '')}` : `/user/${authorUid}`}
+            className="flex items-center space-x-2 hover:bg-gray-50 rounded-lg p-1 -m-1 transition-colors z-10 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+              <div className="relative">
+                <img
+                  src={authorAvatar}
+                  alt={authorName}
+                  className="w-6 h-6 rounded-full object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = isAIPost 
+                      ? 'https://images.unsplash.com/photo-1635776062043-223faf322b1d?w=40&h=40&fit=crop&crop=face'
+                      : 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face';
+                  }}
+                />
+                {isAIPost && (
+                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center">
+                    <Bot className="w-1.5 h-1.5 text-white" />
+                  </div>
+                )}
+              </div>
+            <span className="text-xs text-gray-600 font-medium hover:text-gray-900 transition-colors">
+              {authorName}
+              {isAIPost && <span className="ml-1 text-blue-600">•AI</span>}
+            </span>
+          </Link>
+            
+            <div className="flex items-center space-x-3 text-xs text-gray-500">
+              <button 
+                onClick={handleLike}
+                className={`flex items-center space-x-1 transition-colors hover:text-red-500 ${
+                  localLiked ? 'text-red-500' : ''
+                }`}
+                disabled={isLiking}
+              >
+                <Heart className={`w-4 h-4 ${localLiked ? 'fill-current' : ''}`} />
+                <span>{localLikes}</span>
+              </button>
+              <div className="flex items-center space-x-1">
+                <MessageCircle className="w-4 h-4" />
+                <span>{post.comments || 0}</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <Eye className="w-4 h-4" />
+                <span>{post.views || 0}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+  );
+});
+PostCard.displayName = "PostCard";
+
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSearchQuery, setActiveSearchQuery] = useState("");
@@ -332,323 +654,6 @@ export default function HomePage() {
     setShowUserMenu(prev => !prev);
   }, []);
 
-  const PostCard = React.memo(({ post, index }: { post: any; index: number }) => {
-    const [isDeleting, setIsDeleting] = useState(false);
-    const [showMenu, setShowMenu] = useState(false);
-    const [isLiking, setIsLiking] = useState(false);
-    const [localLikes, setLocalLikes] = useState(post.likes || 0);
-    const [localLiked, setLocalLiked] = useState(false);
-    const menuRef = useRef<HTMLDivElement>(null);
-    
-    // 改进的作者身份验证逻辑 - 管理员可以删除任何帖子
-    const isAuthor = user && post.author.uid && user.uid === post.author.uid;
-    const isAdmin = user && isAdminUser(user);
-    const canDelete = isAdmin || isAuthor; // 管理员优先，可以删除任何帖子
-
-    // 确保头像和作者信息有默认值
-    const authorName = post.author?.name || post.author?.displayName || 'AI助手';
-    const authorAvatar = post.author?.avatar || 'https://images.unsplash.com/photo-1635776062043-223faf322b1d?w=40&h=40&fit=crop&crop=face';
-    const authorUid = post.author?.uid || post.authorId || 'unknown';
-    
-    // 检查是否是AI帖子
-    const isAIPost = post.isAIGenerated || post.aiCharacterId || authorUid.startsWith('ai_');
-
-    // 只在组件挂载时获取一次点赞状态，避免依赖全局状态
-    useEffect(() => {
-      const initializeLikeStatus = async () => {
-        if (user && post.id) {
-          try {
-            const { getUserLikeStatus } = await import("@/lib/firestore-posts");
-            const status = await getUserLikeStatus(post.id, user.uid);
-            setLocalLiked(status);
-          } catch (error) {
-            console.error('获取点赞状态失败:', error);
-          }
-        }
-      };
-      
-      initializeLikeStatus();
-    }, [user?.uid, post.id]);
-
-    // 点击外部关闭菜单
-    useEffect(() => {
-      const handleClickOutside = (event: MouseEvent) => {
-        if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-          setShowMenu(false);
-        }
-      };
-
-      if (showMenu) {
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-      }
-    }, [showMenu]);
-
-    // 点赞功能
-    const handleLike = async (e: React.MouseEvent) => {
-      e.stopPropagation(); // 阻止冒泡到卡片点击事件
-      
-      if (!user) {
-        alert('请先登录才能点赞');
-        return;
-      }
-
-      if (isLiking) return; // 防止重复点击
-
-      setIsLiking(true);
-      
-      try {
-        const newLikedState = !localLiked;
-        const newLikesCount = newLikedState ? localLikes + 1 : localLikes - 1;
-        
-        // 立即更新本地状态以获得即时反馈
-        setLocalLiked(newLikedState);
-        setLocalLikes(newLikesCount);
-        
-        const { toggleLike } = await import("@/lib/firestore-posts");
-        const result = await toggleLike(post.id, user.uid);
-        
-        // 使用服务器返回的准确数据更新状态
-        setLocalLikes(result.likesCount);
-        setLocalLiked(result.liked);
-      } catch (error) {
-        console.error('点赞失败:', error);
-        // 回滚本地状态
-        setLocalLiked(!localLiked);
-        setLocalLikes(localLikes);
-      } finally {
-        setIsLiking(false);
-      }
-    };
-
-    const handleDelete = async (e: React.MouseEvent) => {
-      e.stopPropagation(); // 阻止冒泡
-      
-      if (!canDelete) {
-        alert('您没有权限删除此帖子');
-        return;
-      }
-      
-      const confirmMessage = isAdmin && !isAuthor 
-        ? '您正在以管理员身份删除此帖子，确定要继续吗？' 
-        : '确定要删除这篇帖子吗？';
-        
-      if (!confirm(confirmMessage)) {
-        return;
-      }
-
-      setIsDeleting(true);
-      setShowMenu(false);
-
-      try {
-        const { deletePostFromFirestore } = await import("@/lib/firestore-posts");
-        const result = await deletePostFromFirestore(post.id, user!.uid);
-        
-        if (result) {
-          // 从本地状态中移除帖子
-          setPosts(prevPosts => prevPosts.filter(p => p.id !== post.id));
-          alert('帖子删除成功');
-        } else {
-          alert('删除失败，请重试');
-        }
-      } catch (error) {
-        console.error('删除帖子失败:', error);
-        alert('删除失败，请重试');
-      } finally {
-        setIsDeleting(false);
-      }
-    };
-
-    // 处理卡片点击导航到帖子详情
-    const handleCardClick = () => {
-      router.push(`/post/${post.id}`);
-    };
-
-    // 调试信息（开发环境下显示）
-    useEffect(() => {
-      if (process.env.NODE_ENV === 'development' && user && showMenu) {
-        console.log('删除权限调试:', {
-          postId: post.id,
-          postTitle: post.title,
-          postAuthorName: authorName,
-          postAuthorUID: authorUid,
-          currentUserUID: user.uid,
-          currentUserEmail: user.email,
-          isAuthor,
-          isAdmin,
-          canDelete,
-          isAIPost
-        });
-      }
-    }, [user, showMenu, post, isAuthor, isAdmin, canDelete, authorName, authorUid, isAIPost]);
-
-    return (
-        <div
-          className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 group cursor-pointer relative"
-        onClick={handleCardClick}
-        >
-          {/* 三个点菜单按钮 */}
-          {user && canDelete && (
-            <div className="absolute top-4 right-4 z-10" ref={menuRef}>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowMenu(!showMenu);
-                }}
-                className="p-2 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white/90 transition-colors shadow-sm opacity-0 group-hover:opacity-100"
-                disabled={isDeleting}
-              >
-                <MoreHorizontal className="w-4 h-4 text-gray-600" />
-              </button>
-              
-              {/* 下拉菜单 */}
-              {showMenu && (
-                <div className="absolute top-full right-0 mt-1 bg-white rounded-lg shadow-lg border py-1 z-20 min-w-[100px]">
-                  <button
-                    onClick={handleDelete}
-                    disabled={isDeleting}
-                    className="w-full px-3 py-2 text-left text-red-600 hover:bg-red-50 flex items-center space-x-1.5 disabled:opacity-50 text-xs"
-                  >
-                    {isDeleting ? (
-                      <>
-                        <div className="w-3 h-3 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
-                        <span className="whitespace-nowrap">删除中...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Trash2 className="w-3 h-3 flex-shrink-0" />
-                        <span className="whitespace-nowrap">删除帖子</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-          
-          {/* 图片 */}
-          <div className="h-48 bg-gradient-to-br from-green-400 to-blue-500 relative overflow-hidden">
-            {post.images && post.images.length > 0 ? (
-              <img
-                src={post.images[0]}
-                alt={post.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=300&fit=crop";
-                }}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <div className="text-white/80 text-center">
-                  <FileText className="w-12 h-12 mx-auto mb-2" />
-                  <p className="text-sm">分享内容</p>
-                </div>
-              </div>
-            )}
-          </div>
-          
-          <div className="p-4">
-            <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 text-sm leading-tight">
-              {post.title}
-            </h3>
-            
-            {/* 标签信息移到这里 */}
-            <div className="flex items-center gap-2 mb-2">
-              {/* 分类标签 */}
-              <span className="px-2 py-1 bg-green-500 text-white text-xs font-medium rounded-full">
-                {post.category}
-              </span>
-              
-              {/* AI标识 */}
-              {isAIPost && (
-                <span className="px-2 py-1 bg-blue-500 text-white text-xs font-medium rounded-full flex items-center gap-1">
-                  <Bot className="w-3 h-3" />
-                  <span>AI</span>
-                </span>
-              )}
-              
-              {/* 热门标识 */}
-              {localLikes > 10 && (
-                <span className="px-2 py-1 bg-red-500 text-white text-xs font-medium rounded-full flex items-center gap-1">
-                  🔥
-                  <span>热门</span>
-                </span>
-              )}
-            </div>
-            
-            <p className="text-gray-600 text-xs line-clamp-3 mb-3 leading-relaxed">
-              {post.content}
-            </p>
-            
-            <div className="flex flex-wrap gap-1 mb-3">
-              {post.tags.map((tag: string, tagIndex: number) => (
-                <span
-                  key={tagIndex}
-                  className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
-                >
-                  #{tag}
-                </span>
-              ))}
-            </div>
-            
-            <div className="flex items-center justify-between">
-            <Link 
-              href={isAIPost ? `/ai-profile/${post.aiCharacterId || authorUid.replace('ai_', '')}` : `/user/${authorUid}`}
-              className="flex items-center space-x-2 hover:bg-gray-50 rounded-lg p-1 -m-1 transition-colors z-10 relative"
-              onClick={(e) => e.stopPropagation()}
-            >
-                <div className="relative">
-                  <img
-                    src={authorAvatar}
-                    alt={authorName}
-                    className="w-6 h-6 rounded-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = isAIPost 
-                        ? 'https://images.unsplash.com/photo-1635776062043-223faf322b1d?w=40&h=40&fit=crop&crop=face'
-                        : 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face';
-                    }}
-                  />
-                  {isAIPost && (
-                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center">
-                      <Bot className="w-1.5 h-1.5 text-white" />
-                    </div>
-                  )}
-                </div>
-              <span className="text-xs text-gray-600 font-medium hover:text-gray-900 transition-colors">
-                {authorName}
-                {isAIPost && <span className="ml-1 text-blue-600">•AI</span>}
-              </span>
-            </Link>
-              
-              <div className="flex items-center space-x-3 text-xs text-gray-500">
-                <button 
-                  onClick={handleLike}
-                  className={`flex items-center space-x-1 transition-colors hover:text-red-500 ${
-                    localLiked ? 'text-red-500' : ''
-                  }`}
-                  disabled={isLiking}
-                >
-                  <Heart className={`w-4 h-4 ${localLiked ? 'fill-current' : ''}`} />
-                  <span>{localLikes}</span>
-                </button>
-                <div className="flex items-center space-x-1">
-                  <MessageCircle className="w-4 h-4" />
-                  <span>{post.comments || 0}</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Eye className="w-4 h-4" />
-                  <span>{post.views || 0}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-    );
-  });
-
-  // 处理搜索输入变化 - 当输入框为空时自动清除搜索
   const handleSearchInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setSearchQuery(newValue);
@@ -659,22 +664,24 @@ export default function HomePage() {
     }
   }, []);
 
-  // 处理搜索按钮点击 - 执行搜索
   const handleSearch = useCallback(() => {
     setActiveSearchQuery(searchQuery.trim());
   }, [searchQuery]);
 
-  // 处理搜索输入框回车键
   const handleSearchKeyPress = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleSearch();
     }
   }, [handleSearch]);
 
-  // 清除搜索
   const handleClearSearch = useCallback(() => {
     setSearchQuery("");
     setActiveSearchQuery("");
+  }, []);
+
+  // 处理帖子删除
+  const handlePostDelete = useCallback((postId: string) => {
+    setPosts(prevPosts => prevPosts.filter(p => p.id !== postId));
   }, []);
 
   return (
@@ -1070,7 +1077,7 @@ export default function HomePage() {
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6"
           >
             {filteredPosts.map((post, index) => (
-              <PostCard key={post.id} post={post} index={index} />
+              <PostCard key={post.id} post={post} index={index} onDelete={handlePostDelete} />
             ))}
           </motion.div>
           </AnimatePresence>
@@ -1144,4 +1151,4 @@ export default function HomePage() {
       </div>
     </div>
   );
-} 
+}

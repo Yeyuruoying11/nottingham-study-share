@@ -134,13 +134,13 @@ export default function GoogleMapsEmbedTutorial({ onEmbedCodeChange, embedCode }
               <h4 className="text-lg font-semibold text-gray-900 mb-4">示例嵌入代码：</h4>
               <div className="bg-gray-900 rounded-lg p-4 text-sm font-mono text-green-400 overflow-x-auto">
                 <div className="text-blue-400">&lt;iframe</div>
-                <div className="ml-4 text-yellow-300">src="https://www.google.com/maps/embed?pb=..."</div>
-                <div className="ml-4 text-yellow-300">width="600"</div>
-                <div className="ml-4 text-yellow-300">height="450"</div>
-                <div className="ml-4 text-yellow-300">style="border:0;"</div>
-                <div className="ml-4 text-yellow-300">allowfullscreen=""</div>
-                <div className="ml-4 text-yellow-300">loading="lazy"</div>
-                <div className="ml-4 text-yellow-300">referrerpolicy="no-referrer-when-downgrade"</div>
+                <div className="ml-4 text-yellow-300">src=&quot;https://www.google.com/maps/embed?pb=...&quot;</div>
+                <div className="ml-4 text-yellow-300">width=&quot;600&quot;</div>
+                <div className="ml-4 text-yellow-300">height=&quot;450&quot;</div>
+                <div className="ml-4 text-yellow-300">style=&quot;border:0;&quot;</div>
+                <div className="ml-4 text-yellow-300">allowfullscreen=&quot;&quot;</div>
+                <div className="ml-4 text-yellow-300">loading=&quot;lazy&quot;</div>
+                <div className="ml-4 text-yellow-300">referrerpolicy=&quot;no-referrer-when-downgrade&quot;</div>
                 <div className="text-blue-400">&gt;&lt;/iframe&gt;</div>
               </div>
               

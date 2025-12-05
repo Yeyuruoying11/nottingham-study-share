@@ -105,7 +105,7 @@ export default function GoogleStreetViewEmbed({
                   <li>• Google服务暂时不可用</li>
                 </ul>
                 <p className="mt-3 font-semibold">提示：</p>
-                <p className="mt-1">您可以点击上方的"在 Google Maps 中查看街景"链接查看</p>
+                <p className="mt-1">您可以点击上方的&quot;在 Google Maps 中查看街景&quot;链接查看</p>
               </div>
             </div>
           </div>

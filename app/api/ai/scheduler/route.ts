@@ -112,13 +112,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// 自动启动调度器（应用启动时）
-if (typeof window === 'undefined') {
-  // 仅在服务器端执行
-  setTimeout(() => {
-    if (!aiScheduler.isRunning) {
-      aiScheduler.start();
-      console.log('🚀 AI调度器自动启动');
-    }
-  }, 3000); // 延迟3秒启动，确保应用完全加载
-} 
+// 自动启动调度器逻辑已移除，避免在Serverless环境中造成问题
+// 应使用Vercel Cron Jobs或其他外部定时触发机制
+ 

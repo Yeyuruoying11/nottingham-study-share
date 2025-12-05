@@ -271,8 +271,8 @@ export default function VideoIframeInput({ onIframeChange, iframe = '' }: VideoI
             </h5>
             <ol className="list-decimal list-inside space-y-1 text-sm text-gray-600 ml-6">
               <li>打开你想分享的YouTube视频</li>
-              <li>点击视频下方的"分享"按钮</li>
-              <li>选择"嵌入"</li>
+              <li>点击视频下方的&quot;分享&quot;按钮</li>
+              <li>选择&quot;嵌入&quot;</li>
               <li>复制提供的iframe代码</li>
               <li>粘贴到上方输入框中</li>
             </ol>

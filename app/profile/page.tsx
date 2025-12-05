@@ -460,7 +460,7 @@ export default function ProfilePage() {
                           <div className="absolute left-1/2 -translate-x-1/2 bottom-6 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                             <div className="mb-2 font-medium">功能介绍：</div>
                             <div className="space-y-1">
-                              <div>• 开启后，点击"学习"栏目会自动跳转到您设置的学校和专业页面</div>
+                              <div>• 开启后，点击&quot;学习&quot;栏目会自动跳转到您设置的学校和专业页面</div>
                               <div>• 关闭后，会显示完整的学校选择页面</div>
                               <div>• 需要先设置学校信息才能使用此功能</div>
                             </div>

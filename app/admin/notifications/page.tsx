@@ -24,6 +24,27 @@ export default function AdminNotificationsPage() {
   const [loadingSent, setLoadingSent] = useState(false);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
 
+  // 加载已发送的通知
+  const loadSentNotifications = async () => {
+    if (!user) return;
+    
+    try {
+      setLoadingSent(true);
+      const notifications = await getAdminSentNotifications(user.uid);
+      setSentNotifications(notifications);
+    } catch (error) {
+      console.error('加载已发送通知失败:', error);
+    } finally {
+      setLoadingSent(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user && isAdminUser(user)) {
+      loadSentNotifications();
+    }
+  }, [user]);
+
   // 检查管理员权限
   if (!user || !isAdminUser(user)) {
     return (
@@ -41,25 +62,6 @@ export default function AdminNotificationsPage() {
       </div>
     );
   }
-
-  // 加载已发送的通知
-  const loadSentNotifications = async () => {
-    if (!user) return;
-    
-    try {
-      setLoadingSent(true);
-      const notifications = await getAdminSentNotifications(user.uid);
-      setSentNotifications(notifications);
-    } catch (error) {
-      console.error('加载已发送通知失败:', error);
-    } finally {
-      setLoadingSent(false);
-    }
-  };
-
-  useEffect(() => {
-    loadSentNotifications();
-  }, [user]);
 
   const handleSendNotification = async (e: React.FormEvent) => {
     e.preventDefault();
