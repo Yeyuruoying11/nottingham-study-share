@@ -30,28 +30,28 @@ const migrateTestData = async () => {
 
 const testimonials = [
   {
-    quote: "在诺丁汉的第一年，这个平台帮我解决了很多生活上的问题，感谢大家的分享！",
+    quote: "「刚被系统丢到诺丁汉的时候，我连超市都找不到。还好在这里接到了第一个新手任务，不然可能现在还在原地打转。」",
     name: "李小明",
-    title: "商学院研一学生",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face",
+    title: "商学院 · 新手村常驻 NPC（研一）",
+    image: "/avatars/boys/peeps-avatar (1).png",
   },
   {
-    quote: "作为一个社恐，通过这个平台认识了很多志同道合的朋友，诺丁汉的生活变得更精彩了。",
+    quote: "「别被我看起来很冷静骗了，其实社交技能还没解锁。是这个地方让我第一次主动加了陌生人的好友。」",
     name: "王小美",
-    title: "工程学院大三学生",
-    image: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face",
+    title: "工程学院 · 慢热型 NPC（大三）",
+    image: "/avatars/girls/peeps-avatar (2).png",
   },
   {
-    quote: "这里的美食推荐真的太棒了，每个周末都会尝试新的餐厅，已经成为了美食达人！",
+    quote: "「你是来问吃的吗？这张地图我已经刷到全成就了。照着这里走，踩雷概率会低很多。」",
     name: "张小华",
-    title: "艺术学院大二学生",
-    image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face",
+    title: "艺术学院 · 美食支线发布 NPC（大二）",
+    image: "/avatars/girls/peeps-avatar (5).png",
   },
   {
-    quote: "论文季的时候，这里的学习技巧分享救了我的命，顺利完成了毕业论文。",
+    quote: "「毕业论文？那是最终 Boss。建议先来这里看看前辈们留下的攻略，不然容易团灭。」",
     name: "陈小强",
-    title: "计算机学院研二学生",
-    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
+    title: "计算机学院 · 已通关 NPC（研二）",
+    image: "/avatars/boys/peeps-avatar (4).png",
   },
 ];
 

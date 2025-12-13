@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import AvatarSelector from '@/components/AvatarSelector';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { syncUserProfileInConversations, syncUserProfileInPosts } from '@/lib/chat-service';
 
 interface UserProfile {
   displayName: string;
@@ -99,6 +100,24 @@ export default function SettingsPage() {
         });
         console.log('头像更新成功');
         
+        // 同步更新所有会话中的头像
+        try {
+          await syncUserProfileInConversations(user.uid, undefined, avatarUrl);
+          console.log('会话头像同步成功');
+        } catch (syncError) {
+          console.error('同步会话头像失败:', syncError);
+          // 同步失败不影响主流程
+        }
+        
+        // 同步更新所有帖子中的头像
+        try {
+          await syncUserProfileInPosts(user.uid, undefined, avatarUrl);
+          console.log('帖子头像同步成功');
+        } catch (syncError) {
+          console.error('同步帖子头像失败:', syncError);
+          // 同步失败不影响主流程
+        }
+        
         // 触发全局头像更新事件
         window.dispatchEvent(new CustomEvent('userAvatarUpdated', {
           detail: { 
@@ -143,6 +162,24 @@ export default function SettingsPage() {
         bio: profile.bio,
         updatedAt: new Date()
       });
+      
+      // 同步更新所有会话中的名称和头像
+      try {
+        await syncUserProfileInConversations(user.uid, profile.displayName, profile.photoURL);
+        console.log('会话资料同步成功');
+      } catch (syncError) {
+        console.error('同步会话资料失败:', syncError);
+        // 同步失败不影响主流程
+      }
+      
+      // 同步更新所有帖子中的名称和头像
+      try {
+        await syncUserProfileInPosts(user.uid, profile.displayName, profile.photoURL);
+        console.log('帖子资料同步成功');
+      } catch (syncError) {
+        console.error('同步帖子资料失败:', syncError);
+        // 同步失败不影响主流程
+      }
 
       setIsEditing(false);
       alert('资料更新成功！');

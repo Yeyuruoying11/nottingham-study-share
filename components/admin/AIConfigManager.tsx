@@ -6,6 +6,7 @@ import { Bot, Plus, Edit, Trash2, User, MessageCircle, Brain, Settings, Eye, Eye
 import { AICharacter, AIModelConfig, PostCategory } from '@/lib/types';
 import { collection, doc, getDocs, addDoc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { syncUserProfileInConversations, syncUserProfileInPosts } from '@/lib/chat-service';
 import { useAuth } from '@/contexts/AuthContext';
 import { AIPostingService } from '@/lib/ai-posting-service';
 import { AIChatService } from '@/lib/ai-chat-service';
@@ -693,6 +694,35 @@ function AICharacterModal({
       if (character) {
         // 更新现有角色
         await updateDoc(doc(db, 'ai_characters', character.id), characterData);
+        
+        // 如果头像或名称有变化，同步到所有相关会话和帖子
+        const avatarChanged = formData.avatar !== character.avatar;
+        const nameChanged = formData.displayName !== character.displayName;
+        
+        if ((avatarChanged || nameChanged) && formData.virtual_user?.uid) {
+          try {
+            // 同步到会话
+            await syncUserProfileInConversations(
+              formData.virtual_user.uid,
+              nameChanged ? formData.displayName : undefined,
+              avatarChanged ? formData.avatar : undefined
+            );
+            console.log('AI角色头像/名称已同步到所有会话');
+            
+            // 同步到帖子
+            await syncUserProfileInPosts(
+              formData.virtual_user.uid,
+              nameChanged ? formData.displayName : undefined,
+              avatarChanged ? formData.avatar : undefined
+            );
+            console.log('AI角色头像/名称已同步到所有帖子');
+          } catch (syncError) {
+            console.error('同步AI角色资料失败:', syncError);
+            // 同步失败不影响主流程，但给出提示
+            alert('AI角色已更新，但同步到历史内容时出现问题。请刷新页面查看效果。');
+          }
+        }
+        
         onSave({ ...character, ...characterData } as AICharacter);
       } else {
         // 创建新角色

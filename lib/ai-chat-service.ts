@@ -5,7 +5,7 @@ import { db } from './firebase';
 // AI聊天服务
 export class AIChatService {
   
-  // 处理发送给AI角色的消息
+  // 处理发送给AI角色的消息（延迟调度版本）
   static async handleIncomingMessage(
     conversationId: string,
     messageId: string,
@@ -62,6 +62,86 @@ export class AIChatService {
 
     } catch (error) {
       console.error('处理AI聊天消息失败:', error);
+    }
+  }
+
+  // 直接处理AI消息并立即响应（不使用延迟调度）
+  static async handleIncomingMessageDirect(
+    conversationId: string,
+    messageId: string,
+    userMessage: string,
+    aiCharacterId: string
+  ): Promise<{ success: boolean; responseMessage?: string; error?: string }> {
+    try {
+      console.log('直接处理AI聊天消息:', { conversationId, aiCharacterId, userMessage: userMessage.substring(0, 50) });
+      
+      // 获取AI角色信息 - 通过 virtual_user.uid 查找
+      const aiCharacterQuery = query(
+        collection(db, 'ai_characters'),
+        where('virtual_user.uid', '==', `ai_${aiCharacterId}`)
+      );
+      const aiCharacterSnapshot = await getDocs(aiCharacterQuery);
+      
+      if (aiCharacterSnapshot.empty) {
+        console.error('AI角色不存在:', aiCharacterId);
+        return { success: false, error: 'AI角色不存在' };
+      }
+
+      const characterDoc = aiCharacterSnapshot.docs[0];
+      const character = { id: characterDoc.id, ...characterDoc.data() } as AICharacter;
+      
+      console.log(`找到AI角色: ${character.displayName} (${character.id})`);
+      
+      // 检查AI聊天是否启用
+      if (!character.settings?.auto_chat?.enabled) {
+        console.log('AI聊天功能未启用，使用默认响应');
+        // 即使未启用，也生成一个响应
+      }
+
+      // 获取对话历史（最近10条消息）
+      const historyQuery = query(
+        collection(db, 'messages'),
+        where('conversationId', '==', conversationId),
+        orderBy('timestamp', 'desc'),
+        limit(10)
+      );
+      const historySnapshot = await getDocs(historyQuery);
+      const conversationHistory = historySnapshot.docs.map(doc => {
+        const msg = doc.data();
+        return `${msg.senderName}: ${msg.content}`;
+      }).reverse();
+
+      console.log('获取到对话历史:', conversationHistory.length, '条消息');
+
+      // 生成AI响应
+      const response = await this.generateChatResponse(
+        character, 
+        userMessage,
+        conversationHistory
+      );
+      
+      console.log('AI响应生成成功:', response.message.substring(0, 50));
+
+      // 发送AI响应
+      const sentMessageId = await this.sendAIResponse(
+        conversationId,
+        character,
+        response.message
+      );
+
+      console.log('AI响应已发送，消息ID:', sentMessageId);
+
+      return { 
+        success: true, 
+        responseMessage: response.message 
+      };
+
+    } catch (error) {
+      console.error('直接处理AI聊天消息失败:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : '处理失败' 
+      };
     }
   }
 
@@ -133,6 +213,8 @@ export class AIChatService {
     responseMessage: string
   ): Promise<string> {
     try {
+      const now = new Date();
+      
       // 创建AI响应消息
       const messageData = {
         conversationId: conversationId,
@@ -140,19 +222,42 @@ export class AIChatService {
         senderName: aiCharacter.displayName,
         senderAvatar: aiCharacter.avatar,
         content: responseMessage,
-        timestamp: new Date(),
+        timestamp: now,
         type: 'text',
+        readBy: [aiCharacter.virtual_user.uid], // AI自己已读
+        isEdited: false,
         isAIMessage: true,
         aiCharacterId: aiCharacter.id
       };
 
       const messageRef = await addDoc(collection(db, 'messages'), messageData);
       
-      // 更新对话的最后消息时间
+      // 获取会话信息以更新未读计数
+      const conversationDoc = await getDoc(doc(db, 'conversations', conversationId));
+      let updatedUnreadCount: { [key: string]: number } = {};
+      
+      if (conversationDoc.exists()) {
+        const conversationData = conversationDoc.data();
+        updatedUnreadCount = { ...conversationData.unreadCount };
+        
+        // 为除AI外的所有参与者增加未读计数
+        conversationData.participants.forEach((participantId: string) => {
+          if (participantId !== aiCharacter.virtual_user.uid) {
+            updatedUnreadCount[participantId] = (updatedUnreadCount[participantId] || 0) + 1;
+          }
+        });
+      }
+      
+      // 更新对话的最后消息 - 使用正确的格式
       await updateDoc(doc(db, 'conversations', conversationId), {
-        lastMessage: responseMessage,
-        lastMessageTime: new Date(),
-        updatedAt: new Date()
+        lastMessage: {
+          content: responseMessage,
+          senderId: aiCharacter.virtual_user.uid,
+          timestamp: now,
+          type: 'text'
+        },
+        unreadCount: updatedUnreadCount,
+        updatedAt: now
       });
 
       // 更新AI角色统计

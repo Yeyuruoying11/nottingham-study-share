@@ -171,6 +171,11 @@ export default function ChatInterface({ conversation, otherUser, onBack }: ChatI
                     !isConsecutiveMessage(messages[index + 1], index + 1);
     const isAIMessage = (message as any).isAIMessage || (message as any).aiCharacterId;
 
+    // 对于对方消息，优先使用会话中保存的头像，确保头像一致性
+    const avatarToShow = isOwnMessage 
+      ? (message.senderAvatar || user?.photoURL || '')
+      : (otherUser.avatar || message.senderAvatar || '');
+
     return (
       <motion.div
         key={message.id}
@@ -184,7 +189,10 @@ export default function ChatInterface({ conversation, otherUser, onBack }: ChatI
           {showAvatar && (
             <div className="relative">
               <img
-                src={message.senderAvatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face'}
+                src={avatarToShow || (isAIChat ? 
+                  'https://images.unsplash.com/photo-1635776062043-223faf322b1d?w=32&h=32&fit=crop&crop=face' :
+                  'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face'
+                )}
                 alt={message.senderName}
                 className="w-8 h-8 rounded-full object-cover"
               />

@@ -648,4 +648,131 @@ export function getOtherParticipant(conversation: Conversation, currentUserId: s
     name: conversation.participantNames[otherUserId] || '未知用户',
     avatar: conversation.participantAvatars[otherUserId] || ''
   };
+}
+
+// 同步更新用户在所有会话中的头像和名称
+export async function syncUserProfileInConversations(
+  userId: string,
+  newDisplayName?: string,
+  newAvatar?: string
+): Promise<void> {
+  try {
+    console.log('开始同步用户资料到所有会话:', { userId, newDisplayName, newAvatar });
+    
+    // 查找用户参与的所有会话
+    const q = query(
+      conversationsCollection,
+      where('participants', 'array-contains', userId)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    
+    if (querySnapshot.empty) {
+      console.log('用户没有任何会话，无需同步');
+      return;
+    }
+    
+    const batch = writeBatch(db);
+    let updateCount = 0;
+    
+    querySnapshot.forEach((docSnapshot) => {
+      const updateData: { [key: string]: any } = {};
+      
+      if (newDisplayName) {
+        updateData[`participantNames.${userId}`] = newDisplayName;
+      }
+      
+      if (newAvatar) {
+        updateData[`participantAvatars.${userId}`] = newAvatar;
+      }
+      
+      if (Object.keys(updateData).length > 0) {
+        batch.update(docSnapshot.ref, updateData);
+        updateCount++;
+      }
+    });
+    
+    if (updateCount > 0) {
+      await batch.commit();
+      console.log(`成功同步用户资料到 ${updateCount} 个会话`);
+    }
+    
+  } catch (error) {
+    console.error('同步用户资料失败:', error);
+    throw error;
+  }
+}
+
+// 同步更新用户在所有帖子中的头像和名称
+export async function syncUserProfileInPosts(
+  userId: string,
+  newDisplayName?: string,
+  newAvatar?: string
+): Promise<void> {
+  try {
+    console.log('开始同步用户资料到所有帖子:', { userId, newDisplayName, newAvatar });
+    
+    // 查找用户发布的所有帖子
+    const postsCollection = collection(db, 'posts');
+    const q = query(
+      postsCollection,
+      where('authorId', '==', userId)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    
+    if (querySnapshot.empty) {
+      console.log('用户没有发布任何帖子，无需同步');
+      return;
+    }
+    
+    console.log(`找到 ${querySnapshot.size} 个帖子需要更新`);
+    
+    // 使用批量更新，每次最多500个文档
+    const batches: typeof writeBatch[] = [];
+    let currentBatch = writeBatch(db);
+    let operationCount = 0;
+    let batchCount = 0;
+    
+    querySnapshot.forEach((docSnapshot) => {
+      const updateData: { [key: string]: any } = {};
+      
+      if (newDisplayName) {
+        updateData['author.displayName'] = newDisplayName;
+      }
+      
+      if (newAvatar) {
+        updateData['author.avatar'] = newAvatar;
+      }
+      
+      if (Object.keys(updateData).length > 0) {
+        currentBatch.update(docSnapshot.ref, updateData);
+        operationCount++;
+        batchCount++;
+        
+        // Firebase批量操作限制为500个操作
+        if (batchCount === 500) {
+          batches.push(currentBatch);
+          currentBatch = writeBatch(db);
+          batchCount = 0;
+        }
+      }
+    });
+    
+    // 添加最后一个批次（如果有操作）
+    if (batchCount > 0) {
+      batches.push(currentBatch);
+    }
+    
+    // 执行所有批次
+    if (batches.length > 0) {
+      console.log(`执行 ${batches.length} 个批次操作...`);
+      await Promise.all(batches.map(batch => batch.commit()));
+      console.log(`成功同步用户资料到 ${operationCount} 个帖子`);
+    }
+    
+  } catch (error) {
+    console.error('同步帖子资料失败:', error);
+    throw error;
+  }
 } 

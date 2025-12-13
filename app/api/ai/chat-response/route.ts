@@ -14,18 +14,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 处理AI聊天消息
-    await AIChatService.handleIncomingMessage(
+    console.log('收到AI聊天请求:', { conversationId, aiCharacterId, userMessage: userMessage.substring(0, 50) });
+
+    // 直接处理AI聊天消息并生成响应（不使用延迟调度）
+    const result = await AIChatService.handleIncomingMessageDirect(
       conversationId,
       messageId,
       userMessage,
       aiCharacterId
     );
 
-    return NextResponse.json({ 
-      success: true,
-      message: 'AI chat task created successfully'
-    });
+    if (result.success) {
+      return NextResponse.json({ 
+        success: true,
+        message: 'AI response sent successfully',
+        responseMessage: result.responseMessage
+      });
+    } else {
+      return NextResponse.json({ 
+        success: false,
+        message: result.error || 'Failed to generate AI response'
+      }, { status: 400 });
+    }
 
   } catch (error) {
     console.error('AI聊天响应API错误:', error);
