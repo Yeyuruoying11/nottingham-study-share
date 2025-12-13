@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { Location } from '@/lib/types';
-import { MapPin, Search, X, Maximize2 } from 'lucide-react';
+import { MapPin, Search, X } from 'lucide-react';
 import FullscreenLocationPicker from './FullscreenLocationPicker';
 import Toast from '@/components/ui/Toast';
 
@@ -173,7 +173,6 @@ export default function LocationPicker({
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [isSelecting, setIsSelecting] = useState(false); // 防重复触发
-  const [showMapHint, setShowMapHint] = useState(true); // 控制地图提示显示
   const [mapKey, setMapKey] = useState(`map-${Date.now()}`); // 新增：地图key来强制重新渲染
 
   // 初始化地图设置
@@ -206,7 +205,6 @@ export default function LocationPicker({
   const handleLocationSelect = useCallback((location: Location) => {
     setSelectedLocation(location);
     onLocationSelect(location);
-    setShowMapHint(false); // 用户点击地图后隐藏提示
   }, [onLocationSelect]);
 
   // 新增：处理全屏地图选择
@@ -376,22 +374,6 @@ export default function LocationPicker({
             </div>
           )}
           
-          {/* 全屏按钮 */}
-          <button
-            type="button"
-            onClick={() => setShowFullscreenPicker(true)}
-            className="absolute top-3 right-3 p-2 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow z-[1000]"
-            title="全屏查看地图"
-          >
-            <Maximize2 className="w-4 h-4 text-gray-600" />
-          </button>
-
-          {/* 地图提示 */}
-          {!selectedLocation && showMapHint && (
-            <div className="absolute bottom-3 left-3 bg-white p-2 rounded-lg shadow-md text-xs text-gray-600 z-[1000] backdrop-blur-sm bg-white/95">
-              💡 点击地图选择位置或使用搜索功能
-            </div>
-          )}
         </div>
       </div>
 

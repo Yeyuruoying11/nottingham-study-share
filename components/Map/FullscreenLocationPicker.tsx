@@ -392,14 +392,6 @@ export default function FullscreenLocationPicker({
                 </div>
               )}
               
-              {showMapHint && (
-                <div className="absolute top-4 left-4 bg-white p-3 rounded-xl shadow-md text-sm text-gray-600 z-[1000] border border-gray-200 backdrop-blur-sm bg-white/95">
-                  <div className="flex items-center space-x-2">
-                    <MapPin className="w-4 h-4 text-green-600" />
-                    <span>💡 点击地图上的任意位置来选择旅行地点</span>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* 底部操作区域 */}
