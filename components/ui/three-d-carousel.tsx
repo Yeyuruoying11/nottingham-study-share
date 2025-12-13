@@ -402,7 +402,7 @@ export function ThreeDPhotoCarousel({ images, className = "" }: ThreeDPhotoCarou
         )}
       </AnimatePresence>
       
-      <div className="relative h-[400px] w-full overflow-hidden rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 z-10">
+      <div className="relative h-full min-h-[280px] w-full overflow-hidden rounded-xl bg-gradient-to-br from-gray-50 to-gray-100">
         <Carousel
           handleClick={handleClick}
           controls={controls}

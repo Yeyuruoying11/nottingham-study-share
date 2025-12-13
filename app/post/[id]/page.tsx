@@ -800,7 +800,7 @@ export default function PostDetailPage() {
           className="bg-white rounded-2xl shadow-lg overflow-hidden"
         >
           {/* 帖子头图 */}
-          <div className="relative h-64 md:h-80">
+          <div className="relative h-64 md:h-96 overflow-hidden">
             {/* 使用3D轮播展示多张图片，如果只有一张或没有images数组则使用传统显示 */}
             {post.images && post.images.length > 1 ? (
               <ThreeDPhotoCarousel 
