@@ -69,7 +69,7 @@ const CustomLeafletMap = React.memo(({
         const map = L.map(mapRef.current!, {
           center: center,
           zoom: selectedLocation ? 12 : 6,
-          zoomControl: true,
+          zoomControl: false,
           attributionControl: true,
         });
 
@@ -362,9 +362,6 @@ export default function FullscreenLocationPicker({
                     <MapPin className="w-5 h-5 text-green-600" />
                     <div>
                       <p className="font-medium text-green-800">{selectedLocation.address}</p>
-                      <p className="text-sm text-green-600">
-                        坐标: {selectedLocation.latitude.toFixed(4)}, {selectedLocation.longitude.toFixed(4)}
-                      </p>
                     </div>
                   </div>
                   <button

@@ -81,7 +81,7 @@ const CompactLeafletMap = React.memo(({
         const map = L.map(mapRef.current!, {
           center: center,
           zoom: selectedLocation ? 10 : 6,
-          zoomControl: true,
+          zoomControl: false,
           attributionControl: false, // 紧凑版隐藏版权信息
         });
 
