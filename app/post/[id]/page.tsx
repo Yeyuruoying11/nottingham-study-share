@@ -838,7 +838,7 @@ export default function PostDetailPage() {
 
           {/* 作者信息和互动 */}
           <div className="p-6 border-b">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center space-x-4">
                 {/* 可点击的头像，跳转到用户资料页面 */}
                 <Link 
@@ -846,21 +846,25 @@ export default function PostDetailPage() {
                   className="flex-shrink-0 hover:scale-105 transition-transform"
                   title={`查看 ${post.author.name} 的资料`}
                 >
-                <img
-                  src={post.author.avatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"}
-                  alt={post.author.name}
+                  <img
+                    src={post.author.avatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"}
+                    alt={post.author.name}
                     className="w-12 h-12 rounded-full object-cover border-2 border-transparent hover:border-green-300 transition-colors"
-                />
+                  />
                 </Link>
-                <div className="flex-1">
+                <div>
                   <Link 
                     href={`/user/${post.author.uid}`}
                     className="hover:text-green-600 transition-colors"
                   >
-                  <h3 className="font-semibold text-gray-900">{post.author.name}</h3>
+                    <h3 className="font-semibold text-gray-900">{post.author.name}</h3>
                   </Link>
                   <p className="text-sm text-gray-500">
-                    {post.author.university} · {post.author.year} · {formatTimestamp(post.createdAt)}
+                    {[
+                      post.author.university,
+                      post.author.year,
+                      formatTimestamp(post.createdAt)
+                    ].filter(Boolean).join(' · ')}
                   </p>
                 </div>
                 
