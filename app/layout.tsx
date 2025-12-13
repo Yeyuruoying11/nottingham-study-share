@@ -12,7 +12,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: '诺丁汉留学圈 - 分享你的留学故事',
-  description: '专为诺丁汉留学生打造的社交分享平台，分享留学攻略、生活经验、美食推荐等内容',
+  description: '专为诺丁汉留学生打造的社交分享平台，分享留学攻略、生活经验、美食推荐等精彩内容',
   keywords: '诺丁汉大学,留学,攻略,分享,社交,英国留学',
   icons: {
     icon: 'data:image/svg+xml,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 32 32\'><rect width=\'32\' height=\'32\' fill=\'%2316a34a\'/><text x=\'16\' y=\'24\' font-family=\'Arial\' font-size=\'20\' font-weight=\'bold\' text-anchor=\'middle\' fill=\'white\'>N</text></svg>',
