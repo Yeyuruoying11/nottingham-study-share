@@ -355,25 +355,6 @@ export default function FullscreenLocationPicker({
                 </button>
               </div>
 
-              {/* 当前选中的位置 */}
-              {selectedLocation && (
-                <div className="flex items-center justify-between bg-green-50 p-4 rounded-xl mb-4">
-                  <div className="flex items-center space-x-3">
-                    <MapPin className="w-5 h-5 text-green-600" />
-                    <div>
-                      <p className="font-medium text-green-800">{selectedLocation.address}</p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={clearLocation}
-                    className="text-green-600 hover:text-green-800 transition-colors"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-              )}
-
               {/* 热门目的地 */}
               <div>
                 <h3 className="text-sm font-medium text-gray-700 mb-3">🔥 热门旅行目的地</h3>
