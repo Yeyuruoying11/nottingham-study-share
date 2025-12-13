@@ -728,11 +728,9 @@ export async function syncUserProfileInPosts(
     
     console.log(`找到 ${querySnapshot.size} 个帖子需要更新`);
     
-    // 使用批量更新，每次最多500个文档
-    const batches: typeof writeBatch[] = [];
-    let currentBatch = writeBatch(db);
+    // 使用批量更新
+    const batch = writeBatch(db);
     let operationCount = 0;
-    let batchCount = 0;
     
     querySnapshot.forEach((docSnapshot) => {
       const updateData: { [key: string]: any } = {};
@@ -746,28 +744,14 @@ export async function syncUserProfileInPosts(
       }
       
       if (Object.keys(updateData).length > 0) {
-        currentBatch.update(docSnapshot.ref, updateData);
+        batch.update(docSnapshot.ref, updateData);
         operationCount++;
-        batchCount++;
-        
-        // Firebase批量操作限制为500个操作
-        if (batchCount === 500) {
-          batches.push(currentBatch);
-          currentBatch = writeBatch(db);
-          batchCount = 0;
-        }
       }
     });
     
-    // 添加最后一个批次（如果有操作）
-    if (batchCount > 0) {
-      batches.push(currentBatch);
-    }
-    
-    // 执行所有批次
-    if (batches.length > 0) {
-      console.log(`执行 ${batches.length} 个批次操作...`);
-      await Promise.all(batches.map(batch => batch.commit()));
+    // 执行批量更新
+    if (operationCount > 0) {
+      await batch.commit();
       console.log(`成功同步用户资料到 ${operationCount} 个帖子`);
     }
     
