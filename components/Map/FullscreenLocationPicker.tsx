@@ -78,16 +78,41 @@ const CustomLeafletMap = React.memo(({
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
-        // 添加点击事件
-        map.on('click', (e: any) => {
-          const location: Location = {
-            latitude: e.latlng.lat,
-            longitude: e.latlng.lng,
-            address: `${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`,
+        // 添加点击事件 - 使用反向地理编码获取地名
+        map.on('click', async (e: any) => {
+          const { lat, lng } = e.latlng;
+          
+          // 先立即显示坐标，然后异步获取地名
+          const tempLocation: Location = {
+            latitude: lat,
+            longitude: lng,
+            address: `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
             country: '',
             city: ''
           };
-          onLocationSelect(location);
+          onLocationSelect(tempLocation);
+          
+          try {
+            // 使用反向地理编码获取地址信息
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&addressdetails=1`
+            );
+            const data = await response.json();
+            
+            const location: Location = {
+              latitude: lat,
+              longitude: lng,
+              address: data.display_name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
+              country: data.address?.country || '',
+              city: data.address?.city || data.address?.town || data.address?.village || '',
+              placeId: data.place_id?.toString()
+            };
+            
+            onLocationSelect(location);
+          } catch (error) {
+            console.error('获取地址信息失败:', error);
+            // 如果获取地址失败，保持坐标
+          }
         });
 
         mapInstanceRef.current = map;
@@ -392,6 +417,14 @@ export default function FullscreenLocationPicker({
                 </div>
               )}
               
+              {showMapHint && (
+                <div className="absolute top-4 left-4 bg-white p-3 rounded-xl shadow-md text-sm text-gray-600 z-[1000] border border-gray-200 backdrop-blur-sm bg-white/95">
+                  <div className="flex items-center space-x-2">
+                    <MapPin className="w-4 h-4 text-green-600" />
+                    <span>💡 点击地图上的任意位置来选择旅行地点</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* 底部操作区域 */}
